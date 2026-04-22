@@ -366,6 +366,14 @@
         .footer-table td {
             vertical-align: top;
         }
+
+        .form-no-footer {
+            position: fixed;
+            bottom: -10mm;
+            left: -10mm;
+            font-size: 6pt;
+            color: #374151;
+        }
     </style>
 </head>
 
@@ -392,7 +400,7 @@
         <tr>
             <td style="width:70%;">
                 <div class="header-title">NON-CONFORMANCE REPORT</div>
-                <div class="header-subtitle">PT Rekaindo Global Jasa — paduka-new.ptrekaindo.co.id</div>
+                <div class="header-subtitle">PT Rekaindo Global Jasa — paduka.ptrekaindo.co.id</div>
             </td>
             <td style="width:30%;" class="text-right">
                 <div><span class="badge-nomor">{{ $ncr->nomor_ncr }}</span></div>
@@ -760,13 +768,17 @@
         @endif
     @endif
 
+    <div class="form-no-footer">
+        Form No. : IV-QCAS.003. Rev. B
+    </div>
+
     <div class="footer">
         <table class="footer-table">
             <tr>
                 <td style="width:60%;">
                     Dicetak: {{ \Carbon\Carbon::now()->setTimezone('Asia/Jakarta')->translatedFormat('d F Y, H:i') }}
                     WIB
-                    • paduka-new.ptrekaindo.co.id
+                    • paduka.ptrekaindo.co.id
                 </td>
                 <td style="width:40%;" class="text-right">
                     Dokumen ini digenerate secara otomatis oleh sistem.

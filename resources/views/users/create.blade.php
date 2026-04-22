@@ -8,24 +8,24 @@
 <div class="py-6 max-w-4xl mx-auto space-y-4">
 
     <a href="{{ route('users.index') }}"
-        class="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors">
+        class="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
         Kembali ke daftar pengguna
     </a>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
-            <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
-                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+            <div class="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                <svg class="w-4 h-4 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
             </div>
             <div>
-                <h3 class="text-sm font-semibold text-gray-800">Form Tambah Pengguna</h3>
-                <p class="text-xs text-gray-400">Isi data lengkap pengguna baru</p>
+                <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Form Tambah Pengguna</h3>
+                <p class="text-xs text-gray-400 dark:text-gray-500">Isi data lengkap pengguna baru</p>
             </div>
         </div>
 
@@ -34,11 +34,11 @@
             @csrf
 
             {{-- Foto --}}
-            <div class="flex items-center gap-5 pb-6 border-b border-gray-100">
+            <div class="flex items-center gap-5 pb-6 border-b border-gray-100 dark:border-gray-700">
                 <div class="relative group cursor-pointer flex-shrink-0" @click="$refs.fotoInput.click()">
                     <img :src="preview" alt="Foto"
                         class="w-20 h-20 rounded-2xl object-cover border-2 transition"
-                        :class="hasFile ? 'border-indigo-400' : 'border-gray-200'" />
+                        :class="hasFile ? 'border-indigo-400' : 'border-gray-200 dark:border-gray-600'" />
                     <div class="absolute inset-0 bg-black bg-opacity-40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -50,10 +50,10 @@
                         class="hidden" x-ref="fotoInput" @change="onFileChange($event)" />
                 </div>
                 <div>
-                    <p class="text-sm font-medium text-gray-700">Foto Profil</p>
-                    <p class="text-xs text-gray-400 mt-0.5">Klik untuk memilih. Format: jpg, png, webp. Maks 2MB.</p>
-                    <p x-show="hasFile" x-transition class="mt-1.5 text-xs text-indigo-500 font-medium">✓ Foto dipilih</p>
-                    @error('foto') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Foto Profil</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Klik untuk memilih. Format: jpg, png, webp. Maks 2MB.</p>
+                    <p x-show="hasFile" x-transition class="mt-1.5 text-xs text-indigo-500 dark:text-indigo-400 font-medium">✓ Foto dipilih</p>
+                    @error('foto') <p class="mt-1 text-xs text-red-500 dark:text-red-400">{{ $message }}</p> @enderror
                 </div>
             </div>
 
@@ -123,7 +123,7 @@
                 <div>
                     <x-input-label for="level" value="Level" />
                     <select id="level" name="level"
-                        class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                        class="mt-1 block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm">
                         <option value="user"       @selected(old('level') == 'user')>User</option>
                         <option value="manager"    @selected(old('level') == 'manager')>Manager</option>
                         <option value="admin"      @selected(old('level') == 'admin')>Admin</option>
@@ -137,15 +137,15 @@
                     <div class="mt-2 flex items-center gap-3">
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="keterangan" value="1"
-                                class="text-indigo-600 focus:ring-indigo-500"
+                                class="text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 dark:focus:ring-indigo-400 dark:bg-gray-700 dark:border-gray-600"
                                 @checked(old('keterangan', '1') == '1') />
-                            <span class="text-sm text-gray-700">Aktif</span>
+                            <span class="text-sm text-gray-700 dark:text-gray-300">Aktif</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="keterangan" value="0"
-                                class="text-indigo-600 focus:ring-indigo-500"
+                                class="text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 dark:focus:ring-indigo-400 dark:bg-gray-700 dark:border-gray-600"
                                 @checked(old('keterangan') == '0') />
-                            <span class="text-sm text-gray-700">Nonaktif</span>
+                            <span class="text-sm text-gray-700 dark:text-gray-300">Nonaktif</span>
                         </label>
                     </div>
                 </div>
@@ -156,10 +156,10 @@
 
             </div>
 
-            <div class="flex items-center gap-3 pt-2 border-t border-gray-100">
+            <div class="flex items-center gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
                 <x-primary-button>Simpan Pengguna</x-primary-button>
                 <a href="{{ route('users.index') }}"
-                    class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
+                    class="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
                     Batal
                 </a>
             </div>

@@ -1,7 +1,7 @@
 <div>
     <x-input-label for="{{ $inputId ?? 'unit_kerja' }}" :value="__('Unit Kerja')" />
     <select id="{{ $inputId ?? 'unit_kerja' }}" name="unit_kerja"
-        class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
+        class="mt-1 block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm text-sm focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400">
         <option value="">— Pilih Unit Kerja —</option>
         @foreach($unitKerja as $item)
             <option value="{{ $item->kode_unit ?? $item->nama_unit }}"

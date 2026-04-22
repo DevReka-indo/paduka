@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Project;
 use App\Models\Temuan;
 use App\Models\UnitKerja;
+use App\Models\NcrChangeLog;
 
 class Ncr extends Model
 {
@@ -102,6 +103,20 @@ class Ncr extends Model
     {
         return $this->belongsTo(UnitKerja::class, 'unit_kerja_id');
     }
+
+    public function changeLogs()
+    {
+        return $this->hasMany(NcrChangeLog::class, 'nomor_ncr', 'nomor_ncr')
+            ->orderByDesc('revision_index');
+    }
+
+    public function latestRevision()
+    {
+        return $this->hasOne(NcrChangeLog::class, 'nomor_ncr', 'nomor_ncr')
+            ->latestOfMany('revision_index');
+    }
+
+
 
     // Ambil semua data / satu data berdasarkan nomor_ncr
     public function GetNCR($nomorNcr = false)

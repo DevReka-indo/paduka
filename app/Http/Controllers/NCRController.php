@@ -11,10 +11,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use App\Notifications\NcrPerluDitanggapiNotification;
 use App\Notifications\NcrPerluVerifikasiNotification;
+use App\Notifications\NcrDirevisiNotification;
 use App\Exports\NcrReportExport;
-use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Facades\Excel;  //export excel
+use App\Services\NcrAuditService;  //Service Audit Log
+
 
 class NCRController extends Controller
 {
@@ -23,14 +27,16 @@ class NCRController extends Controller
     protected $modelProyek;
     protected $modelTemuan;
     protected $modelUnitKerja;
+    protected $ncrAuditService;
 
-    public function __construct()
+    public function __construct(NcrAuditService $ncrAuditService)
     {
         $this->modelNCR = new Ncr();
         $this->modelPengguna = new User();
         $this->modelProyek = new Project();
         $this->modelTemuan = new Temuan();
         $this->modelUnitKerja = new UnitKerja();
+        $this->ncrAuditService = $ncrAuditService;
     }
 
     // Halaman daftar registrasi NCR
@@ -38,7 +44,13 @@ class NCRController extends Controller
     {
         $authUser = Auth::user();
 
-        $query = Ncr::with(['project', 'penanggungJawab', 'unitKerja', 'user']);
+        $query = Ncr::with([
+            'project',
+            'penanggungJawab',
+            'unitKerja',
+            'user',
+            'latestRevision',
+        ]);
 
         if (in_array($authUser->level, ['user', 'manager'])) {
             $unitKerjaIds = $authUser->unitKerja()->pluck('unit_kerja.id')->toArray();
@@ -66,14 +78,28 @@ class NCRController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
+
             $query->where(function ($q) use ($search) {
                 $q->where('nomor_ncr', 'like', "%{$search}%")
                     ->orWhere('status_temuan', 'like', "%{$search}%")
                     ->orWhere('nama_proses', 'like', "%{$search}%")
                     ->orWhere('unit_tujuan', 'like', "%{$search}%")
-                    ->orWhereHas('project', fn($p) => $p->where('nama_proyek', 'like', "%{$search}%"))
-                    ->orWhereHas('unitKerja', fn($u) => $u->where('nama_unit', 'like', "%{$search}%")->orWhere('kode_unit', 'like', "%{$search}%"))
-                    ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"));
+                    ->orWhereHas('project', function ($p) use ($search) {
+                        $p->where('nama_proyek', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('unitKerja', function ($u) use ($search) {
+                        $u->where('nama_unit', 'like', "%{$search}%")
+                        ->orWhere('kode_unit', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('user', function ($u) use ($search) {
+                        $u->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('penanggungJawab', function ($u) use ($search) {
+                        $u->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('latestRevision', function ($r) use ($search) {
+                        $r->where('revision', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -150,7 +176,13 @@ class NCRController extends Controller
     // Detail NCR
     public function show($slug)
     {
-        $ncr = Ncr::with(['user', 'project', 'penanggungJawab', 'unitKerja'])
+        $ncr = Ncr::with([
+            'user',
+            'project',
+            'penanggungJawab',
+            'unitKerja',
+            'latestRevision'
+            ])
             ->where('nomor_ncr', $slug)
             ->first();
 
@@ -370,12 +402,30 @@ class NCRController extends Controller
             if (!empty($ncr->up_file) && Storage::disk('public')->exists($ncr->up_file)) {
                 Storage::disk('public')->delete($ncr->up_file);
             }
+
             $pathGambar = $request->file('up_file')->store('ncr', 'public');
         }
 
         $unitKerja = UnitKerja::find($request->input('unit_kerja_id'));
 
-        $ncr->update([
+        $oldData = $ncr->only([
+            'nama_proses',
+            'kode_proyek',
+            'status_temuan',
+            'acuan_periksa',
+            'surat_jalan',
+            'uraian',
+            'uraian_masalah',
+            'penanggung_jawab',
+            'tgl_target',
+            'disposisi_inspektor',
+            'doc_pendukung',
+            'unit_tujuan',
+            'unit_kerja_id',
+            'up_file',
+        ]);
+
+        $dataUpdate = [
             'nama_proses'         => strip_tags($request->input('nama_proses')),
             'kode_proyek'         => $request->input('kode_proyek'),
             'status_temuan'       => strip_tags($request->input('status_temuan')),
@@ -390,7 +440,23 @@ class NCRController extends Controller
             'unit_tujuan'         => $unitKerja?->nama_unit,
             'unit_kerja_id'       => $unitKerja?->id,
             'up_file'             => $pathGambar,
-        ]);
+        ];
+
+        $hasChanges = collect($dataUpdate)->contains(function ($value, $key) use ($oldData) {
+            return (string) ($oldData[$key] ?? '') !== (string) ($value ?? '');
+        });
+
+        if (!$hasChanges) {
+            return redirect()->route('ncr.show', $ncr->nomor_ncr)
+                ->with('pesan', 'Tidak ada perubahan data.');
+        }
+
+        DB::transaction(function () use ($ncr, $oldData, $dataUpdate) {
+            $ncr->update($dataUpdate);
+            $this->ncrAuditService->logUpdate($ncr, $oldData, $dataUpdate);
+        });
+
+        $this->kirimNotifikasiRevisi($ncr);
 
         return redirect()->route('ncr.show', $ncr->nomor_ncr)
             ->with('pesan', 'Data NCR berhasil diperbarui!');
@@ -693,4 +759,69 @@ class NCRController extends Controller
             $filename
         );
     }
+
+    public function showRevision($nomor, $rev)
+    {
+        $ncr = Ncr::where('nomor_ncr', $nomor)->firstOrFail();
+
+        $log = \App\Models\NcrChangeLog::with('user')
+            ->where('nomor_ncr', $nomor)
+            ->where('revision_index', $rev)
+            ->firstOrFail();
+
+        $revisions = \App\Models\NcrChangeLog::with('user')
+            ->where('nomor_ncr', $nomor)
+            ->orderByDesc('revision_index')
+            ->get();
+
+        return view('ncr.revision_show', [
+            'ncr' => $ncr,
+            'log' => $log,
+            'revisions' => $revisions,
+        ]);
+    }
+
+    private function kirimNotifikasiRevisi(Ncr $ncr): void
+    {
+        $ncr->loadMissing([
+            'penanggungJawab',
+            'latestRevision.user',
+        ]);
+
+        $latestLog = $ncr->latestRevision;
+
+        if (!$latestLog) {
+            return;
+        }
+
+        $recipients = collect();
+
+        // 1. Penanggung jawab
+        if ($ncr->penanggungJawab) {
+            $recipients->push($ncr->penanggungJawab);
+        }
+
+        // 2. Semua user dalam unit kerja tujuan
+        $unitUsers = collect();
+
+        if (!is_null($ncr->unit_kerja_id)) {
+            $unitUsers = User::whereHas('unitKerja', function ($q) use ($ncr) {
+                $q->where('unit_kerja.id', $ncr->unit_kerja_id);
+            })->get();
+        } elseif (!empty($ncr->unit_tujuan)) {
+            $unitUsers = User::whereHas('unitKerja', function ($q) use ($ncr) {
+                $q->where('nama_unit', $ncr->unit_tujuan);
+            })->get();
+        }
+
+        $recipients = $recipients
+            ->merge($unitUsers)
+            ->unique('id')
+            ->reject(fn ($user) => (int) $user->id === (int) $latestLog->user_id); // exclude editor
+
+        foreach ($recipients as $user) {
+            $user->notify(new NcrDirevisiNotification($ncr, $latestLog));
+        }
+    }
+
 }

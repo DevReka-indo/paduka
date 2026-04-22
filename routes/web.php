@@ -14,8 +14,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SignatureController;
 
 //testing only
-// use App\Models\Ncr;
-// use App\Models\User;
+use App\Models\Ncr;
+use App\Models\User;
+use App\Models\NcrChangeLog;
 
 Route::get('/', function () {
     return Auth::check() ? redirect()->route('dashboard') : redirect()->route('login');
@@ -72,7 +73,43 @@ Route::middleware('auth')->group(function () {
 
             Route::get('/ncr/export-report', [NcrController::class, 'exportReport'])->name('export-report');
             Route::get('/{nomor_ncr}/export-pdf', [NcrPdfController::class, 'export'])->name('export.pdf');
+
+            Route::get('/{nomor_ncr}/revision/{rev}', [NCRController::class, 'showRevision'])->name('revision.show');
         });
+
+        Route::get('/ncr/file/{path}', function (string $path) {
+            $decoded = base64_decode($path);
+
+            // Cegah path traversal
+            if (str_contains($decoded, '..')) {
+                abort(403);
+            }
+
+            $fullPath = storage_path('app/' . $decoded);
+
+            if (!file_exists($fullPath)) {
+                abort(404, 'File tidak ditemukan.');
+            }
+
+            $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'])) {
+                abort(403, 'Tipe file tidak diizinkan.');
+            }
+
+            $mimeMap = [
+                'jpg'  => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png'  => 'image/png',
+                'gif'  => 'image/gif',
+                'webp' => 'image/webp',
+                'svg'  => 'image/svg+xml',
+                'bmp'  => 'image/bmp',
+            ];
+
+            return response()->file($fullPath, [
+                'Content-Type' => $mimeMap[$ext] ?? 'application/octet-stream',
+            ]);
+        })->middleware('auth')->name('ncr.file.preview');
 });
 
 Route::middleware(['auth', 'isAdmin'])->group(function () {
@@ -124,5 +161,39 @@ Route::middleware(['auth', 'isAdmin'])->group(function () {
 //         'hari_terlambat' => 5,
 //     ]);
 // });
+
+Route::get('/debug/email/direvisi', function () {
+    $notifiable = User::first() ?? (object) ['name' => 'User Debug'];
+
+    $nomorNcr = '202604200084';
+
+    $ncr = Ncr::where('nomor_ncr', $nomorNcr)->first()
+        ?? (object) ['nomor_ncr' => $nomorNcr];
+
+    $changeLog = NcrChangeLog::with('user')
+        ->where('nomor_ncr', $nomorNcr)
+        ->orderByDesc('revision_index')
+        ->first();
+
+    if (!$changeLog) {
+        $changeLog = (object) [
+            'nomor_ncr' => $nomorNcr,
+            'revision' => 'Rev-07',
+            'revision_index' => 7,
+            'action' => 'update',
+            'user' => (object) ['name' => 'Editor Debug'],
+        ];
+    }
+
+    return view('emails.direvisi', [
+        'notifiable' => $notifiable,
+        'ncr' => $ncr,
+        'changeLog' => $changeLog,
+        'url' => route('ncr.revision.show', [
+            'nomor_ncr' => $ncr->nomor_ncr,
+            'rev' => $changeLog->revision_index,
+        ]),
+    ]);
+});
 
 require __DIR__ . '/auth.php';
