@@ -5,7 +5,7 @@
 @endsection
 
 @section('content')
-<div class="py-6 max-w-full mx-auto">
+<div class="py-6 px-4 sm:px-6 lg:px-8 w-full max-w-[1600px] mx-auto space-y-4">
     <div class="bg-white border border-gray-200 shadow-sm rounded-sm">
         <div class="px-4 py-3 border-b border-gray-200 bg-blue-50">
             <h3 class="text-sm font-semibold text-blue-700 uppercase">Tanggapi NCR</h3>

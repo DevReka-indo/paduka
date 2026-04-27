@@ -12,6 +12,8 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     {{-- Icons --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    {{-- Notyf Alert --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
 
     {{-- Anti-flash dark mode --}}
     <script>
@@ -61,12 +63,18 @@
 
             {{-- Page Content --}}
             <main class="flex-1 p-6">
-                @yield('content')
+                <div class="@yield('content_width', 'w-full')">
+                    @yield('content')
+                </div>
             </main>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
     @stack('scripts')
+
+    {{-- Notyf Alert --}}
+
 
     {{-- AlpineJS --}}
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>

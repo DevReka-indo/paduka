@@ -1,39 +1,44 @@
 @php $level = strtolower(Auth::user()->level ?? ''); @endphp
 
 <div x-data="{ openLogoutModal: false }">
+
+    {{-- Toggle Button — fixed mengikuti lebar sidebar --}}
+    <button @click="$store.sidebar.toggle()"
+        title="Toggle Sidebar"
+        :style="$store.sidebar.collapsed ? 'left: 60px' : 'left: 244px'"
+        class="fixed top-[50px] z-50
+            w-6 h-6 flex items-center justify-center rounded-full
+            bg-white dark:bg-gray-700
+            border border-slate-200 dark:border-gray-600
+            text-slate-400 dark:text-gray-400
+            hover:bg-indigo-50 dark:hover:bg-indigo-900/40
+            hover:text-indigo-600 dark:hover:text-indigo-300
+            hover:border-indigo-200 dark:hover:border-indigo-700
+            shadow-sm transition-all duration-300">
+        <svg class="w-3 h-3 transition-transform duration-300"
+            :class="$store.sidebar.collapsed ? 'rotate-180' : ''"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                d="M15 19l-7-7 7-7" />
+        </svg>
+    </button>
+
     <aside
         :class="$store.sidebar.collapsed ? 'w-[72px]' : 'w-64'"
         class="fixed top-0 left-0 h-full bg-white dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 flex flex-col z-40 shadow-sm transition-all duration-300 ease-in-out overflow-hidden">
 
         {{-- Logo / App Name --}}
-        <div class="flex items-center border-b border-slate-200 dark:border-gray-700 bg-slate-50/80 dark:bg-gray-800/80 overflow-hidden"
-            :class="$store.sidebar.collapsed ? 'flex-col gap-2 px-2 py-3 justify-center' : 'flex-row gap-3 px-4 py-5'">
-
-            {{-- Logo --}}
-            <div class="w-10 h-10 flex items-center justify-center flex-shrink-0 rounded-xl bg-white dark:bg-gray-700 shadow-sm ring-1 ring-slate-200 dark:ring-gray-600">
-                <img src="{{ asset('img/logo-paduka-fill.svg') }}" alt="Logo" class="w-7 h-7 object-contain">
+        <div class="relative flex items-center gap-3 px-3 py-4 border-b border-slate-200 dark:border-gray-700 bg-slate-50/80 dark:bg-gray-800/80">
+            <div class="w-9 h-9 flex items-center justify-center flex-shrink-0 rounded-xl bg-white dark:bg-gray-700 shadow-sm ring-1 ring-slate-200 dark:ring-gray-600">
+                <img src="{{ asset('img/logo-paduka-fill.svg') }}" alt="Logo" class="w-6 h-6 object-contain">
             </div>
-
-            {{-- Nama sistem — hanya saat expanded --}}
-            <div class="flex-1 min-w-0 overflow-hidden transition-all duration-200"
-                :class="$store.sidebar.collapsed ? 'opacity-0 w-0 h-0' : 'opacity-100'">
+            <div class="flex-1 min-w-0 overflow-hidden transition-all duration-300"
+                :class="$store.sidebar.collapsed ? 'opacity-0 w-0' : 'opacity-100'">
                 <span class="block text-base font-semibold tracking-tight text-slate-800 dark:text-gray-100 truncate whitespace-nowrap">
                     {{ config('app.name', 'Laravel') }}
                 </span>
-                <p class="text-sm text-slate-500 dark:text-gray-400 leading-none whitespace-nowrap">Website</p>
+                <p class="text-xs text-slate-500 dark:text-gray-400 leading-none whitespace-nowrap">Website</p>
             </div>
-
-            {{-- Toggle Button — SELALU VISIBLE --}}
-            <button @click="$store.sidebar.toggle()"
-                title="Toggle Sidebar"
-                class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 dark:text-gray-500 hover:bg-slate-200 dark:hover:bg-gray-600 hover:text-slate-700 dark:hover:text-gray-200 transition-all duration-200">
-                <svg class="w-4 h-4 transition-transform duration-300"
-                    :class="$store.sidebar.collapsed ? 'rotate-180' : ''"
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                </svg>
-            </button>
         </div>
 
         {{-- Navigation Menu --}}
@@ -42,7 +47,6 @@
             {{-- Semua role bisa akses --}}
             <div class="space-y-1">
 
-                {{-- Section label --}}
                 <p class="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-gray-500 transition-all duration-200 overflow-hidden whitespace-nowrap"
                     :class="$store.sidebar.collapsed ? 'opacity-0 h-0 py-0 mb-0' : 'opacity-100'">
                     Menu Utama
@@ -105,7 +109,6 @@
                                 {{ request()->routeIs('ncr.*') && !request()->routeIs('ncr.verifikasi.*') ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-gray-600' }}"></span>
                             Registrasi NCR
                         </a>
-
                         <a href="{{ route('ncr.verifikasi.index') }}"
                             class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200
                             {{ request()->routeIs('ncr.verifikasi.*')
@@ -117,6 +120,42 @@
                         </a>
                     </div>
                 </div>
+
+                @php
+                    $allowedUnits = [30, 1];
+                    $canAccessFeedback = auth()->check()
+                        && auth()->user()->unitKerja()
+                            ->whereIn('unit_kerja.id', $allowedUnits)
+                            ->exists();
+                @endphp
+
+                @if($canAccessFeedback)
+                    {{-- ── Kepuasan Pelanggan ── --}}
+                    <a href="{{ route('feedback.index') }}"
+                        :title="$store.sidebar.collapsed ? 'Kepuasan Pelanggan' : ''"
+                        class="group flex items-center gap-3 px-1.5 py-2 rounded-xl text-sm font-medium transition-all duration-200
+                        {{ request()->routeIs('feedback.index', 'feedback.show', 'feedback.pdf')
+                            ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 shadow-sm ring-1 ring-indigo-100 dark:ring-indigo-700'
+                            : 'text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-gray-100' }}">
+
+                        <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition
+                            {{ request()->routeIs('feedback.index', 'feedback.show', 'feedback.pdf')
+                                ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300'
+                                : 'bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400 group-hover:bg-slate-200 dark:group-hover:bg-gray-600 group-hover:text-slate-700 dark:group-hover:text-gray-200' }}">
+
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                        </span>
+
+                        <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
+                            :class="$store.sidebar.collapsed ? 'opacity-0 w-0' : 'opacity-100'">
+                            Kepuasan Pelanggan
+                        </span>
+                    </a>
+                @endif
+
             </div>
 
             {{-- Admin & Superadmin --}}
@@ -167,6 +206,35 @@
                 </div>
             @endif
 
+            {{-- Bantuan & Info (semua user) --}}
+            <div class="pt-2 space-y-1">
+                <p class="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-gray-500 transition-all duration-200 overflow-hidden whitespace-nowrap"
+                    :class="$store.sidebar.collapsed ? 'opacity-0 h-0 py-0 mb-0' : 'opacity-100'">
+                    Informasi
+                </p>
+
+                <a href="{{ route('bantuan.index') }}"
+                    :title="$store.sidebar.collapsed ? 'Bantuan & Info' : ''"
+                    class="group flex items-center gap-3 px-1.5 py-2 rounded-xl text-sm font-medium transition-all duration-200
+                    {{ request()->routeIs('bantuan.*')
+                        ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 shadow-sm ring-1 ring-indigo-100 dark:ring-indigo-700'
+                        : 'text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-gray-100' }}">
+                    <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition
+                        {{ request()->routeIs('bantuan.*')
+                            ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300'
+                            : 'bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400 group-hover:bg-slate-200 dark:group-hover:bg-gray-600 group-hover:text-slate-700 dark:group-hover:text-gray-200' }}">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                    </span>
+                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
+                        :class="$store.sidebar.collapsed ? 'opacity-0 w-0' : 'opacity-100'">
+                        Bantuan & Info
+                    </span>
+                </a>
+            </div>
+
             {{-- Superadmin saja --}}
             @if($level === 'superadmin')
                 <div class="pt-2 space-y-1">
@@ -175,6 +243,7 @@
                         Administrasi
                     </p>
 
+                    {{-- Dropdown Users/Pengguna --}}
                     <div x-data="{ open: {{ request()->routeIs('users.*') || request()->routeIs('unit-kerja.*') ? 'true' : 'false' }} }" class="space-y-1">
                         <button type="button"
                             @click="$store.sidebar.collapsed ? (window.location.href = '{{ route('users.index') }}') : (open = !open)"
@@ -212,7 +281,6 @@
                                     {{ request()->routeIs('unit-kerja.*') ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-gray-600' }}"></span>
                                 Management Unit Kerja
                             </a>
-
                             <a href="{{ route('users.index') }}"
                                 class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200
                                 {{ request()->routeIs('users.*')
@@ -224,78 +292,94 @@
                             </a>
                         </div>
                     </div>
+
+                    <a href="{{ route('changelog.index') }}"
+                        :title="$store.sidebar.collapsed ? 'Manajemen Changelog' : ''"
+                        class="group flex items-center gap-3 px-1.5 py-2 rounded-xl text-sm font-medium transition-all duration-200
+                        {{ request()->routeIs('changelog.*')
+                            ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 shadow-sm ring-1 ring-indigo-100 dark:ring-indigo-700'
+                            : 'text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-gray-100' }}">
+                        <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition
+                            {{ request()->routeIs('changelog.*')
+                                ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300'
+                                : 'bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400 group-hover:bg-slate-200 dark:group-hover:bg-gray-600 group-hover:text-slate-700 dark:group-hover:text-gray-200' }}">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </span>
+                        <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
+                            :class="$store.sidebar.collapsed ? 'opacity-0 w-0' : 'opacity-100'">
+                            Change Log
+                        </span>
+                    </a>
                 </div>
             @endif
 
         </nav>
 
         {{-- Profile & Logout --}}
-        <div class="border-t border-slate-200 dark:border-gray-700 p-2 flex items-center gap-2">
+        <div class="border-t border-slate-200 dark:border-gray-700/60 p-3">
+            <div class="flex items-center gap-2">
 
-            {{-- Profile --}}
-            <a href="{{ route('profile.edit') }}"
-                :title="$store.sidebar.collapsed ? '{{ Auth::user()->name }}' : ''"
-                class="flex-1 min-w-0 flex items-center gap-3 px-1.5 py-2 rounded-xl hover:bg-white dark:hover:bg-gray-700 transition-all duration-200 ring-1 ring-transparent hover:ring-slate-200 dark:hover:ring-gray-600">
+                <a href="{{ route('profile.edit') }}"
+                    :title="$store.sidebar.collapsed ? '{{ Auth::user()->name }}' : ''"
+                    class="group flex-1 min-w-0 flex items-center gap-2.5 px-1.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-700/60 transition-all duration-200">
 
-                @if(Auth::user()->foto)
-                    <img src="{{ asset('storage/' . Auth::user()->foto) }}" alt="{{ Auth::user()->name }}"
-                        class="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-gray-600 flex-shrink-0 shadow-sm" />
-                @else
-                    <div class="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">
-                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    @if(Auth::user()->foto)
+                        <img src="{{ asset('storage/' . Auth::user()->foto) }}" alt="{{ Auth::user()->name }}"
+                            class="w-9 h-9 rounded-full object-cover flex-shrink-0 ring-2 ring-slate-200 dark:ring-gray-600" />
+                    @else
+                        <div class="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-200 dark:ring-indigo-700/50">
+                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                        </div>
+                    @endif
+
+                    <div class="overflow-hidden min-w-0 transition-all duration-200"
+                        :class="$store.sidebar.collapsed ? 'opacity-0 w-0' : 'opacity-100'">
+                        <p class="text-sm font-semibold text-slate-800 dark:text-gray-100 truncate leading-tight">
+                            {{ Auth::user()->name }}
+                        </p>
+                        <p class="text-xs text-slate-400 dark:text-gray-500 truncate leading-tight mt-0.5">
+                            {{ Auth::user()->jabatan ?? Auth::user()->email }} - {{ Auth::user()->unit_kerja ?? '-' }}
+                        </p>
                     </div>
-                @endif
+                </a>
 
-                <div class="overflow-hidden min-w-0 transition-all duration-200" :class="$store.sidebar.collapsed ? 'opacity-0 w-0' : 'opacity-100'">
-                    <p class="text-sm font-semibold text-slate-800 dark:text-gray-100 truncate whitespace-nowrap">{{ Auth::user()->name }}</p>
-                    <p class="text-xs text-slate-500 dark:text-gray-400 truncate whitespace-nowrap">
-                        {{ Auth::user()->jabatan ?? '-' }} - {{ Auth::user()->unit_kerja ?? '-' }}
-                    </p>
-                </div>
-            </a>
+                <button type="button"
+                    x-show="!$store.sidebar.collapsed"
+                    @click="openLogoutModal = true"
+                    title="Keluar"
+                    class="logout-btn flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg
+                        text-slate-400 dark:text-gray-500
+                        hover:text-red-500 dark:hover:text-red-400
+                        hover:bg-red-50 dark:hover:bg-red-900/20
+                        transition-all duration-200">
+                    <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path class="logout-door" stroke="currentColor"
+                            d="M4 19.5C4 20.3 4.7 21 5.5 21H12V3H5.5C4.7 3 4 3.7 4 4.5V19.5Z" />
+                        <g class="logout-arrow">
+                            <line x1="9" y1="12" x2="19" y2="12" stroke="currentColor" />
+                            <polyline points="16 9 19 12 16 15" stroke="currentColor" />
+                        </g>
+                    </svg>
+                </button>
 
-            {{-- Logout Button dengan animated SVG icon --}}
-            <button type="button"
-                x-show="!$store.sidebar.collapsed"
-                @click="openLogoutModal = true"
-                title="Logout"
-                class="logout-btn flex-shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-xl border border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 hover:border-red-200 dark:hover:border-red-800/40 transition-all duration-200">
-
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-                    {{-- Pintu (hitam/merah sesuai tema) --}}
-                    <path class="logout-door" stroke="currentColor"
-                        d="M4 19.5C4 20.3 4.7 21 5.5 21H12V3H5.5C4.7 3 4 3.7 4 4.5V19.5Z"
-                        style="color: rgb(220 38 38);" />
-                    {{-- Panah teal animasi --}}
-                    <g class="logout-arrow">
-                        <line x1="9" y1="12" x2="19" y2="12" stroke="#2dd4bf" />
-                        <polyline points="16 9 19 12 16 15" stroke="#2dd4bf" />
-                    </g>
-                </svg>
-
-            </button>
-
-            <style>
-                /* Panah geser kanan saat hover */
-                .logout-btn .logout-arrow {
-                    transform: translateX(0);
-                    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-                }
-                .logout-btn:hover .logout-arrow {
-                    transform: translateX(3px);
-                }
-
-                /* Pintu sedikit mundur ke kiri saat hover */
-                .logout-btn .logout-door {
-                    transform-origin: left center;
-                    transition: transform 0.3s ease;
-                }
-                .logout-btn:hover .logout-door {
-                    transform: scaleX(0.88);
-                }
-            </style>
-
+            </div>
         </div>
+
+        <style>
+            .logout-btn .logout-arrow {
+                transform: translateX(0);
+                transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            .logout-btn:hover .logout-arrow { transform: translateX(3px); }
+            .logout-btn .logout-door {
+                transform-origin: left center;
+                transition: transform 0.3s ease;
+            }
+            .logout-btn:hover .logout-door { transform: scaleX(0.88); }
+        </style>
 
     </aside>
 

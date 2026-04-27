@@ -5,7 +5,7 @@
 @endsection
 
 @section('content')
-<div class="py-6 max-w-4xl mx-auto space-y-6">
+<div class="py-6 px-4 sm:px-6 lg:px-8 w-full max-w-[1600px] mx-auto space-y-4">
 
     {{-- Update Profile Info --}}
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">

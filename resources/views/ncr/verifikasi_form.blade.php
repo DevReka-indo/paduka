@@ -3,8 +3,8 @@
 @section('title', 'Verifikasi NCR')
 
 @section('content')
-<div class="p-6">
-    <div class="max-w-6xl mx-auto">
+<div class="py-6 px-4 sm:px-6 lg:px-8 w-full max-w-[1600px] mx-auto space-y-4">
+    <div>
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="px-6 py-5 border-b border-slate-200">
                 <h1 class="text-2xl font-bold text-slate-800">Verifikasi NCR</h1>

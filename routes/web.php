@@ -9,9 +9,10 @@ use App\Http\Controllers\TemuanController;
 use App\Http\Controllers\UnitKerjaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\NcrPdfController;
+use App\Http\Controllers\FeedbackPelangganController;
+use App\Http\Controllers\SignatureController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SignatureController;
 
 //testing only
 use App\Models\Ncr;
@@ -22,7 +23,13 @@ Route::get('/', function () {
     return Auth::check() ? redirect()->route('dashboard') : redirect()->route('login');
 });
 
+//link detail qr code signature
 Route::get('/signature/{token}', [SignatureController::class, 'show'])->name('signature.show');
+
+//link publik form kepuasan pelanggan
+Route::get('/survey-kepuasan', [FeedbackPelangganController::class, 'form'])->name('feedback.form');
+Route::post('/survey-kepuasan', [FeedbackPelangganController::class, 'store'])->name('feedback.store');
+Route::get('/survey-kepuasan/submited', [FeedbackPelangganController::class, 'success'])->name('feedback.success');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -77,6 +84,18 @@ Route::middleware('auth')->group(function () {
             Route::get('/{nomor_ncr}/revision/{rev}', [NCRController::class, 'showRevision'])->name('revision.show');
         });
 
+    // Feedback Kepuasan Pelanggan
+    Route::prefix('feedback-pelanggan')
+        ->name('feedback.')
+        ->group(function () {
+            Route::get('/', [FeedbackPelangganController::class, 'index'])->name('index');
+            Route::get('/{id}', [FeedbackPelangganController::class, 'show'])->name('show');
+            Route::get('/{id}/pdf', [FeedbackPelangganController::class, 'pdf'])->name('pdf');
+            Route::delete('/{id}', [FeedbackPelangganController::class, 'destroy'])->name('destroy');
+        });
+
+
+
         Route::get('/ncr/file/{path}', function (string $path) {
             $decoded = base64_decode($path);
 
@@ -110,6 +129,8 @@ Route::middleware('auth')->group(function () {
                 'Content-Type' => $mimeMap[$ext] ?? 'application/octet-stream',
             ]);
         })->middleware('auth')->name('ncr.file.preview');
+
+        Route::get('/bantuan', [App\Http\Controllers\BantuanController::class, 'index'])->name('bantuan.index');
 });
 
 Route::middleware(['auth', 'isAdmin'])->group(function () {
@@ -119,6 +140,8 @@ Route::middleware(['auth', 'isAdmin'])->group(function () {
     Route::resource('temuan', TemuanController::class)->parameters(['temuan' => 'lokasi']);
 
     Route::resource('projects', ProjectController::class)->parameters(['projects' => 'project']);
+
+    Route::resource('changelog', App\Http\Controllers\ChangelogController::class)->except(['show']);
 });
 
 
@@ -162,38 +185,38 @@ Route::middleware(['auth', 'isAdmin'])->group(function () {
 //     ]);
 // });
 
-Route::get('/debug/email/direvisi', function () {
-    $notifiable = User::first() ?? (object) ['name' => 'User Debug'];
+// Route::get('/debug/email/direvisi', function () {
+//     $notifiable = User::first() ?? (object) ['name' => 'User Debug'];
 
-    $nomorNcr = '202604200084';
+//     $nomorNcr = '202604200084';
 
-    $ncr = Ncr::where('nomor_ncr', $nomorNcr)->first()
-        ?? (object) ['nomor_ncr' => $nomorNcr];
+//     $ncr = Ncr::where('nomor_ncr', $nomorNcr)->first()
+//         ?? (object) ['nomor_ncr' => $nomorNcr];
 
-    $changeLog = NcrChangeLog::with('user')
-        ->where('nomor_ncr', $nomorNcr)
-        ->orderByDesc('revision_index')
-        ->first();
+//     $changeLog = NcrChangeLog::with('user')
+//         ->where('nomor_ncr', $nomorNcr)
+//         ->orderByDesc('revision_index')
+//         ->first();
 
-    if (!$changeLog) {
-        $changeLog = (object) [
-            'nomor_ncr' => $nomorNcr,
-            'revision' => 'Rev-07',
-            'revision_index' => 7,
-            'action' => 'update',
-            'user' => (object) ['name' => 'Editor Debug'],
-        ];
-    }
+//     if (!$changeLog) {
+//         $changeLog = (object) [
+//             'nomor_ncr' => $nomorNcr,
+//             'revision' => 'Rev-07',
+//             'revision_index' => 7,
+//             'action' => 'update',
+//             'user' => (object) ['name' => 'Editor Debug'],
+//         ];
+//     }
 
-    return view('emails.direvisi', [
-        'notifiable' => $notifiable,
-        'ncr' => $ncr,
-        'changeLog' => $changeLog,
-        'url' => route('ncr.revision.show', [
-            'nomor_ncr' => $ncr->nomor_ncr,
-            'rev' => $changeLog->revision_index,
-        ]),
-    ]);
-});
+//     return view('emails.direvisi', [
+//         'notifiable' => $notifiable,
+//         'ncr' => $ncr,
+//         'changeLog' => $changeLog,
+//         'url' => route('ncr.revision.show', [
+//             'nomor_ncr' => $ncr->nomor_ncr,
+//             'rev' => $changeLog->revision_index,
+//         ]),
+//     ]);
+// });
 
 require __DIR__ . '/auth.php';

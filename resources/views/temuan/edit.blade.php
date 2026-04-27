@@ -5,7 +5,7 @@
 @endsection
 
 @section('content')
-    <div class="py-6 max-w-2xl mx-auto space-y-4">
+    <div class="py-6 px-4 sm:px-6 lg:px-8 w-full max-w-[1600px] mx-auto space-y-4">
 
         <a href="{{ route('temuan.index') }}"
             class="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
