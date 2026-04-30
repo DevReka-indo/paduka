@@ -122,7 +122,7 @@
                 </div>
 
                 @php
-                    $allowedUnits = [30, 1];
+                    $allowedUnits = [30, 31, 1];
                     $canAccessFeedback = auth()->check()
                         && auth()->user()->unitKerja()
                             ->whereIn('unit_kerja.id', $allowedUnits)

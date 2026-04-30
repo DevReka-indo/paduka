@@ -313,6 +313,122 @@
         .fb-title { font-size: 20px; }
         .fb-info-grid { grid-template-columns: 1fr; }
     }
+
+    /* ================= DARK MODE ================= */
+
+    .dark .fb-wrapper {
+        background: #111827;
+        color: #e5e7eb;
+    }
+
+    .dark .fb-title,
+    .dark .fb-card-title,
+    .dark .fb-info-value,
+    .dark .fb-score-table td {
+        color: #f3f4f6;
+    }
+
+    .dark .fb-meta,
+    .dark .fb-info-label,
+    .dark .fb-score-table th,
+    .dark .fb-jabatan {
+        color: #9ca3af;
+    }
+
+    .dark .fb-card {
+        background: #1f2937;
+        border-color: #374151;
+        box-shadow: none;
+    }
+
+    .dark .fb-card-header {
+        background: rgba(55, 65, 81, 0.5);
+        border-color: #374151;
+    }
+
+    .dark .fb-info-item {
+        border-color: #374151;
+    }
+
+    .dark .fb-score-table thead {
+        background: rgba(55, 65, 81, 0.5);
+        border-color: #374151;
+    }
+
+    .dark .fb-score-table tbody tr {
+        border-color: #374151;
+    }
+
+    .dark .fb-score-table tbody tr:hover {
+        background: rgba(55, 65, 81, 0.4);
+    }
+
+    .dark .fb-star.off {
+        color: #4b5563;
+    }
+
+    /* tombol */
+    .dark .fb-btn-ghost {
+        background: #1f2937;
+        border-color: #374151;
+        color: #d1d5db;
+    }
+
+    .dark .fb-btn-ghost:hover {
+        background: #374151;
+        color: #fff;
+    }
+
+    /* avg banner */
+    .dark .fb-avg-banner {
+        background: linear-gradient(135deg, #1e3a8a20 0%, #1e40af30 100%);
+        border-color: #1e40af40;
+    }
+
+    .dark .fb-avg-label,
+    .dark .fb-avg-value {
+        color: #93c5fd;
+    }
+
+    .dark .fb-avg-sub,
+    .dark .fb-progress-label {
+        color: #60a5fa;
+    }
+
+    .dark .fb-progress-bar-bg {
+        background: #1e3a8a40;
+    }
+
+    .dark .fb-progress-bar-fill {
+        background: #3b82f6;
+    }
+
+    /* saran */
+    .dark .fb-saran-body {
+        color: #d1d5db;
+    }
+
+    .dark .fb-saran-empty {
+        color: #6b7280;
+    }
+
+    /* tanda tangan */
+    .fb-ttd-img {
+        max-width: 220px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #ffffff; /* ini penting */
+        padding: 6px;
+    }
+
+    /* back link */
+    .dark .fb-back {
+        color: #9ca3af;
+    }
+
+    .dark .fb-back:hover {
+        color: #60a5fa;
+    }
 </style>
 
 <div class="fb-wrapper">

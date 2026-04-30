@@ -188,6 +188,14 @@ body {
     text-align: center;
     font-size: 8pt;
 }
+
+.form-no-footer {
+    position: fixed;
+    bottom: -10mm;
+    left: -10mm;
+    font-size: 6pt;
+    color: #374151;
+}
 </style>
 </head>
 
@@ -333,6 +341,10 @@ Rata-rata: <strong>{{ number_format($feedback->rata_rata,2) }}</strong> / 4
     </tr>
 </table>
 
+</div>
+
+<div class="form-no-footer">
+    Form No. : IV-QCAS.006. Rev. 0
 </div>
 
 {{-- FOOTER --}}

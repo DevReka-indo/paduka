@@ -378,6 +378,137 @@
             grid-template-columns: 1fr;
         }
     }
+
+    /* ================= DARK MODE - mengikuti pola halaman NCR ================= */
+    .dark .fb-wrapper {
+        background: #111827;
+        color: #e5e7eb;
+    }
+
+    .dark .fb-title,
+    .dark .fb-stat-value,
+    .dark .fb-chart-title,
+    .dark .fb-table td,
+    .dark .fb-name {
+        color: #f3f4f6;
+    }
+
+    .dark .fb-subtitle,
+    .dark .fb-stat-label,
+    .dark .fb-chart-subtitle,
+    .dark .fb-jabatan,
+    .dark .fb-empty,
+    .dark .fb-empty-sub,
+    .dark .fb-table th {
+        color: #9ca3af;
+    }
+
+    .dark .fb-stat-card,
+    .dark .fb-card,
+    .dark .fb-chart-card {
+        background: #1f2937;
+        border-color: #374151;
+        box-shadow: none;
+    }
+
+    .dark .fb-table thead {
+        background: rgba(55, 65, 81, 0.5);
+        border-color: #374151;
+    }
+
+    .dark .fb-table tbody tr {
+        border-color: #374151;
+    }
+
+    .dark .fb-table tbody tr:hover {
+        background: rgba(55, 65, 81, 0.45);
+    }
+
+    .dark .fb-search {
+        background: #111827;
+        border-color: #4b5563;
+        color: #e5e7eb;
+    }
+
+    .dark .fb-search::placeholder {
+        color: #6b7280;
+    }
+
+    .dark .fb-search-icon {
+        color: #6b7280;
+    }
+
+    .dark .fb-search:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, .22);
+    }
+
+    .dark .fb-btn-ghost {
+        background: #1f2937;
+        border-color: #374151;
+        color: #d1d5db;
+    }
+
+    .dark .fb-btn-ghost:hover {
+        background: #374151;
+        color: #f9fafb;
+    }
+
+    .dark .fb-pagination {
+        background: #1f2937;
+        border-color: #374151;
+    }
+
+    .dark .fb-flash {
+        background: rgba(16, 185, 129, .12);
+        border-color: rgba(16, 185, 129, .35);
+        color: #34d399;
+    }
+
+    .dark .fb-badge-green {
+        background: rgba(16, 185, 129, .15);
+        color: #34d399;
+    }
+
+    .dark .fb-badge-yellow {
+        background: rgba(245, 158, 11, .15);
+        color: #fbbf24;
+    }
+
+    .dark .fb-badge-red {
+        background: rgba(239, 68, 68, .15);
+        color: #f87171;
+    }
+
+    .dark .fb-action-detail {
+        background: rgba(99, 102, 241, .18);
+        color: #818cf8;
+        border-color: rgba(99, 102, 241, .35);
+    }
+
+    .dark .fb-action-detail:hover {
+        background: rgba(99, 102, 241, .3);
+    }
+
+    .dark .fb-action-pdf {
+        background: rgba(16, 185, 129, .15);
+        color: #34d399;
+        border-color: rgba(16, 185, 129, .35);
+    }
+
+    .dark .fb-action-pdf:hover {
+        background: rgba(16, 185, 129, .25);
+    }
+
+    .dark .fb-action-delete {
+        background: rgba(239, 68, 68, .15);
+        color: #f87171;
+        border-color: rgba(239, 68, 68, .35);
+    }
+
+    .dark .fb-action-delete:hover {
+        background: rgba(239, 68, 68, .25);
+    }
 </style>
 
 <div class="fb-wrapper">
@@ -597,6 +728,183 @@
         @endif
     </div>
 
+        {{-- Feedback Project Section --}}
+        <div class="fb-card" style="margin-top:24px;margin-bottom:24px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap;">
+                <div>
+                    <div class="fb-chart-title">Master Project Feedback</div>
+                    <div class="fb-chart-subtitle" style="margin-bottom:0;">
+                        Daftar project yang dapat dipilih pelanggan saat mengisi form survey
+                    </div>
+                </div>
+
+                <a href="{{ route('feedback-projects.create') }}" class="fb-btn fb-btn-primary">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Tambah Project
+                </a>
+            </div>
+
+            <table class="fb-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nama Project</th>
+                        <th class="fb-col-hide">Deskripsi</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($feedbackProjects as $index => $project)
+                    <tr>
+                        <td style="color:var(--text-muted);font-size:12px;font-family:'DM Mono',monospace;width:40px;">
+                            {{ $index + 1 }}
+                        </td>
+
+                        <td>
+                            <span class="fb-name">{{ $project->nama_project }}</span>
+                        </td>
+
+                        <td class="fb-col-hide" style="color:var(--text-secondary);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ $project->deskripsi }}">
+                            {{ $project->deskripsi ?: '—' }}
+                        </td>
+
+                        <td>
+                            @if($project->is_active)
+                                <span class="fb-badge fb-badge-green">Aktif</span>
+                            @else
+                                <span class="fb-badge fb-badge-red">Nonaktif</span>
+                            @endif
+                        </td>
+
+                        <td>
+                            <div class="fb-actions">
+                                <a href="{{ route('feedback-projects.edit', $project->id) }}" class="fb-action-btn fb-action-detail">
+                                    Edit
+                                </a>
+
+                                <form method="POST"
+                                    action="{{ route('feedback-projects.destroy', $project->id) }}"
+                                    onsubmit="return confirm('Hapus project {{ addslashes($project->nama_project) }}?')">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="submit" class="fb-action-btn fb-action-delete">
+                                        Hapus
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5">
+                            <div class="fb-empty">
+                                <div class="fb-empty-icon">🗂️</div>
+                                <div class="fb-empty-text">Belum ada master project feedback</div>
+                                <div class="fb-empty-sub">Klik Tambah Project untuk membuat pilihan dropdown survey.</div>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        {{-- Feedback Project Item Section --}}
+        <div class="fb-card" style="margin-top:24px;margin-bottom:24px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap;">
+                <div>
+                    <div class="fb-chart-title">Master Barang / Komponen Project</div>
+                    <div class="fb-chart-subtitle" style="margin-bottom:0;">
+                        Daftar barang atau komponen yang terkait dengan project feedback
+                    </div>
+                </div>
+
+                <a href="{{ route('feedback-project-items.create') }}" class="fb-btn fb-btn-primary">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Tambah Barang
+                </a>
+            </div>
+
+            <table class="fb-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Project</th>
+                        <th>Nama Barang</th>
+                        <th class="fb-col-hide">Deskripsi</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($feedbackProjectItems as $index => $item)
+                    <tr>
+                        <td style="color:var(--text-muted);font-size:12px;font-family:'DM Mono',monospace;width:40px;">
+                            {{ $index + 1 }}
+                        </td>
+
+                        <td>
+                            <span class="fb-name">
+                                {{ $item->project->nama_project ?? '—' }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="fb-name">{{ $item->nama_barang }}</span>
+                        </td>
+
+                        <td class="fb-col-hide" style="color:var(--text-secondary);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ $item->deskripsi }}">
+                            {{ $item->deskripsi ?: '—' }}
+                        </td>
+
+                        <td>
+                            @if($item->is_active)
+                                <span class="fb-badge fb-badge-green">Aktif</span>
+                            @else
+                                <span class="fb-badge fb-badge-red">Nonaktif</span>
+                            @endif
+                        </td>
+
+                        <td>
+                            <div class="fb-actions">
+                                <a href="{{ route('feedback-project-items.edit', $item->id) }}" class="fb-action-btn fb-action-detail">
+                                    Edit
+                                </a>
+
+                                <form method="POST"
+                                    action="{{ route('feedback-project-items.destroy', $item->id) }}"
+                                    onsubmit="return confirm('Hapus barang {{ addslashes($item->nama_barang) }}?')">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="submit" class="fb-action-btn fb-action-delete">
+                                        Hapus
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6">
+                            <div class="fb-empty">
+                                <div class="fb-empty-icon">📦</div>
+                                <div class="fb-empty-text">Belum ada master barang project</div>
+                                <div class="fb-empty-sub">Klik Tambah Barang untuk membuat daftar barang/komponen per project.</div>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
 </div>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
@@ -623,108 +931,203 @@ function copySurveyLink() {
 }
 
 const proyekLabels = @json($chartProyek->pluck('proyek'));
-// const proyekData = @json($chartProyek->pluck('total'));
 const proyekData = @json($chartProyek->pluck('rata_rata_skor'));
 
 const produkLabels = @json($chartProduk->pluck('identitas_barang'));
-// const produkData = @json($chartProduk->pluck('total'));
 const produkData = @json($chartProduk->pluck('rata_rata_skor'));
 
-const chartBaseOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-        legend: {
-            display: false
-        },
-        tooltip: {
-            backgroundColor: '#111827',
-            padding: 10,
-            cornerRadius: 8
-        }
-    },
-    scales: {
-        y: {
-            beginAtZero: true,
-            max:4,
-            ticks: {
-                stepSize:1
-            },
-            grid: {
-                color: '#eef2f7'
-            }
-        },
-        x: {
-            grid: {
-                display: false
-            },
-            ticks: {
-                maxRotation: 35,
-                minRotation: 0
-            }
-        }
+let chartProyek = null;
+let chartProduk = null;
+let rebuildTimer = null;
+
+function getChartTheme() {
+    const isDark = document.documentElement.classList.contains('dark');
+
+    return {
+        isDark,
+        gridColor: isDark
+            ? 'rgba(107, 114, 128, 0.22)'
+            : 'rgba(107, 114, 128, 0.10)',
+        tickColor: isDark ? '#9ca3af' : '#6b7280',
+        tooltipBg: isDark ? 'rgba(17, 24, 39, 0.92)' : 'rgba(17, 24, 39, 0.95)',
+        tooltipTitle: '#ffffff',
+        tooltipBody: '#ffffff',
+        donutBorderColor: isDark ? '#1f2937' : '#ffffff'
+    };
+}
+
+function destroyCharts() {
+    if (chartProyek) {
+        chartProyek.destroy();
+        chartProyek = null;
     }
-};
 
-new Chart(document.getElementById('chartProyek'), {
-    type: 'bar',
-    data: {
-        labels: proyekLabels,
-        datasets: [{
-            label: 'Rata-rata Skor',
-            data: proyekData,
-            backgroundColor: '#1d4ed8',
-            borderRadius: 8,
-            maxBarThickness: 44
-        }]
-    },
-    options: chartBaseOptions
-});
+    if (chartProduk) {
+        chartProduk.destroy();
+        chartProduk = null;
+    }
+}
 
-new Chart(document.getElementById('chartProduk'), {
-    type: 'doughnut',
-    data: {
-        labels: produkLabels,
-        datasets: [{
-            data: produkData,
-            backgroundColor: [
-                '#1d4ed8',
-                '#059669',
-                '#d97706',
-                '#dc2626',
-                '#7c3aed',
-                '#0891b2',
-                '#65a30d',
-                '#be123c',
-                '#4338ca',
-                '#0f766e'
-            ],
-            borderWidth: 3,
-            borderColor: '#ffffff'
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    boxWidth: 12,
-                    padding: 14,
-                    font: {
-                        size: 11
-                    }
+function createCharts(animated = true) {
+    const theme = getChartTheme();
+
+    destroyCharts();
+
+    const chartProyekEl = document.getElementById('chartProyek');
+    const chartProdukEl = document.getElementById('chartProduk');
+
+    if (!chartProyekEl || !chartProdukEl) return;
+
+    chartProyek = new Chart(chartProyekEl.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: proyekLabels,
+            datasets: [{
+                label: 'Rata-rata Skor',
+                data: proyekData,
+                backgroundColor: '#1d4ed8',
+                borderRadius: 8,
+                maxBarThickness: 44
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: animated ? {
+                duration: 450,
+                easing: 'easeOutCubic'
+            } : false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: theme.tooltipBg,
+                    titleColor: theme.tooltipTitle,
+                    bodyColor: theme.tooltipBody,
+                    borderColor: theme.gridColor,
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 8
                 }
             },
-            tooltip: {
-                backgroundColor: '#111827',
-                padding: 10,
-                cornerRadius: 8
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 4,
+                    border: {
+                        display: false
+                    },
+                    ticks: {
+                        stepSize: 1,
+                        color: theme.tickColor,
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        color: theme.gridColor,
+                        drawBorder: false
+                    }
+                },
+                x: {
+                    border: {
+                        display: false
+                    },
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: theme.tickColor,
+                        maxRotation: 35,
+                        minRotation: 0,
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
             }
+        }
+    });
+
+    chartProduk = new Chart(chartProdukEl.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: produkLabels,
+            datasets: [{
+                data: produkData,
+                backgroundColor: [
+                    '#1d4ed8',
+                    '#059669',
+                    '#d97706',
+                    '#dc2626',
+                    '#7c3aed',
+                    '#0891b2',
+                    '#65a30d',
+                    '#be123c',
+                    '#4338ca',
+                    '#0f766e'
+                ],
+                borderWidth: 3,
+                borderColor: theme.donutBorderColor,
+                hoverOffset: 8
+            }]
         },
-        cutout: '62%'
-    }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            animation: animated ? {
+                duration: 450,
+                easing: 'easeOutCubic'
+            } : false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: theme.tickColor,
+                        boxWidth: 12,
+                        padding: 14,
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: theme.tooltipBg,
+                    titleColor: theme.tooltipTitle,
+                    bodyColor: theme.tooltipBody,
+                    borderColor: theme.gridColor,
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 8
+                }
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    createCharts(true);
+
+    const observer = new MutationObserver((mutations) => {
+        const classChanged = mutations.some(
+            mutation => mutation.type === 'attributes' && mutation.attributeName === 'class'
+        );
+
+        if (!classChanged) return;
+
+        clearTimeout(rebuildTimer);
+
+        rebuildTimer = setTimeout(() => {
+            createCharts(false);
+        }, 120);
+    });
+
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+    });
 });
 </script>
 @endsection

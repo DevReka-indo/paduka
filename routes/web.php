@@ -11,6 +11,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\NcrPdfController;
 use App\Http\Controllers\FeedbackPelangganController;
 use App\Http\Controllers\SignatureController;
+use App\Http\Controllers\FeedbackProjectController;
+use App\Http\Controllers\FeedbackProjectItemController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -93,6 +95,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/{id}/pdf', [FeedbackPelangganController::class, 'pdf'])->name('pdf');
             Route::delete('/{id}', [FeedbackPelangganController::class, 'destroy'])->name('destroy');
         });
+
+        Route::resource('feedback-projects', FeedbackProjectController::class);
+        Route::resource('feedback-project-items', FeedbackProjectItemController::class)
+            ->only(['create', 'store', 'edit', 'update', 'destroy']);
 
 
 

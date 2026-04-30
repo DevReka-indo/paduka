@@ -1,102 +1,193 @@
 <x-guest-layout>
-    <div class="w-full max-w-[420px]">
+<style>
+    .lf-welcome {
+        font-size: 11px; font-weight: 600;
+        color: #1e40af; letter-spacing: 0.08em;
+        text-transform: uppercase; margin-bottom: 0.3rem;
+    }
+    .lf-title {
+        font-family: 'DM Serif Display', serif;
+        font-size: 28px; color: #0b1d3e;
+        font-weight: 400; line-height: 1.2; margin-bottom: 0.35rem;
+    }
+    .lf-sub {
+        font-size: 12.5px; font-weight: 300;
+        color: #94a3b8; margin-bottom: 2rem;
+    }
 
-        {{-- Logo --}}
-        <div class="anim-fade-in flex justify-center mb-8">
-            <img src="{{ asset('img/logo-paduka.svg') }}" alt="{{ config('app.name') }}"
-                 class="w-20 object-contain opacity-90">
+    .lf-error {
+        background: #fef2f2; border: 1px solid #fecaca;
+        border-radius: 10px; padding: 0.75rem 1rem;
+        margin-bottom: 1.25rem; font-size: 12px; color: #ef4444;
+    }
+    .lf-error ul { padding-left: 1rem; }
+
+    .lf-group { margin-bottom: 1.1rem; }
+    .lf-label {
+        display: block; font-size: 11.5px;
+        font-weight: 600; color: #475569; margin-bottom: 0.45rem;
+    }
+    .lf-wrap { position: relative; }
+
+    .lf-icon {
+        position: absolute; left: 13px; top: 50%;
+        transform: translateY(-50%);
+        color: #c4d0de; font-size: 12px;
+        pointer-events: none; transition: color 0.2s;
+    }
+    .lf-wrap:focus-within .lf-icon { color: #1e40af; }
+
+    .lf-input {
+        width: 100%;
+        padding: 0.78rem 1rem 0.78rem 2.6rem;
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 13px; color: #334155;
+        font-family: 'DM Sans', sans-serif;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .lf-input::placeholder { color: #c8d3e0; }
+    .lf-input:focus {
+        background: #fff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.10);
+    }
+
+    .lf-eye {
+        position: absolute; right: 12px; top: 50%;
+        transform: translateY(-50%);
+        background: none; border: none; cursor: pointer;
+        color: #b0bec9; font-size: 12px;
+        transition: color 0.2s; padding: 0;
+    }
+    .lf-eye:hover { color: #1e40af; }
+
+    .lf-row {
+        display: flex; align-items: center;
+        justify-content: space-between;
+        margin: 0.9rem 0 1.5rem;
+    }
+    .lf-remember {
+        display: flex; align-items: center; gap: 0.45rem;
+        font-size: 12px; color: #64748b; font-weight: 300;
+        cursor: pointer; user-select: none;
+    }
+    .lf-remember input { accent-color: #1e40af; width: 13px; height: 13px; cursor: pointer; }
+    .lf-forgot {
+        font-size: 12px; font-weight: 600;
+        color: #1e40af; text-decoration: none;
+        transition: opacity 0.15s;
+    }
+    .lf-forgot:hover { opacity: 0.7; }
+
+    .lf-btn {
+        width: 100%;
+        display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        background: #1e40af; color: #fff;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 13.5px; font-weight: 700; letter-spacing: 0.05em;
+        border: none; border-radius: 10px;
+        padding: 0.9rem 1.5rem; cursor: pointer;
+        transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        box-shadow: 0 4px 18px rgba(30,64,175,0.35);
+    }
+    .lf-btn:hover {
+        background: #1d3d9f;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(30,64,175,0.45);
+    }
+    .lf-btn:active { transform: translateY(0); }
+    .lf-btn .arrow { font-size: 11px; transition: transform 0.2s; }
+    .lf-btn:hover .arrow { transform: translateX(3px); }
+
+    .lf-footer {
+        margin-top: 1.5rem; text-align: center;
+        font-size: 10.5px; font-weight: 300; color: #c0ccd8;
+    }
+</style>
+
+<p class="lf-welcome">Selamat datang kembali</p>
+<h2 class="lf-title">Masuk ke PADUKA</h2>
+<p class="lf-sub">Gunakan akun Anda untuk melanjutkan.</p>
+
+@if ($errors->any())
+<div class="lf-error">
+    <ul>
+        @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
+@if (session('status'))
+<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:12px;color:#16a34a;">
+    {{ session('status') }}
+</div>
+@endif
+
+<form method="POST" action="{{ route('login') }}">
+    @csrf
+
+    <div class="lf-group">
+        <label class="lf-label">Username atau NIP</label>
+        <div class="lf-wrap">
+            <i class="fas fa-user lf-icon"></i>
+            <input type="text" name="login"
+                   value="{{ old('login') }}"
+                   required autofocus autocomplete="username"
+                   placeholder="Masukkan username atau NIP"
+                   class="lf-input">
         </div>
-
-        {{-- Mobile branding --}}
-        <div class="anim-fade-up lg:hidden text-center mb-7">
-            <h1 class="font-['DM_Serif_Display'] text-[32px] text-[#0b1d3e]">
-                PAD<span class="text-[#1e40af]">U</span>KA
-            </h1>
-            <p class="text-xs font-light text-slate-400 mt-1.5 leading-relaxed">
-                Sistem NCR Online Terpusat · PT. Rekaindo Global Jasa
-            </p>
-        </div>
-
-        {{-- Card --}}
-        <div class="anim-fade-up delay-100 relative bg-white border border-slate-200 rounded-3xl px-8 py-9 shadow-[0_8px_40px_rgba(11,29,62,0.08),0_1px_3px_rgba(0,0,0,0.04)]">
-            <div class="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#1e40af]/30 to-transparent"></div>
-
-            <div class="anim-fade-up delay-150 mb-7">
-                <h2 class="font-['DM_Serif_Display'] text-[24px] text-[#0b1d3e] font-normal">Masuk ke Sistem</h2>
-                <p class="text-[13px] font-light text-slate-400 mt-1 leading-relaxed">
-                    Gunakan email atau username untuk mengakses akun Anda
-                </p>
-            </div>
-
-            @if ($errors->any())
-            <div class="anim-fade-up mb-5 flex gap-3 border border-red-200 bg-red-50 rounded-2xl px-4 py-3.5">
-                <i class="fa-solid fa-triangle-exclamation text-red-400 mt-0.5 text-sm shrink-0"></i>
-                <div>
-                    <strong class="block text-[12px] font-semibold text-red-600 mb-1">Terjadi kesalahan:</strong>
-                    <ul class="space-y-0.5">
-                        @foreach ($errors->all() as $error)
-                            <li class="text-[12px] text-red-500">{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-            @endif
-
-            <form method="POST" action="{{ route('login') }}" class="space-y-5">
-                @csrf
-
-                <div class="anim-fade-up delay-200">
-                    <label for="login" class="block text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">
-                        Username atau NIP
-                    </label>
-                    <input id="login" type="text" name="login"
-                           value="{{ old('login') }}"
-                           required autofocus autocomplete="username"
-                           placeholder="Username atau NIP"
-                           class="auth-input w-full border border-slate-200 bg-slate-50/70 rounded-xl px-4 py-3 text-[13.5px] text-slate-700 placeholder-slate-300 shadow-inner">
-                    <x-input-error :messages="$errors->get('login')" class="mt-1.5" />
-                </div>
-
-                <div class="anim-fade-up delay-250">
-                    <label for="password" class="block text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-2">
-                        Password
-                    </label>
-                    <input id="password" type="password" name="password"
-                           required autocomplete="current-password"
-                           placeholder="••••••••"
-                           class="auth-input w-full border border-slate-200 bg-slate-50/70 rounded-xl px-4 py-3 text-[13.5px] text-slate-700 placeholder-slate-300 shadow-inner">
-                    <x-input-error :messages="$errors->get('password')" class="mt-1.5" />
-                </div>
-
-                <div class="anim-fade-up delay-300 flex items-center justify-between">
-                    <label class="inline-flex items-center gap-2 cursor-pointer text-[12.5px] text-slate-500 font-light select-none">
-                        <input type="checkbox" name="remember" id="remember_me"
-                               class="w-3.5 h-3.5 rounded accent-[#1e40af]">
-                        <span>Ingat saya</span>
-                    </label>
-                    @if (Route::has('password.request'))
-                        <a href="{{ route('password.request') }}"
-                           class="text-[12.5px] text-[#1e40af]/70 hover:text-[#1e40af] transition-colors duration-150 font-medium">
-                            Lupa password?
-                        </a>
-                    @endif
-                </div>
-
-                <div class="anim-fade-up delay-400 pt-1">
-                    <button type="submit"
-                            class="group relative w-full flex items-center justify-center gap-2 overflow-hidden bg-[#0b1d3e] hover:bg-[#0f2552] text-white font-semibold text-[13.5px] tracking-wide rounded-xl px-6 py-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(11,29,62,0.3)] shadow-[0_2px_8px_rgba(11,29,62,0.2)] active:translate-y-0">
-                        <span class="absolute inset-0 bg-gradient-to-br from-white/[0.06] to-transparent pointer-events-none"></span>
-                        <span>Masuk</span>
-                        <i class="fa-solid fa-arrow-right text-[11px] transition-transform duration-200 group-hover:translate-x-1"></i>
-                    </button>
-                </div>
-            </form>
-
-            <div class="my-6 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
-
-            <p class="text-center text-[11px] font-light text-slate-300 tracking-wide">
-                © {{ date('Y') }} PT. Rekaindo Global Jasa · All rights reserved
-            </p>
-        </div>
+        <x-input-error :messages="$errors->get('login')" class="mt-1.5" />
     </div>
+
+    <div class="lf-group">
+        <label class="lf-label">Password</label>
+        <div class="lf-wrap">
+            <i class="fas fa-lock lf-icon"></i>
+            <input id="pwInput" type="password" name="password"
+                   required autocomplete="current-password"
+                   placeholder="••••••••"
+                   class="lf-input">
+            <button type="button" class="lf-eye" onclick="togglePw()">
+                <i id="eyeIcon" class="fas fa-eye"></i>
+            </button>
+        </div>
+        <x-input-error :messages="$errors->get('password')" class="mt-1.5" />
+    </div>
+
+    <div class="lf-row">
+        <label class="lf-remember">
+            <input type="checkbox" name="remember" id="remember_me">
+            <span>Ingat saya</span>
+        </label>
+        @if (Route::has('password.request'))
+            <a href="{{ route('password.request') }}" class="lf-forgot">Lupa Password?</a>
+        @endif
+    </div>
+
+    <button type="submit" class="lf-btn" id="submitBtn">
+        <span>Masuk</span>
+        <i class="fa-solid fa-arrow-right arrow"></i>
+    </button>
+</form>
+
+<p class="lf-footer">© {{ date('Y') }} PT. Rekaindo Global Jasa · All rights reserved</p>
+
+<script>
+function togglePw() {
+    const inp  = document.getElementById('pwInput');
+    const icon = document.getElementById('eyeIcon');
+    if (inp.type === 'password') {
+        inp.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        inp.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+</script>
 </x-guest-layout>

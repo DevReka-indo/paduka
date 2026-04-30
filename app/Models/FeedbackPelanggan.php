@@ -14,6 +14,8 @@ class FeedbackPelanggan extends Model
         'jabatan_unit_kerja',
         'proyek',
         'identitas_barang',
+        'feedback_project_id',
+        'feedback_project_item_id',
 
         'q1_pengiriman_tepat_waktu',
         'q2_kemudahan_pengoperasian_produk',
@@ -47,5 +49,15 @@ class FeedbackPelanggan extends Model
     public function getRataRataAttribute()
     {
         return round($this->total_nilai / 9, 2);
+    }
+
+    public function feedbackProject()
+    {
+        return $this->belongsTo(FeedbackProject::class, 'feedback_project_id');
+    }
+
+    public function feedbackProjectItem()
+    {
+        return $this->belongsTo(FeedbackProjectItem::class, 'feedback_project_item_id');
     }
 }

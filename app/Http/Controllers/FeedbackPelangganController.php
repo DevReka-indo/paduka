@@ -6,6 +6,9 @@ use App\Models\FeedbackPelanggan;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use App\Models\FeedbackProject;
+use App\Models\FeedbackProjectItem;
+
 
 class FeedbackPelangganController extends Controller
 {
@@ -38,10 +41,11 @@ class FeedbackPelangganController extends Controller
             ) / 9
         ";
 
-        $chartProyek = FeedbackPelanggan::select(
+        $chartProyek = FeedbackPelanggan::query()
+            ->select([
                 'proyek',
-                DB::raw("ROUND(AVG($avgScoreSql), 2) as rata_rata_skor")
-            )
+                DB::raw("ROUND(AVG($avgScoreSql), 2) as rata_rata_skor"),
+            ])
             ->whereNotNull('proyek')
             ->where('proyek', '!=', '')
             ->groupBy('proyek')
@@ -49,10 +53,11 @@ class FeedbackPelangganController extends Controller
             ->limit(10)
             ->get();
 
-        $chartProduk = FeedbackPelanggan::select(
+        $chartProduk = FeedbackPelanggan::query()
+            ->select([
                 'identitas_barang',
-                DB::raw("ROUND(AVG($avgScoreSql), 2) as rata_rata_skor")
-            )
+                DB::raw("ROUND(AVG($avgScoreSql), 2) as rata_rata_skor"),
+            ])
             ->whereNotNull('identitas_barang')
             ->where('identitas_barang', '!=', '')
             ->groupBy('identitas_barang')
@@ -60,16 +65,35 @@ class FeedbackPelangganController extends Controller
             ->limit(10)
             ->get();
 
+        $feedbackProjects = FeedbackProject::query()
+            ->latest()
+            ->get();
+
+        $feedbackProjectItems = FeedbackProjectItem::query()
+            ->with('project')
+            ->latest()
+            ->get();
+
         return view('feedback.index', compact(
             'feedbacks',
             'chartProyek',
-            'chartProduk'
+            'chartProduk',
+            'feedbackProjects',
+            'feedbackProjectItems'
         ));
     }
 
     public function form()
     {
-        return view('feedback.form');
+        $projects = FeedbackProject::query()
+            ->where('is_active', true)
+            ->with(['items' => function ($query) {
+                $query->where('is_active', true)->orderBy('nama_barang');
+            }])
+            ->orderBy('nama_project')
+            ->get();
+
+        return view('feedback.form', compact('projects'));
     }
 
     public function store(Request $request)
@@ -79,8 +103,8 @@ class FeedbackPelangganController extends Controller
             'perusahaan' => 'nullable|string|max:255',
             'jabatan_unit_kerja' => 'nullable|string|max:255',
 
-            'proyek' => 'required|string|max:255',
-            'identitas_barang' => 'required|string|max:255',
+            'feedback_project_id' => 'required|exists:feedback_projects,id',
+            'feedback_project_item_id' => 'required|exists:feedback_project_items,id',
 
             'q1_pengiriman_tepat_waktu' => 'required|integer|min:1|max:4',
             'q2_kemudahan_pengoperasian_produk' => 'required|integer|min:1|max:4',
@@ -96,7 +120,18 @@ class FeedbackPelangganController extends Controller
             'tanda_tangan' => 'nullable|string',
         ]);
 
-        FeedbackPelanggan::create($validated);
+        $project = FeedbackProject::query()
+            ->findOrFail($validated['feedback_project_id']);
+
+        $item = FeedbackProjectItem::query()
+            ->where('id', $validated['feedback_project_item_id'])
+            ->where('feedback_project_id', $project->id)
+            ->firstOrFail();
+
+        $validated['proyek'] = $project->nama_project;
+        $validated['identitas_barang'] = $item->nama_barang;
+
+        FeedbackPelanggan::query()->create($validated);
 
         return redirect()->route('feedback.success');
     }
@@ -106,14 +141,14 @@ class FeedbackPelangganController extends Controller
         return view('feedback.success');
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         $feedback = FeedbackPelanggan::findOrFail($id);
 
         return view('feedback.show', compact('feedback'));
     }
 
-    public function pdf($id)
+    public function pdf(int $id)
     {
         $feedback = FeedbackPelanggan::findOrFail($id);
 
@@ -123,7 +158,7 @@ class FeedbackPelangganController extends Controller
         return $pdf->stream('feedback-pelanggan-' . $feedback->id . '.pdf');
     }
 
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $feedback = FeedbackPelanggan::findOrFail($id);
         $feedback->delete();
@@ -132,4 +167,6 @@ class FeedbackPelangganController extends Controller
             ->route('feedback.index')
             ->with('success', 'Data feedback pelanggan berhasil dihapus.');
     }
+
+
 }

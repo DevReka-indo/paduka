@@ -363,6 +363,49 @@
         .radio-group { grid-template-columns: repeat(2, 1fr); }
         .rating-legend { grid-template-columns: repeat(2, 1fr); }
     }
+
+    .field select {
+        background: #FAFAF8;
+        border: 0.5px solid #E3E0D9;
+        border-radius: 10px;
+        padding: 11px 14px;
+        font-size: 14px;
+        font-family: 'DM Sans', sans-serif;
+        color: #1C1C1C;
+        width: 100%;
+
+        /* samakan behavior */
+        outline: none;
+        transition: border-color 0.15s, background 0.15s;
+
+        /* hilangkan style bawaan */
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+
+        /* IMPORTANT: fix tinggi biar sama */
+        height: 44px;
+
+        /* arrow custom */
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 7l5 5 5-5' stroke='%23999' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 14px;
+
+        /* spacing kanan biar ga ketiban arrow */
+        padding-right: 36px;
+    }
+
+    .field select:focus {
+        border-color: #4A3FD4;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(74,63,212,0.07);
+    }
+
+    .field select:disabled {
+        color: #B0ACA4;
+        cursor: not-allowed;
+    }
 </style>
 <div class="page-wrap">
 
@@ -404,18 +447,47 @@
                         placeholder="Contoh: Manajer Operasional"
                         value="{{ old('jabatan_unit_kerja') }}">
                 </div>
+
                 <div class="field">
-                    <label for="proyek">Proyek <span class="req">*</span></label>
-                    <input type="text" id="proyek" name="proyek"
-                        placeholder="Nama proyek"
-                        value="{{ old('proyek') }}" required>
+                    <label for="feedback_project_id">
+                        Proyek <span class="req">*</span>
+                    </label>
+
+                    <select id="feedback_project_id"
+                            name="feedback_project_id"
+                            required>
+                        <option value="">-- Pilih Proyek --</option>
+
+                        @foreach($projects as $project)
+                            <option value="{{ $project->id }}"
+                                {{ old('feedback_project_id') == $project->id ? 'selected' : '' }}>
+                                {{ $project->nama_project }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    @error('feedback_project_id')
+                        <span style="color:#D44;font-size:12px;">{{ $message }}</span>
+                    @enderror
                 </div>
+
                 <div class="field span-2">
-                    <label for="identitas_barang">Identitas Barang / Produk REKA <span class="req">*</span></label>
-                    <input type="text" id="identitas_barang" name="identitas_barang"
-                        placeholder="Nomor seri / kode identitas barang"
-                        value="{{ old('identitas_barang') }}" required>
+                    <label for="feedback_project_item_id">
+                        Identitas Barang / Produk REKA <span class="req">*</span>
+                    </label>
+
+                    <select id="feedback_project_item_id"
+                            name="feedback_project_item_id"
+                            required
+                            disabled>
+                        <option value="">-- Pilih proyek terlebih dahulu --</option>
+                    </select>
+
+                    @error('feedback_project_item_id')
+                        <span style="color:#D44;font-size:12px;">{{ $message }}</span>
+                    @enderror
                 </div>
+
             </div>
         </div>
 
@@ -583,5 +655,65 @@
     resize();
     window.addEventListener('resize', resize);
 })();
+
+const projectItems = @json(
+    $projects->mapWithKeys(function ($project) {
+        return [
+            $project->id => $project->items->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'nama_barang' => $item->nama_barang,
+                ];
+            })->values()
+        ];
+    })
+);
+
+const oldProjectId = "{{ old('feedback_project_id') }}";
+const oldItemId = "{{ old('feedback_project_item_id') }}";
+
+function renderProjectItems(projectId, selectedItemId = null) {
+    const itemSelect = document.getElementById('feedback_project_item_id');
+    const items = projectItems[projectId] || [];
+
+    itemSelect.innerHTML = '';
+
+    if (!projectId) {
+        itemSelect.disabled = true;
+        itemSelect.innerHTML = '<option value="">-- Pilih proyek terlebih dahulu --</option>';
+        return;
+    }
+
+    if (items.length === 0) {
+        itemSelect.disabled = true;
+        itemSelect.innerHTML = '<option value="">Belum ada barang untuk proyek ini</option>';
+        return;
+    }
+
+    itemSelect.disabled = false;
+    itemSelect.innerHTML = '<option value="">-- Pilih Barang / Produk --</option>';
+
+    items.forEach(function (item) {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.nama_barang;
+
+        if (String(selectedItemId) === String(item.id)) {
+            option.selected = true;
+        }
+
+        itemSelect.appendChild(option);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const projectSelect = document.getElementById('feedback_project_id');
+
+    renderProjectItems(oldProjectId || projectSelect.value, oldItemId);
+
+    projectSelect.addEventListener('change', function () {
+        renderProjectItems(this.value);
+    });
+});
 </script>
 @endsection
