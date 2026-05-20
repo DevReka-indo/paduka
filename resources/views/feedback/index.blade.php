@@ -578,6 +578,27 @@
         </div>
     </div>
 
+    {{-- Master Data Stats --}}
+    <div class="fb-stats" style="margin-top:16px;">
+
+        {{-- count total project --}}
+        <div class="fb-stat-card">
+            <div class="fb-stat-label">Total Project</div>
+            <div class="fb-stat-value">
+                {{ $feedbackProjects->total() }}
+            </div>
+        </div>
+
+        {{-- count total project items --}}
+        <div class="fb-stat-card">
+            <div class="fb-stat-label">Total Item Project</div>
+            <div class="fb-stat-value">
+                {{ $feedbackProjectItems->total() }}
+            </div>
+        </div>
+
+    </div>
+
     {{-- Charts --}}
     <div class="fb-chart-grid">
         <div class="fb-chart-card">
@@ -738,12 +759,35 @@
                     </div>
                 </div>
 
+
                 <a href="{{ route('feedback-projects.create') }}" class="fb-btn fb-btn-primary">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path d="M12 5v14M5 12h14"/>
                     </svg>
                     Tambah Project
                 </a>
+            </div>
+
+            <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+                <form method="GET" action="{{ route('feedback.index') }}" style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <input
+                        type="text"
+                        name="project_search"
+                        value="{{ request('project_search') }}"
+                        placeholder="Cari nama project / deskripsi..."
+                        style="flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;"
+                    >
+
+                    <button type="submit" class="fb-btn fb-btn-primary">
+                        Cari
+                    </button>
+
+                    @if(request('project_search'))
+                        <a href="{{ route('feedback.index') }}" class="fb-btn" style="background:#e5e7eb;color:#374151;">
+                            Reset
+                        </a>
+                    @endif
+                </form>
             </div>
 
             <table class="fb-table">
@@ -760,7 +804,7 @@
                     @forelse($feedbackProjects as $index => $project)
                     <tr>
                         <td style="color:var(--text-muted);font-size:12px;font-family:'DM Mono',monospace;width:40px;">
-                            {{ $index + 1 }}
+                            {{ $feedbackProjects->firstItem() + $index }}
                         </td>
 
                         <td>
@@ -811,6 +855,12 @@
                     @endforelse
                 </tbody>
             </table>
+
+            @if($feedbackProjects->hasPages())
+                <div style="padding:16px 20px;">
+                    {{ $feedbackProjects->links() }}
+                </div>
+            @endif
         </div>
 
         {{-- Feedback Project Item Section --}}
@@ -831,6 +881,29 @@
                 </a>
             </div>
 
+            {{-- search field project item --}}
+            <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+                <form method="GET" action="{{ route('feedback.index') }}" style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <input
+                        type="text"
+                        name="item_search"
+                        value="{{ request('item_search') }}"
+                        placeholder="Cari project / nama barang..."
+                        style="flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;"
+                    >
+
+                    <button type="submit" class="fb-btn fb-btn-primary">
+                        Cari
+                    </button>
+
+                    @if(request('item_search'))
+                        <a href="{{ route('feedback.index') }}" class="fb-btn" style="background:#e5e7eb;color:#374151;">
+                            Reset
+                        </a>
+                    @endif
+                </form>
+            </div>
+
             <table class="fb-table">
                 <thead>
                     <tr>
@@ -846,7 +919,7 @@
                     @forelse($feedbackProjectItems as $index => $item)
                     <tr>
                         <td style="color:var(--text-muted);font-size:12px;font-family:'DM Mono',monospace;width:40px;">
-                            {{ $index + 1 }}
+                           {{ $feedbackProjectItems->firstItem() + $index }}
                         </td>
 
                         <td>
@@ -903,6 +976,12 @@
                     @endforelse
                 </tbody>
             </table>
+
+            @if($feedbackProjectItems->hasPages())
+                <div style="padding:16px 20px;">
+                    {{ $feedbackProjectItems->links() }}
+                </div>
+            @endif
         </div>
 
 </div>

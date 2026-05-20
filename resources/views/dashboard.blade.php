@@ -120,9 +120,42 @@
                 <div>
                     <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Tren NCR per Bulan</h3>
                     <p class="text-xs text-gray-400 dark:text-gray-500">
-                        12 bulan terakhir{{ !$isAdmin ? ' — NCR Anda' : '' }}
+                        Statistik NCR berdasarkan bulan
                     </p>
                 </div>
+
+                <form method="GET" class="flex items-center gap-2">
+
+                    {{-- FROM --}}
+                    <select name="from"
+                        onchange="this.form.submit()"
+                        class="text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+
+                        @foreach($availableMonths as $month)
+                            <option value="{{ $month['value'] }}"
+                                {{ request('from', $defaultFrom) == $month['value'] ? 'selected' : '' }}>
+                                {{ $month['label'] }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    <span class="text-gray-400 text-sm">→</span>
+
+                    {{-- TO --}}
+                    <select name="to"
+                        onchange="this.form.submit()"
+                        class="text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+
+                        @foreach($availableMonths as $month)
+                            <option value="{{ $month['value'] }}"
+                                {{ request('to', $defaultTo) == $month['value'] ? 'selected' : '' }}>
+                                {{ $month['label'] }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                </form>
+
                 <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                     <span class="flex items-center gap-1">
                         <span class="w-2.5 h-2.5 bg-red-400 rounded-sm inline-block"></span>Open
@@ -145,30 +178,33 @@
             <div class="mb-4">
                 <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Proporsi Status</h3>
                 <p class="text-xs text-gray-400 dark:text-gray-500">
-                    {{ $isAdmin ? 'Keseluruhan NCR' : 'NCR Anda' }}
+                    {{ \Carbon\Carbon::createFromFormat('Y-m', $from)->translatedFormat('F Y') }}
+                    -
+                    {{ \Carbon\Carbon::createFromFormat('Y-m', $to)->translatedFormat('F Y') }}
+                    {{ !$isAdmin ? ' — NCR Anda' : '' }}
                 </p>
             </div>
             <div class="flex-1 flex items-center justify-center">
                 <div class="relative w-44 h-44">
                     <canvas id="chartDonut"></canvas>
                     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <p class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ $totalNcr }}</p>
+                        <p class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ $filteredTotalNcr }}</p>
                         <p class="text-xs text-gray-400 dark:text-gray-500">Total</p>
                     </div>
                 </div>
             </div>
             <div class="mt-4 space-y-2">
                 @php
-                    $pctOpen   = $totalNcr > 0 ? round($totalOpen   / $totalNcr * 100) : 0;
-                    $pctProses = $totalNcr > 0 ? round($totalProses / $totalNcr * 100) : 0;
-                    $pctClose  = $totalNcr > 0 ? round($totalClose  / $totalNcr * 100) : 0;
+                    $pctOpen   = $filteredTotalNcr > 0 ? round($filteredTotalOpen / $filteredTotalNcr * 100) : 0;
+                    $pctProses = $filteredTotalNcr > 0 ? round($filteredTotalProses / $filteredTotalNcr * 100) : 0;
+                    $pctClose  = $filteredTotalNcr > 0 ? round($filteredTotalClose / $filteredTotalNcr * 100) : 0;
                 @endphp
                 <div class="flex items-center justify-between text-xs">
                     <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
                         <span class="w-2.5 h-2.5 bg-red-400 rounded-full"></span>Open
                     </span>
                     <span class="font-semibold text-gray-700 dark:text-gray-300">
-                        {{ $totalOpen }} <span class="text-gray-400 dark:text-gray-500 font-normal">({{ $pctOpen }}%)</span>
+                        {{ $filteredTotalOpen }} <span class="text-gray-400 dark:text-gray-500 font-normal">({{ $pctOpen }}%)</span>
                     </span>
                 </div>
                 <div class="flex items-center justify-between text-xs">
@@ -176,7 +212,7 @@
                         <span class="w-2.5 h-2.5 bg-amber-400 rounded-full"></span>Process
                     </span>
                     <span class="font-semibold text-gray-700 dark:text-gray-300">
-                        {{ $totalProses }} <span class="text-gray-400 dark:text-gray-500 font-normal">({{ $pctProses }}%)</span>
+                        {{ $filteredTotalProses }} <span class="text-gray-400 dark:text-gray-500 font-normal">({{ $pctProses }}%)</span>
                     </span>
                 </div>
                 <div class="flex items-center justify-between text-xs">
@@ -184,7 +220,7 @@
                         <span class="w-2.5 h-2.5 bg-green-400 rounded-full"></span>Close
                     </span>
                     <span class="font-semibold text-gray-700 dark:text-gray-300">
-                        {{ $totalClose }} <span class="text-gray-400 dark:text-gray-500 font-normal">({{ $pctClose }}%)</span>
+                        {{ $filteredTotalClose }} <span class="text-gray-400 dark:text-gray-500 font-normal">({{ $pctClose }}%)</span>
                     </span>
                 </div>
             </div>
@@ -474,7 +510,7 @@ document.addEventListener('DOMContentLoaded', function () {
             data: {
                 labels: ['Open', 'Process', 'Close'],
                 datasets: [{
-                    data: [{{ $totalOpen }}, {{ $totalProses }}, {{ $totalClose }}],
+                    data: [{{ $filteredTotalOpen }}, {{ $filteredTotalProses }}, {{ $filteredTotalClose }}],
                     backgroundColor: [
                         'rgba(248, 113, 113, 0.88)',
                         'rgba(251, 191, 36, 0.88)',

@@ -6,7 +6,6 @@ use App\Models\Ncr;
 use App\Models\User;
 use App\Models\Project;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -19,37 +18,85 @@ class DashboardController extends Controller
         $level = strtolower($authUser->level ?? '');
         $isAdmin = in_array($level, ['admin', 'superadmin']);
 
-        // ── Query dasar berdasarkan role ──────────────────────────
         $baseQuery = $this->baseNcrQuery($authUser, $isAdmin);
 
-        // ── Statistik utama ───────────────────────────────────────
+        // Statistik utama total keseluruhan
         $totalNcr = (clone $baseQuery)->count();
         $totalOpen = (clone $baseQuery)->where('keterangan', 'open')->count();
         $totalProses = (clone $baseQuery)->where('keterangan', 'process')->count();
         $totalClose = (clone $baseQuery)->whereIn('keterangan', ['close', 'closed'])->count();
 
-        // ── Grafik 12 bulan terakhir ──────────────────────────────
+        // Default: 12 bulan terakhir dari bulan ini
+        $defaultFrom = now()->subMonths(11)->format('Y-m');
+        $defaultTo = now()->format('Y-m');
+
+        $from = request('from', $defaultFrom);
+        $to = request('to', $defaultTo);
+
+        $startDate = Carbon::createFromFormat('Y-m', $from)->startOfMonth();
+        $endDate = Carbon::createFromFormat('Y-m', $to)->endOfMonth();
+
+        if ($startDate->greaterThan($endDate)) {
+            [$startDate, $endDate] = [$endDate, $startDate];
+            [$from, $to] = [$to, $from];
+        }
+
+        // Dropdown bulan-tahun, dibuat 24 bulan terakhir agar lengkap meski tidak ada NCR
+        $availableMonths = collect();
+        $monthCursor = now()->subMonths(23)->startOfMonth();
+
+        while ($monthCursor->lte(now()->startOfMonth())) {
+            $availableMonths->push([
+                'value' => $monthCursor->format('Y-m'),
+                'label' => $monthCursor->translatedFormat('F Y'),
+            ]);
+
+            $monthCursor->addMonth();
+        }
+
+        // Query khusus filter chart
+        $filteredQuery = (clone $baseQuery)
+            ->whereBetween('tgl_masuk', [$startDate, $endDate]);
+
+        $filteredTotalNcr = (clone $filteredQuery)->count();
+        $filteredTotalOpen = (clone $filteredQuery)->where('keterangan', 'open')->count();
+        $filteredTotalProses = (clone $filteredQuery)->where('keterangan', 'process')->count();
+        $filteredTotalClose = (clone $filteredQuery)
+            ->whereIn('keterangan', ['close', 'closed'])
+            ->count();
+
+        // Bar chart sesuai range filter
         $bulanLabel = [];
         $dataOpen = [];
         $dataProses = [];
         $dataClose = [];
 
-        for ($i = 11; $i >= 0; $i--) {
-            $bulan = Carbon::now()->subMonths($i);
-            $bulanLabel[] = $bulan->translatedFormat('M Y');
+        $current = $startDate->copy();
 
-            $dataOpen[] = (clone $baseQuery)->where('keterangan', 'open')->whereYear('tgl_masuk', $bulan->year)->whereMonth('tgl_masuk', $bulan->month)->count();
+        while ($current->lte($endDate)) {
+            $bulanLabel[] = $current->translatedFormat('M Y');
 
-            $dataProses[] = (clone $baseQuery)->where('keterangan', 'process')->whereYear('tgl_masuk', $bulan->year)->whereMonth('tgl_masuk', $bulan->month)->count();
+            $dataOpen[] = (clone $baseQuery)
+                ->where('keterangan', 'open')
+                ->whereYear('tgl_masuk', $current->year)
+                ->whereMonth('tgl_masuk', $current->month)
+                ->count();
+
+            $dataProses[] = (clone $baseQuery)
+                ->where('keterangan', 'process')
+                ->whereYear('tgl_masuk', $current->year)
+                ->whereMonth('tgl_masuk', $current->month)
+                ->count();
 
             $dataClose[] = (clone $baseQuery)
                 ->whereIn('keterangan', ['close', 'closed'])
-                ->whereYear('tgl_masuk', $bulan->year)
-                ->whereMonth('tgl_masuk', $bulan->month)
+                ->whereYear('tgl_masuk', $current->year)
+                ->whereMonth('tgl_masuk', $current->month)
                 ->count();
+
+            $current->addMonth();
         }
 
-        // ── NCR mendekati target ──────────────────────────────────
         $ncrMendekatiTarget = (clone $baseQuery)
             ->with(['project', 'penanggungJawab'])
             ->whereNotIn('keterangan', ['close', 'closed'])
@@ -62,19 +109,39 @@ class DashboardController extends Controller
                 $ncr->sisa_hari = Carbon::now()
                     ->startOfDay()
                     ->diffInDays(Carbon::parse($ncr->tgl_target)->startOfDay(), false);
+
                 return $ncr;
             });
 
-        // ── Info tambahan (hanya admin/superadmin) ────────────────
         $totalProject = $isAdmin ? Project::count() : null;
         $totalUser = $isAdmin ? User::where('keterangan', true)->count() : null;
 
-        return view('dashboard', compact('totalNcr', 'totalOpen', 'totalProses', 'totalClose', 'bulanLabel', 'dataOpen', 'dataProses', 'dataClose', 'ncrMendekatiTarget', 'totalProject', 'totalUser', 'isAdmin', 'level'));
+        return view('dashboard', compact(
+            'totalNcr',
+            'totalOpen',
+            'totalProses',
+            'totalClose',
+            'filteredTotalNcr',
+            'filteredTotalOpen',
+            'filteredTotalProses',
+            'filteredTotalClose',
+            'bulanLabel',
+            'dataOpen',
+            'dataProses',
+            'dataClose',
+            'availableMonths',
+            'defaultFrom',
+            'defaultTo',
+            'from',
+            'to',
+            'ncrMendekatiTarget',
+            'totalProject',
+            'totalUser',
+            'isAdmin',
+            'level'
+        ));
     }
 
-    /**
-     * Query dasar NCR sesuai role — sama persis dengan logika di NCRController::index()
-     */
     private function baseNcrQuery(User $authUser, bool $isAdmin)
     {
         $query = Ncr::query();
@@ -84,25 +151,18 @@ class DashboardController extends Controller
             $unitKerjaNames = $authUser->unitKerja()->pluck('nama_unit')->toArray();
 
             $query->where(function ($q) use ($authUser, $unitKerjaIds, $unitKerjaNames) {
-                // 1. NCR dibuat sendiri
                 $q->where('user_id', $authUser->id);
 
-                // 2. NCR sebagai PIC
                 $q->orWhere('penanggung_jawab', $authUser->id);
 
-                // 3. NCR dari user yang unit kerjanya sama (INI YANG KURANG)
                 if (!empty($unitKerjaIds)) {
                     $q->orWhereHas('user.unitKerja', function ($uq) use ($unitKerjaIds) {
                         $uq->whereIn('unit_kerja.id', $unitKerjaIds);
                     });
-                }
 
-                // 4. NCR berdasarkan unit tujuan (relasi)
-                if (!empty($unitKerjaIds)) {
                     $q->orWhereIn('unit_kerja_id', $unitKerjaIds);
                 }
 
-                // 5. NCR lama (string)
                 if (!empty($unitKerjaNames)) {
                     $q->orWhereIn('unit_tujuan', $unitKerjaNames);
                 }

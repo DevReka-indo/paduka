@@ -156,6 +156,40 @@
                     </a>
                 @endif
 
+
+                @php
+                    $allowedUnitsVisualCheck = [30, 31, 1];
+                    $canAccessVisualCheck = auth()->check()
+                        && auth()->user()->unitKerja()
+                            ->whereIn('unit_kerja.id', $allowedUnitsVisualCheck)
+                            ->exists();
+                @endphp
+
+                {{-- Visual Check Menu --}}
+                @if ($canAccessVisualCheck)
+                <a href="{{ route('visual-check.index') }}"
+                    :title="$store.sidebar.collapsed ? 'Visual Check' : ''"
+                    class="group flex items-center gap-3 px-1.5 py-2 rounded-xl text-sm font-medium transition-all duration-200
+                    {{ request()->routeIs('visual-check.*')
+                        ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 shadow-sm ring-1 ring-indigo-100 dark:ring-indigo-700'
+                        : 'text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-gray-100' }}">
+                    <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition
+                        {{ request()->routeIs('visual-check.*')
+                            ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300'
+                            : 'bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400 group-hover:bg-slate-200 dark:group-hover:bg-gray-600 group-hover:text-slate-700 dark:group-hover:text-gray-200' }}">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    </span>
+                    <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
+                        :class="$store.sidebar.collapsed ? 'opacity-0 w-0' : 'opacity-100'">
+                        VISIQ
+                    </span>
+                </a>
+                @endif
+
+
             </div>
 
             {{-- Admin & Superadmin --}}

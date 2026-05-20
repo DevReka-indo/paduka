@@ -136,6 +136,11 @@ Route::middleware('auth')->group(function () {
             ]);
         })->middleware('auth')->name('ncr.file.preview');
 
+        //embed visual check
+        Route::get('/visiq', function () {
+            return view('visual-check.index');
+        })->name('visual-check.index');
+
         Route::get('/bantuan', [App\Http\Controllers\BantuanController::class, 'index'])->name('bantuan.index');
 });
 
@@ -150,79 +155,5 @@ Route::middleware(['auth', 'isAdmin'])->group(function () {
     Route::resource('changelog', App\Http\Controllers\ChangelogController::class)->except(['show']);
 });
 
-
-// Testing debug view email
-
-// Route::get('/debug/email/perlu-ditanggapi', function () {
-//     $notifiable = User::first() ?? (object) ['name' => 'User Debug'];
-//     $ncr = Ncr::first() ?? (object) ['nomor_ncr' => '202604010077'];
-
-//     return view('emails.perlu-ditanggapi', [
-//         'notifiable' => $notifiable,
-//         'ncr' => $ncr,
-//         'url' => route('ncr.show', $ncr->nomor_ncr ?? '202604010077'),
-//     ]);
-// });
-
-// Route::get('/debug/email/perlu-diverifikasi', function () {
-//     $notifiable = User::first() ?? (object) ['name' => 'User Debug'];
-//     $ncr = Ncr::first() ?? (object) ['nomor_ncr' => '202604010077'];
-
-//     return view('emails.perlu-diverifikasi', [
-//         'notifiable' => $notifiable,
-//         'ncr' => $ncr,
-//         'url' => route('ncr.show', $ncr->nomor_ncr ?? '202604010077'),
-//     ]);
-// });
-
-// Route::get('/debug/email/terlambat', function () {
-//     $notifiable = User::first() ?? (object) ['name' => 'User Debug'];
-//     $ncr = Ncr::first() ?? (object) [
-//         'nomor_ncr' => '202604010077',
-//         'tgl_target' => now(),
-//     ];
-
-//     return view('emails.terlambat', [
-//         'notifiable' => $notifiable,
-//         'ncr' => $ncr,
-//         'url' => route('ncr.show', $ncr->nomor_ncr ?? '202604010077'),
-//         'tanggal_target' => optional($ncr->tgl_target)->format('Y-m-d') ?? '-',
-//         'hari_terlambat' => 5,
-//     ]);
-// });
-
-// Route::get('/debug/email/direvisi', function () {
-//     $notifiable = User::first() ?? (object) ['name' => 'User Debug'];
-
-//     $nomorNcr = '202604200084';
-
-//     $ncr = Ncr::where('nomor_ncr', $nomorNcr)->first()
-//         ?? (object) ['nomor_ncr' => $nomorNcr];
-
-//     $changeLog = NcrChangeLog::with('user')
-//         ->where('nomor_ncr', $nomorNcr)
-//         ->orderByDesc('revision_index')
-//         ->first();
-
-//     if (!$changeLog) {
-//         $changeLog = (object) [
-//             'nomor_ncr' => $nomorNcr,
-//             'revision' => 'Rev-07',
-//             'revision_index' => 7,
-//             'action' => 'update',
-//             'user' => (object) ['name' => 'Editor Debug'],
-//         ];
-//     }
-
-//     return view('emails.direvisi', [
-//         'notifiable' => $notifiable,
-//         'ncr' => $ncr,
-//         'changeLog' => $changeLog,
-//         'url' => route('ncr.revision.show', [
-//             'nomor_ncr' => $ncr->nomor_ncr,
-//             'rev' => $changeLog->revision_index,
-//         ]),
-//     ]);
-// });
 
 require __DIR__ . '/auth.php';

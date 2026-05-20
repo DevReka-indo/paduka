@@ -7,10 +7,28 @@ use Illuminate\Http\Request;
 
 class FeedbackProjectController extends Controller
 {
-    public function index()
+
+
+
+    public function index(Request $request)
     {
-        $projects = FeedbackProject::latest()->paginate(10);
-        return view('feedback.project.index', compact('projects'));
+        $projectSearch = trim($request->get('project_search', ''));
+
+        $feedbackProjects = FeedbackProject::query()
+            ->when($projectSearch !== '', function ($query) use ($projectSearch) {
+                $query->where(function ($q) use ($projectSearch) {
+                    $q->where('nama_project', 'like', "%{$projectSearch}%")
+                    ->orWhere('deskripsi', 'like', "%{$projectSearch}%");
+                });
+            })
+            ->latest()
+            ->paginate(10, ['*'], 'project_page')
+            ->withQueryString();
+
+        return view('feedback.index', compact(
+            'feedbackProjects',
+            'projectSearch'
+        ));
     }
 
     public function create()

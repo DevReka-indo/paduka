@@ -65,21 +65,43 @@ class FeedbackPelangganController extends Controller
             ->limit(10)
             ->get();
 
+
+        // Feedback Project Pagination
+        $projectSearch = trim($request->get('project_search', ''));
+
         $feedbackProjects = FeedbackProject::query()
+            ->when($projectSearch !== '', function ($query) use ($projectSearch) {
+                $query->where(function ($q) use ($projectSearch) {
+                    $q->where('nama_project', 'like', "%{$projectSearch}%")
+                    ->orWhere('deskripsi', 'like', "%{$projectSearch}%");
+                });
+            })
             ->latest()
-            ->get();
+            ->paginate(10, ['*'], 'project_page')
+            ->withQueryString();
+
+        $itemSearch = trim($request->get('item_search', ''));
 
         $feedbackProjectItems = FeedbackProjectItem::query()
+            ->when($itemSearch !== '', function ($query) use ($itemSearch) {
+                $query->where('nama_barang', 'like', "%{$itemSearch}%")
+                    ->orWhereHas('project', function ($q) use ($itemSearch) {
+                        $q->where('nama_project', 'like', "%{$itemSearch}%");
+                    });
+            })
             ->with('project')
             ->latest()
-            ->get();
+            ->paginate(10, ['*'], 'item_page')
+            ->withQueryString();
 
         return view('feedback.index', compact(
             'feedbacks',
             'chartProyek',
             'chartProduk',
             'feedbackProjects',
-            'feedbackProjectItems'
+            'feedbackProjectItems',
+            'projectSearch',
+            'itemSearch'
         ));
     }
 

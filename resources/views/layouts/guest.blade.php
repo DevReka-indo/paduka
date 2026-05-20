@@ -107,43 +107,56 @@
             text-align: center;
             opacity: 0;
         }
-        /* Logo row — two logos side by side */
+
+        /* Logo row */
         .sys-logos-row {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0;
-            margin-bottom: 1rem;
+            margin-bottom: 1.2rem;
         }
 
-        .sys-logo-wrap {
-            display: inline-flex;
-            align-items: center; justify-content: center;
-            width: 64px; height: 64px;
-            background: #ffffff;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 16px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-        }
-        .sys-logo-wrap img { width: 40px; height: 40px; object-fit: contain; }
-
-        /* Vertical divider between logos */
-        .logo-divider {
-            width: 1px; height: 40px;
-            background: rgba(255,255,255,0.18);
-            margin: 0 1rem;
-        }
-
+        /* Shared logo wrapper */
+        .sys-logo-wrap,
         .sys-logo-company {
             display: inline-flex;
-            align-items: center; justify-content: center;
-            width: 64px; height: 64px;
-            background: #ffffff;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 16px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+            align-items: center;
+            justify-content: center;
+
+            width: 92px;
+            height: 92px;
+
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
         }
-        .sys-logo-company img { width: 40px; height: 40px; object-fit: contain; }
+
+        /* PADUKA logo */
+        .sys-logo-wrap img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        /* REKA logo */
+        .sys-logo-company img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+
+            /* ubah logo hitam jadi putih */
+            filter: brightness(0) invert(1);
+        }
+
+        /* Divider */
+        .logo-divider {
+            width: 1px;
+            height: 56px;
+            background: rgba(255,255,255,0.14);
+            margin: 0 1.3rem;
+        }
 
         .sys-title {
             font-family: 'DM Serif Display', serif;
@@ -220,7 +233,7 @@
                     </div>
                 </div>
                 <div class="sys-title">PAD<span>U</span>KA</div>
-                <div class="sys-subtitle">Sistem NCR Online Terpusat</div>
+                <div class="sys-subtitle">One System for Quality and Service Excellence</div>
             </div>
 
             <!-- QC Animation Stage -->
@@ -333,10 +346,10 @@
                 </svg>
             </div>
 
-            <!-- Tagline -->
+            {{-- <!-- Tagline -->
             <div class="sys-tagline" id="elTagline">
                 <p>© {{ date('Y') }} PT. Rekaindo Global Jasa · All rights reserved</p>
-            </div>
+            </div> --}}
 
             <!-- Wave edge separator -->
             <div class="wave-edge">
