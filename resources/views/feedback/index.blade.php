@@ -319,7 +319,18 @@
         color: var(--text-muted);
     }
 
-    .fb-empty-icon { font-size: 36px; margin-bottom: 12px; }
+    .fb-empty-icon {
+        margin-bottom: 14px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .fb-empty-icon img {
+        width: 110px;
+        height: auto;
+        object-fit: contain;
+        opacity: .95;
+    }
     .fb-empty-text { font-size: 14px; font-weight: 500; }
     .fb-empty-sub  { font-size: 12.5px; margin-top: 4px; }
 
@@ -509,6 +520,81 @@
     .dark .fb-action-delete:hover {
         background: rgba(239, 68, 68, .25);
     }
+
+    .fb-score-box {
+        padding: 14px 16px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .fb-score-high {
+        background: #bbf7d0;
+    }
+
+    .fb-score-low {
+        background: #fecaca;
+    }
+
+    .fb-score-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .fb-score-value {
+        font-size: 34px;
+        font-weight: 500;
+        font-family: 'DM Mono', monospace;
+        line-height: 1;
+    }
+
+    .fb-score-high .fb-score-value {
+        color: #0f766e;
+    }
+
+    .fb-score-low .fb-score-value {
+        color: #dc2626;
+    }
+
+    .dark .fb-score-high {
+        background: rgba(16, 185, 129, .18);
+    }
+
+    .dark .fb-score-low {
+        background: rgba(239, 68, 68, .18);
+    }
+
+    .dark .fb-score-label {
+        color: #e5e7eb;
+    }
+
+    .fb-inline-search {
+        flex: 1;
+        min-width: 220px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text-primary);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 13.5px;
+        outline: none;
+    }
+
+    .fb-inline-search::placeholder {
+        color: var(--text-muted);
+    }
+
+    .dark .fb-inline-search {
+        background: #111827;
+        border-color: #4b5563;
+        color: #e5e7eb;
+    }
+
+    .dark .fb-inline-search::placeholder {
+        color: #6b7280;
+    }
 </style>
 
 <div class="fb-wrapper">
@@ -556,26 +642,227 @@
     </div>
     @endif
 
+    {{-- Filter Tahun & Caturwulan --}}
+    <div class="fb-card" style="margin-bottom:20px;">
+        <form method="GET"
+            action="{{ route('feedback.index') }}"
+            style="padding:18px 20px;display:flex;gap:12px;align-items:end;flex-wrap:wrap;">
+
+            {{-- Tahun --}}
+            <div style="min-width:160px;">
+                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-secondary);">
+                    Tahun
+                </label>
+
+                <select name="year" class="fb-search" style="padding-left:14px;">
+                    @for($year = date('Y'); $year >= date('Y') - 5; $year--)
+                        <option value="{{ $year }}"
+                            {{ (string) $selectedYear === (string) $year ? 'selected' : '' }}>
+                            {{ $year }}
+                        </option>
+                    @endfor
+                </select>
+            </div>
+
+            {{-- Caturwulan --}}
+            <div style="min-width:220px;">
+                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-secondary);">
+                    Caturwulan
+                </label>
+
+                <select name="cw" class="fb-search" style="padding-left:14px;">
+                    <option value="">Semua Caturwulan</option>
+
+                    <option value="1" {{ $selectedCw == '1' ? 'selected' : '' }}>
+                        CW-1 (Jan - Apr)
+                    </option>
+
+                    <option value="2" {{ $selectedCw == '2' ? 'selected' : '' }}>
+                        CW-2 (Mei - Agu)
+                    </option>
+
+                    <option value="3" {{ $selectedCw == '3' ? 'selected' : '' }}>
+                        CW-3 (Sep - Des)
+                    </option>
+                </select>
+            </div>
+
+            {{-- Bulan --}}
+            <div style="min-width:220px;">
+                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-secondary);">
+                    Bulan
+                </label>
+
+                <select name="month" class="fb-search" style="padding-left:14px;">
+                    <option value="">Semua Bulan</option>
+
+                    @foreach([
+                        1 => 'Januari',
+                        2 => 'Februari',
+                        3 => 'Maret',
+                        4 => 'April',
+                        5 => 'Mei',
+                        6 => 'Juni',
+                        7 => 'Juli',
+                        8 => 'Agustus',
+                        9 => 'September',
+                        10 => 'Oktober',
+                        11 => 'November',
+                        12 => 'Desember'
+                    ] as $num => $name)
+
+                        <option value="{{ $num }}"
+                            {{ (string)$selectedMonth === (string)$num ? 'selected' : '' }}>
+                            {{ $name }}
+                        </option>
+
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Dari Tanggal --}}
+            <div style="min-width:180px;">
+                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-secondary);">
+                    Dari Tanggal
+                </label>
+
+                <input
+                    type="date"
+                    name="date_from"
+                    value="{{ $dateFrom }}"
+                    class="fb-search"
+                    style="padding-left:14px;"
+                >
+            </div>
+
+            {{-- Sampai Tanggal --}}
+            <div style="min-width:180px;">
+                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-secondary);">
+                    Sampai Tanggal
+                </label>
+
+                <input
+                    type="date"
+                    name="date_to"
+                    value="{{ $dateTo }}"
+                    class="fb-search"
+                    style="padding-left:14px;"
+                >
+            </div>
+
+            {{-- Button --}}
+            <div style="display:flex;gap:8px;">
+                <button type="submit" class="fb-btn fb-btn-primary">
+                    <svg width="14" height="14" fill="none" stroke="currentColor"
+                        stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M3 4h18M6 12h12M10 20h4"/>
+                    </svg>
+                    Terapkan
+                </button>
+
+                <a href="{{ route('feedback.index') }}"
+                class="fb-btn fb-btn-ghost">
+                    Reset
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+    @if($selectedYear || $selectedCw || $selectedMonth || $dateFrom || $dateTo)
+    <div class="fb-card"
+        style="
+            margin-bottom:20px;
+            background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);
+            border:1px solid #bfdbfe;
+        ">
+
+        <div style="
+            padding:14px 18px;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            color:#1e40af;
+            font-size:13.5px;
+            font-weight:500;
+        ">
+
+            <svg width="18" height="18"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24">
+                <path d="M12 8v4l3 3"/>
+                <circle cx="12" cy="12" r="9"/>
+            </svg>
+
+            <div>
+                Menampilkan data kepuasan pelanggan
+
+                @if($dateFrom && $dateTo)
+                    dari
+                    <strong>{{ \Carbon\Carbon::parse($dateFrom)->format('d M Y') }}</strong>
+                    sampai
+                    <strong>{{ \Carbon\Carbon::parse($dateTo)->format('d M Y') }}</strong>
+                @elseif($selectedMonth)
+                    bulan <strong>
+                        {{ \Carbon\Carbon::create()->month((int)$selectedMonth)->translatedFormat('F') }}
+                    </strong>
+                @elseif($selectedCw)
+                    pada <strong>CW-{{ $selectedCw }}</strong>
+                @endif
+
+                @if($selectedYear)
+                    tahun <strong>{{ $selectedYear }}</strong>
+                @endif
+            </div>
+
+        </div>
+    </div>
+    @endif
+
     {{-- Stats strip --}}
     <div class="fb-stats">
         <div class="fb-stat-card">
             <div class="fb-stat-label">Total Feedback</div>
             <div class="fb-stat-value">{{ $feedbacks->total() }}</div>
         </div>
+
         <div class="fb-stat-card">
-            <div class="fb-stat-label">Rata-rata Skor</div>
-            <div class="fb-stat-value good">
-                {{ $feedbacks->count() ? number_format($feedbacks->avg('rata_rata'), 2) : '—' }}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="fb-score-box fb-score-high">
+                    <div class="fb-score-label">Nilai Tertinggi</div>
+                    <div class="fb-score-value">
+                        {{ $maxFilteredScore ? number_format($maxFilteredScore, 2) : '—' }}
+                    </div>
+                </div>
+
+                <div class="fb-score-box fb-score-low">
+                    <div class="fb-score-label">Nilai Terendah</div>
+                    <div class="fb-score-value">
+                        {{ $minFilteredScore ? number_format($minFilteredScore, 2) : '—' }}
+                    </div>
+                </div>
             </div>
         </div>
+
         <div class="fb-stat-card">
-            <div class="fb-stat-label">Halaman Ini</div>
-            <div class="fb-stat-value">{{ $feedbacks->count() }}</div>
+            <div class="fb-stat-label">Nilai Rata - Rata</div>
+
+            <div class="fb-stat-value good">
+                {{ $avgFilteredScore ? number_format($avgFilteredScore, 2) : '—' }}
+            </div>
         </div>
+
         <div class="fb-stat-card">
-            <div class="fb-stat-label">Halaman</div>
-            <div class="fb-stat-value">{{ $feedbacks->currentPage() }} / {{ $feedbacks->lastPage() }}</div>
+            <div class="fb-stat-label">Presentase</div>
+
+            <div class="fb-stat-value good">
+                {{ $nilaiFinal ? number_format($nilaiFinal, 2) . '%' : '—' }}
+            </div>
         </div>
+
+
     </div>
 
     {{-- Master Data Stats --}}
@@ -720,7 +1007,10 @@
                 <tr>
                     <td colspan="6">
                         <div class="fb-empty">
-                            <div class="fb-empty-icon">📋</div>
+                            <div class="fb-empty-icon">
+                                <img src="{{ asset('img/data-not-found.png') }}"
+                                    alt="Data tidak ditemukan">
+                            </div>
                             <div class="fb-empty-text">
                                 @if(request('search'))
                                     Tidak ada hasil untuk "{{ request('search') }}"
@@ -775,7 +1065,7 @@
                         name="project_search"
                         value="{{ request('project_search') }}"
                         placeholder="Cari nama project / deskripsi..."
-                        style="flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;"
+                        class="fb-inline-search"
                     >
 
                     <button type="submit" class="fb-btn fb-btn-primary">
@@ -846,7 +1136,10 @@
                     <tr>
                         <td colspan="5">
                             <div class="fb-empty">
-                                <div class="fb-empty-icon">🗂️</div>
+                                <div class="fb-empty-icon">
+                                    <img src="{{ asset('img/data-not-found.png') }}"
+                                        alt="Data tidak ditemukan">
+                                </div>
                                 <div class="fb-empty-text">Belum ada master project feedback</div>
                                 <div class="fb-empty-sub">Klik Tambah Project untuk membuat pilihan dropdown survey.</div>
                             </div>
@@ -889,7 +1182,7 @@
                         name="item_search"
                         value="{{ request('item_search') }}"
                         placeholder="Cari project / nama barang..."
-                        style="flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;"
+                        class="fb-inline-search"
                     >
 
                     <button type="submit" class="fb-btn fb-btn-primary">
@@ -967,7 +1260,10 @@
                     <tr>
                         <td colspan="6">
                             <div class="fb-empty">
-                                <div class="fb-empty-icon">📦</div>
+                                <div class="fb-empty-icon">
+                                    <img src="{{ asset('img/data-not-found.png') }}"
+                                        alt="Data tidak ditemukan">
+                                </div>
                                 <div class="fb-empty-text">Belum ada master barang project</div>
                                 <div class="fb-empty-sub">Klik Tambah Barang untuk membuat daftar barang/komponen per project.</div>
                             </div>

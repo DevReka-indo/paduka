@@ -25,7 +25,54 @@ class FeedbackPelangganController extends Controller
             });
         }
 
-        $feedbacks = $query->paginate(10);
+        $selectedYear = $request->get('year', date('Y'));
+        $selectedCw = $request->get('cw');
+        $selectedMonth = $request->get('month');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        $applyDateFilters = function ($query) use ($selectedYear, $selectedCw, $selectedMonth, $dateFrom, $dateTo) {
+            if ($selectedYear) {
+                $query->whereYear('created_at', $selectedYear);
+            }
+
+            if ($dateFrom && $dateTo) {
+                $query->whereBetween('created_at', [
+                    $dateFrom . ' 00:00:00',
+                    $dateTo . ' 23:59:59',
+                ]);
+            } elseif ($selectedMonth) {
+                $query->whereMonth('created_at', $selectedMonth);
+            } elseif ($selectedCw) {
+                $months = match ($selectedCw) {
+                    '1' => [1, 2, 3, 4],
+                    '2' => [5, 6, 7, 8],
+                    '3' => [9, 10, 11, 12],
+                    default => [],
+                };
+
+                if (!empty($months)) {
+                    $query->whereIn(DB::raw('MONTH(created_at)'), $months);
+                }
+            }
+        };
+
+        $applyDateFilters($query);
+
+        $filteredQuery = clone $query;
+        $filteredFeedbacks = $filteredQuery->get();
+
+        $avgFilteredScore = $filteredFeedbacks->avg('rata_rata');
+        $maxFilteredScore = $filteredFeedbacks->max('rata_rata');
+        $minFilteredScore = $filteredFeedbacks->min('rata_rata');
+
+        $nilaiFinal = $avgFilteredScore
+            ? ($avgFilteredScore / 3) * 100
+            : null;
+
+        $feedbacks = $query
+            ->paginate(10)
+            ->withQueryString();
 
         $avgScoreSql = "
             (
@@ -46,6 +93,7 @@ class FeedbackPelangganController extends Controller
                 'proyek',
                 DB::raw("ROUND(AVG($avgScoreSql), 2) as rata_rata_skor"),
             ])
+            ->tap($applyDateFilters)
             ->whereNotNull('proyek')
             ->where('proyek', '!=', '')
             ->groupBy('proyek')
@@ -58,6 +106,7 @@ class FeedbackPelangganController extends Controller
                 'identitas_barang',
                 DB::raw("ROUND(AVG($avgScoreSql), 2) as rata_rata_skor"),
             ])
+            ->tap($applyDateFilters)
             ->whereNotNull('identitas_barang')
             ->where('identitas_barang', '!=', '')
             ->groupBy('identitas_barang')
@@ -65,15 +114,13 @@ class FeedbackPelangganController extends Controller
             ->limit(10)
             ->get();
 
-
-        // Feedback Project Pagination
         $projectSearch = trim($request->get('project_search', ''));
 
         $feedbackProjects = FeedbackProject::query()
             ->when($projectSearch !== '', function ($query) use ($projectSearch) {
                 $query->where(function ($q) use ($projectSearch) {
                     $q->where('nama_project', 'like', "%{$projectSearch}%")
-                    ->orWhere('deskripsi', 'like', "%{$projectSearch}%");
+                        ->orWhere('deskripsi', 'like', "%{$projectSearch}%");
                 });
             })
             ->latest()
@@ -101,7 +148,16 @@ class FeedbackPelangganController extends Controller
             'feedbackProjects',
             'feedbackProjectItems',
             'projectSearch',
-            'itemSearch'
+            'itemSearch',
+            'selectedYear',
+            'selectedCw',
+            'selectedMonth',
+            'dateFrom',
+            'dateTo',
+            'avgFilteredScore',
+            'maxFilteredScore',
+            'minFilteredScore',
+            'nilaiFinal'
         ));
     }
 

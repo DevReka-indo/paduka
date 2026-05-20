@@ -126,6 +126,11 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+        'ncr_reminder' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/ncr-reminder.log'),
+            'level' => 'info',
+        ],
 
     ],
 
