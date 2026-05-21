@@ -12,13 +12,14 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 use App\Notifications\NcrPerluDitanggapiNotification;
 use App\Notifications\NcrPerluVerifikasiNotification;
 use App\Notifications\NcrDirevisiNotification;
 use App\Exports\NcrReportExport;
-use Maatwebsite\Excel\Facades\Excel;  //export excel
-use App\Services\NcrAuditService;  //Service Audit Log
-
+use Maatwebsite\Excel\Facades\Excel; //export excel
+use App\Services\NcrAuditService; //Service Audit Log
+use Carbon\Carbon;
 
 class NCRController extends Controller
 {
@@ -44,13 +45,7 @@ class NCRController extends Controller
     {
         $authUser = Auth::user();
 
-        $query = Ncr::with([
-            'project',
-            'penanggungJawab',
-            'unitKerja',
-            'user',
-            'latestRevision',
-        ]);
+        $query = Ncr::with(['project', 'penanggungJawab', 'unitKerja', 'user', 'latestRevision']);
 
         if (in_array($authUser->level, ['user', 'manager'])) {
             $unitKerjaIds = $authUser->unitKerja()->pluck('unit_kerja.id')->toArray();
@@ -88,8 +83,7 @@ class NCRController extends Controller
                         $p->where('nama_proyek', 'like', "%{$search}%");
                     })
                     ->orWhereHas('unitKerja', function ($u) use ($search) {
-                        $u->where('nama_unit', 'like', "%{$search}%")
-                        ->orWhere('kode_unit', 'like', "%{$search}%");
+                        $u->where('nama_unit', 'like', "%{$search}%")->orWhere('kode_unit', 'like', "%{$search}%");
                     })
                     ->orWhereHas('user', function ($u) use ($search) {
                         $u->where('name', 'like', "%{$search}%");
@@ -176,13 +170,7 @@ class NCRController extends Controller
     // Detail NCR
     public function show($slug)
     {
-        $ncr = Ncr::with([
-            'user',
-            'project',
-            'penanggungJawab',
-            'unitKerja',
-            'latestRevision'
-            ])
+        $ncr = Ncr::with(['user', 'project', 'penanggungJawab', 'unitKerja', 'latestRevision'])
             ->where('nomor_ncr', $slug)
             ->first();
 
@@ -222,9 +210,7 @@ class NCRController extends Controller
             }
 
             if (!empty($ncrLama->ncr_baru)) {
-                return redirect()
-                    ->route('ncr.show', $ncrLama->nomor_ncr)
-                    ->with('error', 'NCR baru dari data ini sudah pernah dibuat.');
+                return redirect()->route('ncr.show', $ncrLama->nomor_ncr)->with('error', 'NCR baru dari data ini sudah pernah dibuat.');
             }
         }
 
@@ -295,9 +281,7 @@ class NCRController extends Controller
             // }
 
             if (!empty($ncrLama->ncr_baru)) {
-                return redirect()
-                    ->route('ncr.show', $ncrLama->nomor_ncr)
-                    ->with('error', 'NCR baru dari data ini sudah pernah dibuat.');
+                return redirect()->route('ncr.show', $ncrLama->nomor_ncr)->with('error', 'NCR baru dari data ini sudah pernah dibuat.');
             }
         }
 
@@ -310,30 +294,30 @@ class NCRController extends Controller
         $unitKerja = UnitKerja::find($request->input('unit_kerja_id'));
 
         $ncr = $this->modelNCR->create([
-            'nomor_ncr'           => $request->input('nomor_ncr'),
-            'user_id'             => Auth::id(),
-            'tgl_masuk'           => $request->input('tgl_masuk'),
-            'nama_proses'         => strip_tags($request->input('nama_proses')),
-            'kode_proyek'         => $request->input('kode_proyek'),
-            'status_temuan'       => strip_tags($request->input('status_temuan')),
-            'acuan_periksa'       => strip_tags($request->input('acuan_periksa')),
-            'surat_jalan'         => strip_tags($request->input('surat_jalan')),
-            'uraian'              => strip_tags($request->input('uraian')),
-            'uraian_masalah'      => strip_tags($request->input('uraian_masalah')),
-            'kategori_masalah'    => strip_tags($request->input('kategori_masalah')),
-            'penanggung_jawab'    => $request->input('penanggung_jawab'),
-            'tgl_target'          => $request->input('tgl_target'),
+            'nomor_ncr' => $request->input('nomor_ncr'),
+            'user_id' => Auth::id(),
+            'tgl_masuk' => $request->input('tgl_masuk'),
+            'nama_proses' => strip_tags($request->input('nama_proses')),
+            'kode_proyek' => $request->input('kode_proyek'),
+            'status_temuan' => strip_tags($request->input('status_temuan')),
+            'acuan_periksa' => strip_tags($request->input('acuan_periksa')),
+            'surat_jalan' => strip_tags($request->input('surat_jalan')),
+            'uraian' => strip_tags($request->input('uraian')),
+            'uraian_masalah' => strip_tags($request->input('uraian_masalah')),
+            'kategori_masalah' => strip_tags($request->input('kategori_masalah')),
+            'penanggung_jawab' => $request->input('penanggung_jawab'),
+            'tgl_target' => $request->input('tgl_target'),
             'disposisi_inspektor' => strip_tags($request->input('disposisi_inspektor')),
-            'doc_pendukung'       => strip_tags($request->input('doc_pendukung')),
-            'unit_tujuan'         => $unitKerja?->nama_unit,
-            'unit_kerja_id'       => $unitKerja?->id,
-            'up_file'             => $pathGambar,
-            'keterangan'          => 'open',
-            'uraian_perbaikan'    => null,
-            'uraian_pencegahan'   => null,
+            'doc_pendukung' => strip_tags($request->input('doc_pendukung')),
+            'unit_tujuan' => $unitKerja?->nama_unit,
+            'unit_kerja_id' => $unitKerja?->id,
+            'up_file' => $pathGambar,
+            'keterangan' => 'open',
+            'uraian_perbaikan' => null,
+            'uraian_pencegahan' => null,
 
             // ── TANDA TANGAN DIGITAL #1: dicap saat NCR dibuat ──────────────
-            'signed_at_open'      => now(),
+            'signed_at_open' => now(),
         ]);
 
         if ($ncrLama) {
@@ -342,8 +326,7 @@ class NCRController extends Controller
 
         $this->kirimNotifikasiPerluDitanggapi($ncr);
 
-        return redirect()->route('ncr.show', $request->input('nomor_ncr'))
-            ->with('pesan', 'Data NCR berhasil disimpan');
+        return redirect()->route('ncr.show', $request->input('nomor_ncr'))->with('pesan', 'Data NCR berhasil disimpan');
     }
 
     // Form ubah NCR
@@ -380,20 +363,20 @@ class NCRController extends Controller
         }
 
         $request->validate([
-            'nama_proses'         => 'required|string|max:255',
-            'kode_proyek'         => 'required',
-            'status_temuan'       => 'required',
-            'acuan_periksa'       => 'nullable|string',
-            'surat_jalan'         => 'nullable|string|max:255',
-            'uraian'              => 'nullable|string',
-            'uraian_masalah'      => 'nullable|string',
-            'penanggung_jawab'    => 'nullable',
-            'tgl_target'          => 'nullable|date',
+            'nama_proses' => 'required|string|max:255',
+            'kode_proyek' => 'required',
+            'status_temuan' => 'required',
+            'acuan_periksa' => 'nullable|string',
+            'surat_jalan' => 'nullable|string|max:255',
+            'uraian' => 'nullable|string',
+            'uraian_masalah' => 'nullable|string',
+            'penanggung_jawab' => 'nullable',
+            'tgl_target' => 'nullable|date',
             'disposisi_inspektor' => 'nullable|in:internal,eksternal',
-            'doc_pendukung'       => 'nullable|string|max:255',
-            'unit_tujuan'         => 'nullable|string|max:255',
-            'unit_kerja_id'       => 'nullable|exists:unit_kerja,id',
-            'up_file'             => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
+            'doc_pendukung' => 'nullable|string|max:255',
+            'unit_tujuan' => 'nullable|string|max:255',
+            'unit_kerja_id' => 'nullable|exists:unit_kerja,id',
+            'up_file' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
         ]);
 
         $pathGambar = $ncr->up_file;
@@ -408,38 +391,23 @@ class NCRController extends Controller
 
         $unitKerja = UnitKerja::find($request->input('unit_kerja_id'));
 
-        $oldData = $ncr->only([
-            'nama_proses',
-            'kode_proyek',
-            'status_temuan',
-            'acuan_periksa',
-            'surat_jalan',
-            'uraian',
-            'uraian_masalah',
-            'penanggung_jawab',
-            'tgl_target',
-            'disposisi_inspektor',
-            'doc_pendukung',
-            'unit_tujuan',
-            'unit_kerja_id',
-            'up_file',
-        ]);
+        $oldData = $ncr->only(['nama_proses', 'kode_proyek', 'status_temuan', 'acuan_periksa', 'surat_jalan', 'uraian', 'uraian_masalah', 'penanggung_jawab', 'tgl_target', 'disposisi_inspektor', 'doc_pendukung', 'unit_tujuan', 'unit_kerja_id', 'up_file']);
 
         $dataUpdate = [
-            'nama_proses'         => strip_tags($request->input('nama_proses')),
-            'kode_proyek'         => $request->input('kode_proyek'),
-            'status_temuan'       => strip_tags($request->input('status_temuan')),
-            'acuan_periksa'       => strip_tags($request->input('acuan_periksa')),
-            'surat_jalan'         => strip_tags($request->input('surat_jalan')),
-            'uraian'              => strip_tags($request->input('uraian')),
-            'uraian_masalah'      => strip_tags($request->input('uraian_masalah')),
-            'penanggung_jawab'    => $request->input('penanggung_jawab'),
-            'tgl_target'          => $request->input('tgl_target'),
+            'nama_proses' => strip_tags($request->input('nama_proses')),
+            'kode_proyek' => $request->input('kode_proyek'),
+            'status_temuan' => strip_tags($request->input('status_temuan')),
+            'acuan_periksa' => strip_tags($request->input('acuan_periksa')),
+            'surat_jalan' => strip_tags($request->input('surat_jalan')),
+            'uraian' => strip_tags($request->input('uraian')),
+            'uraian_masalah' => strip_tags($request->input('uraian_masalah')),
+            'penanggung_jawab' => $request->input('penanggung_jawab'),
+            'tgl_target' => $request->input('tgl_target'),
             'disposisi_inspektor' => $request->input('disposisi_inspektor'),
-            'doc_pendukung'       => strip_tags($request->input('doc_pendukung')),
-            'unit_tujuan'         => $unitKerja?->nama_unit,
-            'unit_kerja_id'       => $unitKerja?->id,
-            'up_file'             => $pathGambar,
+            'doc_pendukung' => strip_tags($request->input('doc_pendukung')),
+            'unit_tujuan' => $unitKerja?->nama_unit,
+            'unit_kerja_id' => $unitKerja?->id,
+            'up_file' => $pathGambar,
         ];
 
         $hasChanges = collect($dataUpdate)->contains(function ($value, $key) use ($oldData) {
@@ -447,8 +415,7 @@ class NCRController extends Controller
         });
 
         if (!$hasChanges) {
-            return redirect()->route('ncr.show', $ncr->nomor_ncr)
-                ->with('pesan', 'Tidak ada perubahan data.');
+            return redirect()->route('ncr.show', $ncr->nomor_ncr)->with('pesan', 'Tidak ada perubahan data.');
         }
 
         DB::transaction(function () use ($ncr, $oldData, $dataUpdate) {
@@ -458,8 +425,7 @@ class NCRController extends Controller
 
         $this->kirimNotifikasiRevisi($ncr);
 
-        return redirect()->route('ncr.show', $ncr->nomor_ncr)
-            ->with('pesan', 'Data NCR berhasil diperbarui!');
+        return redirect()->route('ncr.show', $ncr->nomor_ncr)->with('pesan', 'Data NCR berhasil diperbarui!');
     }
 
     // Form tanggapi NCR
@@ -485,9 +451,9 @@ class NCRController extends Controller
 
         $data = [
             'pengguna' => $this->modelPengguna->all(),
-            'proyek'   => $this->modelProyek->all(),
-            'temuan'   => $this->modelTemuan->all(),
-            'ncr'      => $ncr,
+            'proyek' => $this->modelProyek->all(),
+            'temuan' => $this->modelTemuan->all(),
+            'ncr' => $ncr,
         ];
 
         return view('ncr.tanggapi.form', $data);
@@ -513,7 +479,7 @@ class NCRController extends Controller
             [
                 'up_filee.image' => 'Dokumen yang anda pilih bukan gambar!',
                 'up_filee.mimes' => 'Dokumen yang anda pilih bukan gambar!',
-                'up_filee.max'   => 'Ukuran gambar terlalu besar!',
+                'up_filee.max' => 'Ukuran gambar terlalu besar!',
             ],
         );
 
@@ -532,19 +498,19 @@ class NCRController extends Controller
         $signedAtProcess = $ncr->signed_at_process ?? now();
 
         $ncr->update([
-            'manager_tgp'       => $request->input('manager_tgp'),
-            'akar_masalah'      => $request->input('akar_masalah'),
-            'uraian_masalah'    => $request->input('uraian_masalah'),
-            'uraian_perbaikan'  => $request->input('uraian_perbaikan'),
+            'manager_tgp' => $request->input('manager_tgp'),
+            'akar_masalah' => $request->input('akar_masalah'),
+            'uraian_masalah' => $request->input('uraian_masalah'),
+            'uraian_perbaikan' => $request->input('uraian_perbaikan'),
             'uraian_pencegahan' => $request->input('uraian_pencegahan'),
-            'kategori_masalah'  => $request->input('kategori_masalah'),
-            'disposisi_unit'    => $request->input('disposisi_unit'),
-            'senior_manager'    => $request->input('senior_manager'),
-            'tgl_managers'      => $request->input('tgl_manager'),
-            'doc_lampiran'      => $request->input('doc_lampiran'),
-            'keterangan'        => 'process',
-            'up_filee'          => $namaGambar,
-            'manager_tgp_id'    => Auth::id(),
+            'kategori_masalah' => $request->input('kategori_masalah'),
+            'disposisi_unit' => $request->input('disposisi_unit'),
+            'senior_manager' => $request->input('senior_manager'),
+            'tgl_managers' => $request->input('tgl_manager'),
+            'doc_lampiran' => $request->input('doc_lampiran'),
+            'keterangan' => 'process',
+            'up_filee' => $namaGambar,
+            'manager_tgp_id' => Auth::id(),
 
             // ── TANDA TANGAN DIGITAL #2: dicap saat PIC pertama kali merespons ─
             'signed_at_process' => $signedAtProcess,
@@ -552,8 +518,7 @@ class NCRController extends Controller
 
         $this->kirimNotifikasiPerluVerifikasi($ncr);
 
-        return redirect()->route('ncr.show', $ncr->nomor_ncr)
-            ->with('pesan', 'Data NCR berhasil ditanggapi!');
+        return redirect()->route('ncr.show', $ncr->nomor_ncr)->with('pesan', 'Data NCR berhasil ditanggapi!');
     }
 
     // Form verifikasi NCR
@@ -569,9 +534,9 @@ class NCRController extends Controller
 
         $data = [
             'pengguna' => $this->modelPengguna->all(),
-            'proyek'   => $this->modelProyek->all(),
-            'temuan'   => $this->modelTemuan->all(),
-            'ncr'      => $ncr,
+            'proyek' => $this->modelProyek->all(),
+            'temuan' => $this->modelTemuan->all(),
+            'ncr' => $ncr,
         ];
 
         return view('ncr.verifikasi_form', $data);
@@ -589,21 +554,21 @@ class NCRController extends Controller
 
         $validated = $request->validate(
             [
-                'verifikasi_qc'    => 'required|string',
-                'tgl_verifikasi'   => 'required|date',
+                'verifikasi_qc' => 'required|string',
+                'tgl_verifikasi' => 'required|date',
                 'hasil_verifikasi' => 'required|in:Efektif,Tidak Efektif',
-                'keterangan'       => 'required|in:open,close',
-                'ncr_baru'         => 'nullable|string|max:255',
+                'keterangan' => 'required|in:open,close',
+                'ncr_baru' => 'nullable|string|max:255',
             ],
             [
-                'verifikasi_qc.required'    => 'Penjelasan verifikasi wajib diisi.',
-                'tgl_verifikasi.required'   => 'Tanggal verifikasi wajib diisi.',
-                'tgl_verifikasi.date'       => 'Tanggal verifikasi tidak valid.',
+                'verifikasi_qc.required' => 'Penjelasan verifikasi wajib diisi.',
+                'tgl_verifikasi.required' => 'Tanggal verifikasi wajib diisi.',
+                'tgl_verifikasi.date' => 'Tanggal verifikasi tidak valid.',
                 'hasil_verifikasi.required' => 'Hasil verifikasi wajib dipilih.',
-                'hasil_verifikasi.in'       => 'Hasil verifikasi tidak valid.',
-                'ncr_baru.max'              => 'NCR baru maksimal 255 karakter.',
-                'keterangan.required'       => 'Status NCR wajib dipilih.',
-                'keterangan.in'             => 'Status NCR harus open atau close.',
+                'hasil_verifikasi.in' => 'Hasil verifikasi tidak valid.',
+                'ncr_baru.max' => 'NCR baru maksimal 255 karakter.',
+                'keterangan.required' => 'Status NCR wajib dipilih.',
+                'keterangan.in' => 'Status NCR harus open atau close.',
             ],
         );
 
@@ -615,18 +580,17 @@ class NCRController extends Controller
         }
 
         $ncr->update([
-            'verifikasi_qc'    => strip_tags($validated['verifikasi_qc']),
-            'tgl_verifikasi'   => $validated['tgl_verifikasi'],
+            'verifikasi_qc' => strip_tags($validated['verifikasi_qc']),
+            'tgl_verifikasi' => $validated['tgl_verifikasi'],
             'hasil_verifikasi' => $validated['hasil_verifikasi'],
-            'ncr_baru'         => strip_tags($validated['ncr_baru'] ?? ''),
-            'keterangan'       => $validated['keterangan'],
+            'ncr_baru' => strip_tags($validated['ncr_baru'] ?? ''),
+            'keterangan' => $validated['keterangan'],
 
             // ── TANDA TANGAN DIGITAL #3: dicap saat NCR resmi ditutup ────────
-            'signed_at_close'  => $signedAtClose,
+            'signed_at_close' => $signedAtClose,
         ]);
 
-        return redirect()->route('ncr.show', $ncr->nomor_ncr)
-            ->with('pesan', 'Data NCR berhasil diverifikasi!');
+        return redirect()->route('ncr.show', $ncr->nomor_ncr)->with('pesan', 'Data NCR berhasil diverifikasi!');
     }
 
     // Hapus NCR
@@ -669,16 +633,14 @@ class NCRController extends Controller
 
         // hanya boleh muncul/berjalan kalau status bukan open
         if (!in_array($ncr->keterangan, ['process', 'close'])) {
-            return redirect()->route('ncr.show', $ncr->nomor_ncr)
-                ->with('error', 'Status NCR hanya bisa dikembalikan ke OPEN dari PROCESS atau CLOSE.');
+            return redirect()->route('ncr.show', $ncr->nomor_ncr)->with('error', 'Status NCR hanya bisa dikembalikan ke OPEN dari PROCESS atau CLOSE.');
         }
 
         $ncr->update([
             'keterangan' => 'open',
         ]);
 
-        return redirect()->route('ncr.show', $ncr->nomor_ncr)
-            ->with('pesan', 'Data NCR berhasil dikembalikan ke status OPEN!');
+        return redirect()->route('ncr.show', $ncr->nomor_ncr)->with('pesan', 'Data NCR berhasil dikembalikan ke status OPEN!');
     }
 
     private function canTanggapiNcr(Ncr $ncr, User $user): bool
@@ -687,7 +649,7 @@ class NCRController extends Controller
             return false;
         }
 
-        $unitKerjaIds   = $user->unitKerja()->pluck('unit_kerja.id')->toArray();
+        $unitKerjaIds = $user->unitKerja()->pluck('unit_kerja.id')->toArray();
         $unitKerjaNames = $user->unitKerja()->pluck('nama_unit')->toArray();
 
         if (!empty($unitKerjaIds) && !is_null($ncr->unit_kerja_id) && in_array($ncr->unit_kerja_id, $unitKerjaIds)) {
@@ -747,32 +709,23 @@ class NCRController extends Controller
     public function exportReport(Request $request)
     {
         $request->validate([
-            'tgl_awal'  => 'nullable|date',
+            'tgl_awal' => 'nullable|date',
             'tgl_akhir' => 'nullable|date|after_or_equal:tgl_awal',
-            'ket_ncr'   => 'nullable|string',
+            'ket_ncr' => 'nullable|string',
         ]);
 
         $filename = 'laporan_ncr_' . now()->format('Ymd_His') . '.xlsx';
 
-        return Excel::download(
-            new NcrReportExport($request->tgl_awal, $request->tgl_akhir, $request->ket_ncr),
-            $filename
-        );
+        return Excel::download(new NcrReportExport($request->tgl_awal, $request->tgl_akhir, $request->ket_ncr), $filename);
     }
 
     public function showRevision($nomor, $rev)
     {
         $ncr = Ncr::where('nomor_ncr', $nomor)->firstOrFail();
 
-        $log = \App\Models\NcrChangeLog::with('user')
-            ->where('nomor_ncr', $nomor)
-            ->where('revision_index', $rev)
-            ->firstOrFail();
+        $log = \App\Models\NcrChangeLog::with('user')->where('nomor_ncr', $nomor)->where('revision_index', $rev)->firstOrFail();
 
-        $revisions = \App\Models\NcrChangeLog::with('user')
-            ->where('nomor_ncr', $nomor)
-            ->orderByDesc('revision_index')
-            ->get();
+        $revisions = \App\Models\NcrChangeLog::with('user')->where('nomor_ncr', $nomor)->orderByDesc('revision_index')->get();
 
         return view('ncr.revision_show', [
             'ncr' => $ncr,
@@ -783,10 +736,7 @@ class NCRController extends Controller
 
     private function kirimNotifikasiRevisi(Ncr $ncr): void
     {
-        $ncr->loadMissing([
-            'penanggungJawab',
-            'latestRevision.user',
-        ]);
+        $ncr->loadMissing(['penanggungJawab', 'latestRevision.user']);
 
         $latestLog = $ncr->latestRevision;
 
@@ -814,14 +764,61 @@ class NCRController extends Controller
             })->get();
         }
 
-        $recipients = $recipients
-            ->merge($unitUsers)
-            ->unique('id')
-            ->reject(fn ($user) => (int) $user->id === (int) $latestLog->user_id); // exclude editor
+        $recipients = $recipients->merge($unitUsers)->unique('id')->reject(fn($user) => (int) $user->id === (int) $latestLog->user_id); // exclude editor
 
         foreach ($recipients as $user) {
             $user->notify(new NcrDirevisiNotification($ncr, $latestLog));
         }
     }
 
+    public function terlambat(): View
+    {
+        /** @var User $authUser */
+        $authUser = Auth::user();
+
+        $level = strtolower($authUser->level ?? '');
+        $isAdmin = in_array($level, ['admin', 'superadmin']);
+
+        $query = Ncr::query()
+            ->with(['project', 'penanggungJawab'])
+            ->whereNotIn('keterangan', ['close', 'closed'])
+            ->whereNotNull('tgl_target')
+            ->whereDate('tgl_target', '<', Carbon::today());
+
+        if (!$isAdmin && in_array($level, ['user', 'manager'])) {
+            $unitKerjaIds = $authUser->unitKerja()->pluck('unit_kerja.id')->toArray();
+            $unitKerjaNames = $authUser->unitKerja()->pluck('nama_unit')->toArray();
+
+            $query->where(function ($q) use ($authUser, $unitKerjaIds, $unitKerjaNames) {
+                $q->where('user_id', $authUser->id);
+
+                $q->orWhere('penanggung_jawab', $authUser->id);
+
+                if (!empty($unitKerjaIds)) {
+                    $q->orWhereHas('user.unitKerja', function ($uq) use ($unitKerjaIds) {
+                        $uq->whereIn('unit_kerja.id', $unitKerjaIds);
+                    });
+
+                    $q->orWhereIn('unit_kerja_id', $unitKerjaIds);
+                }
+
+                if (!empty($unitKerjaNames)) {
+                    $q->orWhereIn('unit_tujuan', $unitKerjaNames);
+                }
+            });
+        }
+
+        $ncrTerlambat = $query
+            ->orderBy('tgl_target', 'asc')
+            ->paginate(10)
+            ->through(function ($ncr) {
+                $ncr->sisa_hari = Carbon::now()
+                    ->startOfDay()
+                    ->diffInDays(Carbon::parse($ncr->tgl_target)->startOfDay(), false);
+
+                return $ncr;
+            });
+
+        return view('ncr.ncr-terlambat', compact('ncrTerlambat', 'isAdmin', 'level'));
+    }
 }

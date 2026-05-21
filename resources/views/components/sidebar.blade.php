@@ -72,17 +72,28 @@
                 </a>
 
                 {{-- NCR Dropdown --}}
-                <div x-data="{ open: {{ request()->routeIs('ncr.*') ? 'true' : 'false' }} }" class="space-y-1">
+                @php
+                    $isNcrParentActive = request()->routeIs('ncr.*');
+
+                    $isNcrRegistrasiActive = request()->routeIs('ncr.*')
+                        && !request()->routeIs('ncr.verifikasi.*')
+                        && !request()->routeIs('ncr.terlambat');
+
+                    $isNcrVerifikasiActive = request()->routeIs('ncr.verifikasi.*');
+                    $isNcrTerlambatActive = request()->routeIs('ncr.terlambat');
+                @endphp
+
+                <div x-data="{ open: {{ $isNcrParentActive ? 'true' : 'false' }} }" class="space-y-1">
                     <button type="button"
                         @click="$store.sidebar.collapsed ? (window.location.href = '{{ route('ncr.index') }}') : (open = !open)"
                         :title="$store.sidebar.collapsed ? 'NCR' : ''"
                         class="group w-full flex items-center justify-between gap-3 px-1.5 py-2 rounded-xl text-sm font-medium transition-all duration-200
-                        {{ request()->routeIs('ncr.*')
+                        {{ $isNcrParentActive
                             ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 shadow-sm ring-1 ring-indigo-100 dark:ring-indigo-700'
                             : 'text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-gray-100' }}">
                         <div class="flex items-center gap-3">
                             <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition
-                                {{ request()->routeIs('ncr.*')
+                                {{ $isNcrParentActive
                                     ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300'
                                     : 'bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400 group-hover:bg-slate-200 dark:group-hover:bg-gray-600 group-hover:text-slate-700 dark:group-hover:text-gray-200' }}">
                                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,8 +101,14 @@
                                         d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                             </span>
-                            <span class="whitespace-nowrap overflow-hidden transition-all duration-200" :class="$store.sidebar.collapsed ? 'opacity-0 w-0' : 'opacity-100'">NCR</span>
+
+                            <span
+                                class="whitespace-nowrap overflow-hidden transition-all duration-200"
+                                :class="$store.sidebar.collapsed ? 'opacity-0 w-0' : 'opacity-100'">
+                                NCR
+                            </span>
                         </div>
+
                         <svg class="w-4 h-4 flex-shrink-0 transition-all duration-200"
                             :class="{ 'rotate-180': open, 'opacity-0 w-0': $store.sidebar.collapsed }"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,24 +116,39 @@
                         </svg>
                     </button>
 
-                    <div x-show="open && !$store.sidebar.collapsed" x-collapse class="ml-4 pl-4 border-l border-slate-200 dark:border-gray-600 space-y-1">
+                    <div
+                        x-show="open && !$store.sidebar.collapsed"
+                        x-collapse
+                        class="ml-4 pl-4 border-l border-slate-200 dark:border-gray-600 space-y-1">
+
                         <a href="{{ route('ncr.index') }}"
                             class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200
-                            {{ request()->routeIs('ncr.*') && !request()->routeIs('ncr.verifikasi.*')
+                            {{ $isNcrRegistrasiActive
                                 ? 'bg-slate-100 dark:bg-gray-700 text-slate-900 dark:text-gray-100 font-medium'
                                 : 'text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-800 dark:hover:text-gray-200' }}">
                             <span class="w-1.5 h-1.5 rounded-full flex-shrink-0
-                                {{ request()->routeIs('ncr.*') && !request()->routeIs('ncr.verifikasi.*') ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-gray-600' }}"></span>
+                                {{ $isNcrRegistrasiActive ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-gray-600' }}"></span>
                             Registrasi NCR
                         </a>
+
                         <a href="{{ route('ncr.verifikasi.index') }}"
                             class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200
-                            {{ request()->routeIs('ncr.verifikasi.*')
+                            {{ $isNcrVerifikasiActive
                                 ? 'bg-slate-100 dark:bg-gray-700 text-slate-900 dark:text-gray-100 font-medium'
                                 : 'text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-800 dark:hover:text-gray-200' }}">
                             <span class="w-1.5 h-1.5 rounded-full flex-shrink-0
-                                {{ request()->routeIs('ncr.verifikasi.*') ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-gray-600' }}"></span>
+                                {{ $isNcrVerifikasiActive ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-gray-600' }}"></span>
                             Verifikasi NCR
+                        </a>
+
+                        <a href="{{ route('ncr.terlambat') }}"
+                            class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200
+                            {{ $isNcrTerlambatActive
+                                ? 'bg-slate-100 dark:bg-gray-700 text-slate-900 dark:text-gray-100 font-medium'
+                                : 'text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-800 dark:hover:text-gray-200' }}">
+                            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0
+                                {{ $isNcrTerlambatActive ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-gray-600' }}"></span>
+                            NCR Terlambat
                         </a>
                     </div>
                 </div>

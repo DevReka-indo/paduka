@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function () {
         ->group(function () {
             Route::get('/', [NCRController::class, 'index'])->name('index');
             Route::get('/verifikasi', [NCRController::class, 'verifikasincr'])->name('verifikasi.index');
+            Route::get('/terlambat', [NCRController::class, 'terlambat'])->name('terlambat');
 
             Route::get('/create', [NCRController::class, 'create'])->name('create');
             Route::post('/', [NCRController::class, 'simpan'])->name('store');
@@ -91,6 +92,8 @@ Route::middleware('auth')->group(function () {
         ->name('feedback.')
         ->group(function () {
             Route::get('/', [FeedbackPelangganController::class, 'index'])->name('index');
+            Route::get('/project', [FeedbackPelangganController::class, 'project'])->name('project');
+            Route::get('/barang', [FeedbackPelangganController::class, 'barang'])->name('barang');
             Route::get('/{id}', [FeedbackPelangganController::class, 'show'])->name('show');
             Route::get('/{id}/pdf', [FeedbackPelangganController::class, 'pdf'])->name('pdf');
             Route::delete('/{id}', [FeedbackPelangganController::class, 'destroy'])->name('destroy');

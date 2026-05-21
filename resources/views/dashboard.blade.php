@@ -5,571 +5,231 @@
 @endsection
 
 @section('content')
-<div class="py-6 px-4 sm:px-6 lg:px-8 w-full max-w-[1600px] mx-auto space-y-6">
+<div
+    x-data="{ activeTab: 'executive' }"
+    class="min-h-screen bg-slate-50 px-4 py-6 dark:bg-gray-950 sm:px-6 lg:px-8"
+>
+    <div class="mx-auto max-w-[1600px] space-y-6">
 
-    {{-- Greeting --}}
-    <div>
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
-            Selamat datang, {{ Auth::user()->name }}
-        </h2>
-        <p class="text-sm text-gray-400 dark:text-gray-500 mt-0.5">
-            {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
-        </p>
-    </div>
+        <x-dashboard.header />
 
-    {{-- Stat Cards --}}
-    <div class="grid grid-cols-2 gap-4 {{ $isAdmin ? 'lg:grid-cols-5' : 'lg:grid-cols-4' }}">
+        {{--
+            ============================
+            DASHBOARD TAB NAVIGATION
+            ============================
 
-        {{-- Total NCR — pakai ring agar tidak nyaru di dark mode --}}
-        <a href="{{ route('ncr.index') }}"
-            class="{{ $isAdmin ? 'lg:col-span-1' : 'col-span-2 lg:col-span-1' }}
-                   bg-gray-800 dark:bg-gray-700 dark:ring-1 dark:ring-gray-600
-                   text-white rounded-2xl p-5 flex flex-col justify-between min-h-[110px]
-                   transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg
-                   focus:outline-none focus:ring-2 focus:ring-gray-400">
-            <div class="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-            </div>
-            <div class="mt-3">
-                <p class="text-3xl font-bold">{{ $totalNcr }}</p>
-                <p class="text-xs text-gray-400 mt-0.5">
-                    {{ $isAdmin ? 'Total Semua NCR' : 'Total NCR' }}
-                </p>
-            </div>
-        </a>
+            Jika nanti ingin menambahkan tab baru:
+            1. Tambahkan button tab baru pada bagian <nav> di bawah.
+               Contoh:
+               <button type="button" @click="activeTab = 'project'">Project Summary</button>
 
-        {{-- Open --}}
-        <a href="{{ route('ncr.index', ['status' => 'open']) }}"
-            class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/40
-                   rounded-2xl p-5 flex flex-col justify-between min-h-[110px]
-                   transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg
-                   focus:outline-none focus:ring-2 focus:ring-red-200">
-            <div class="w-9 h-9 bg-red-100 dark:bg-red-800/40 rounded-xl flex items-center justify-center">
-                <span class="w-3 h-3 bg-red-500 rounded-full"></span>
-            </div>
-            <div class="mt-3">
-                <p class="text-3xl font-bold text-red-600 dark:text-red-400">{{ $totalOpen }}</p>
-                <p class="text-xs text-red-400 dark:text-red-500 mt-0.5">Open</p>
-            </div>
-        </a>
+            2. Tambahkan panel baru di bawah bagian TAB CONTENT.
+               Contoh:
+               <div x-show="activeTab === 'project'" class="space-y-6">
+                   <x-dashboard.project-summary />
+               </div>
 
-        {{-- Process --}}
-        <a href="{{ route('ncr.index', ['status' => 'process']) }}"
-            class="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/40
-                   rounded-2xl p-5 flex flex-col justify-between min-h-[110px]
-                   transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg
-                   focus:outline-none focus:ring-2 focus:ring-amber-200">
-            <div class="w-9 h-9 bg-amber-100 dark:bg-amber-800/40 rounded-xl flex items-center justify-center">
-                <span class="w-3 h-3 bg-amber-500 rounded-full"></span>
-            </div>
-            <div class="mt-3">
-                <p class="text-3xl font-bold text-amber-600 dark:text-amber-400">{{ $totalProses }}</p>
-                <p class="text-xs text-amber-400 dark:text-amber-500 mt-0.5">Process</p>
-            </div>
-        </a>
+            3. Buat file component baru di folder:
+               resources/views/components/dashboard/
 
-        {{-- Close --}}
-        <a href="{{ route('ncr.index', ['status' => 'close']) }}"
-            class="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/40
-                   rounded-2xl p-5 flex flex-col justify-between min-h-[110px]
-                   transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg
-                   focus:outline-none focus:ring-2 focus:ring-green-200">
-            <div class="w-9 h-9 bg-green-100 dark:bg-green-800/40 rounded-xl flex items-center justify-center">
-                <span class="w-3 h-3 bg-green-500 rounded-full"></span>
-            </div>
-            <div class="mt-3">
-                <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ $totalClose }}</p>
-                <p class="text-xs text-green-400 dark:text-green-500 mt-0.5">Closed</p>
-            </div>
-        </a>
+               Contoh:
+               resources/views/components/dashboard/project-summary.blade.php
 
-        {{-- Project & User — hanya admin/superadmin --}}
-        @if($isAdmin)
-        <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/40
-                    rounded-2xl p-5 flex flex-col justify-between min-h-[110px]">
-            <div class="w-9 h-9 bg-indigo-100 dark:bg-indigo-800/40 rounded-xl flex items-center justify-center">
-                <svg class="w-5 h-5 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                </svg>
-            </div>
-            <div class="mt-3 flex items-end justify-between">
-                <div>
-                    <p class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $totalProject }}</p>
-                    <p class="text-xs text-indigo-400 dark:text-indigo-500 mt-0.5">Project</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-xl font-bold text-indigo-400 dark:text-indigo-500">{{ $totalUser }}</p>
-                    <p class="text-xs text-indigo-300 dark:text-indigo-600">User aktif</p>
-                </div>
-            </div>
-        </div>
-        @endif
+            4. Jika component baru butuh data dari controller,
+               tambahkan data tersebut di DashboardController lalu kirim sebagai props.
+        --}}
+        <div class="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
 
-    </div>
+            {{-- Tabs Header --}}
+            <div class="border-b border-gray-100 px-4 dark:border-gray-800 sm:px-6">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
-    {{-- Chart + Donut --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <nav class="-mb-px flex gap-2 overflow-x-auto" aria-label="Dashboard Tabs">
 
-        {{-- Bar Chart --}}
-        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Tren NCR per Bulan</h3>
-                    <p class="text-xs text-gray-400 dark:text-gray-500">
-                        Statistik NCR berdasarkan bulan
-                    </p>
-                </div>
-
-                <form method="GET" class="flex items-center gap-2">
-
-                    {{-- FROM --}}
-                    <select name="from"
-                        onchange="this.form.submit()"
-                        class="text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-
-                        @foreach($availableMonths as $month)
-                            <option value="{{ $month['value'] }}"
-                                {{ request('from', $defaultFrom) == $month['value'] ? 'selected' : '' }}>
-                                {{ $month['label'] }}
-                            </option>
-                        @endforeach
-                    </select>
-
-                    <span class="text-gray-400 text-sm">→</span>
-
-                    {{-- TO --}}
-                    <select name="to"
-                        onchange="this.form.submit()"
-                        class="text-sm rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-
-                        @foreach($availableMonths as $month)
-                            <option value="{{ $month['value'] }}"
-                                {{ request('to', $defaultTo) == $month['value'] ? 'selected' : '' }}>
-                                {{ $month['label'] }}
-                            </option>
-                        @endforeach
-                    </select>
-
-                </form>
-
-                <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                    <span class="flex items-center gap-1">
-                        <span class="w-2.5 h-2.5 bg-red-400 rounded-sm inline-block"></span>Open
-                    </span>
-                    <span class="flex items-center gap-1">
-                        <span class="w-2.5 h-2.5 bg-amber-400 rounded-sm inline-block"></span>Process
-                    </span>
-                    <span class="flex items-center gap-1">
-                        <span class="w-2.5 h-2.5 bg-green-400 rounded-sm inline-block"></span>Close
-                    </span>
-                </div>
-            </div>
-            <div class="relative h-56">
-                <canvas id="chartTren"></canvas>
-            </div>
-        </div>
-
-        {{-- Donut --}}
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex flex-col">
-            <div class="mb-4">
-                <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Proporsi Status</h3>
-                <p class="text-xs text-gray-400 dark:text-gray-500">
-                    {{ \Carbon\Carbon::createFromFormat('Y-m', $from)->translatedFormat('F Y') }}
-                    -
-                    {{ \Carbon\Carbon::createFromFormat('Y-m', $to)->translatedFormat('F Y') }}
-                    {{ !$isAdmin ? ' — NCR Anda' : '' }}
-                </p>
-            </div>
-            <div class="flex-1 flex items-center justify-center">
-                <div class="relative w-44 h-44">
-                    <canvas id="chartDonut"></canvas>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <p class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ $filteredTotalNcr }}</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500">Total</p>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-4 space-y-2">
-                @php
-                    $pctOpen   = $filteredTotalNcr > 0 ? round($filteredTotalOpen / $filteredTotalNcr * 100) : 0;
-                    $pctProses = $filteredTotalNcr > 0 ? round($filteredTotalProses / $filteredTotalNcr * 100) : 0;
-                    $pctClose  = $filteredTotalNcr > 0 ? round($filteredTotalClose / $filteredTotalNcr * 100) : 0;
-                @endphp
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                        <span class="w-2.5 h-2.5 bg-red-400 rounded-full"></span>Open
-                    </span>
-                    <span class="font-semibold text-gray-700 dark:text-gray-300">
-                        {{ $filteredTotalOpen }} <span class="text-gray-400 dark:text-gray-500 font-normal">({{ $pctOpen }}%)</span>
-                    </span>
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                        <span class="w-2.5 h-2.5 bg-amber-400 rounded-full"></span>Process
-                    </span>
-                    <span class="font-semibold text-gray-700 dark:text-gray-300">
-                        {{ $filteredTotalProses }} <span class="text-gray-400 dark:text-gray-500 font-normal">({{ $pctProses }}%)</span>
-                    </span>
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                    <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                        <span class="w-2.5 h-2.5 bg-green-400 rounded-full"></span>Close
-                    </span>
-                    <span class="font-semibold text-gray-700 dark:text-gray-300">
-                        {{ $filteredTotalClose }} <span class="text-gray-400 dark:text-gray-500 font-normal">({{ $pctClose }}%)</span>
-                    </span>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    {{-- NCR Mendekati Target --}}
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-orange-50 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
-                    <svg class="w-4 h-4 text-orange-500 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">NCR Mendekati Target</h3>
-                    <p class="text-xs text-gray-400 dark:text-gray-500">
-                        Belum selesai & target ≤ 7 hari ke depan{{ !$isAdmin ? ' — NCR Anda' : '' }}
-                    </p>
-                </div>
-            </div>
-            <a href="{{ route('ncr.index') }}" class="text-xs text-indigo-500 dark:text-indigo-400 hover:underline">
-                Lihat semua
-            </a>
-        </div>
-
-        @if($ncrMendekatiTarget->isEmpty())
-            <div class="px-4 py-10 text-center">
-                <div class="flex flex-col items-center gap-2">
-                    <svg class="w-10 h-10 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p class="text-sm font-medium text-gray-400 dark:text-gray-500">Tidak ada NCR yang mendekati target</p>
-                </div>
-            </div>
-        @else
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-700">
-                        <th class="px-4 py-3 text-left font-semibold">Nomor NCR</th>
-                        <th class="px-4 py-3 text-left font-semibold">Nama Proses</th>
-                        <th class="px-4 py-3 text-left font-semibold">Proyek</th>
-                        <th class="px-4 py-3 text-left font-semibold">Lokasi Temuan</th>
-                        <th class="px-4 py-3 text-left font-semibold">Penanggung Jawab</th>
-                        <th class="px-4 py-3 text-left font-semibold">Target</th>
-                        <th class="px-4 py-3 text-left font-semibold">Sisa Waktu</th>
-                        <th class="px-4 py-3 text-left font-semibold">Status</th>
-                        <th class="px-4 py-3 text-left font-semibold">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
-                    @foreach($ncrMendekatiTarget as $item)
-                    <tr class="transition-colors
-                        {{ $item->sisa_hari < 0
-                            ? 'bg-red-50/50 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20'
-                            : ($item->sisa_hari <= 2
-                                ? 'bg-orange-50/50 dark:bg-orange-900/10 hover:bg-orange-50 dark:hover:bg-orange-900/20'
-                                : 'hover:bg-gray-50 dark:hover:bg-gray-700/50') }}">
-
-                        <td class="px-4 py-3">
-                            <a href="{{ route('ncr.show', $item->nomor_ncr) }}"
-                                class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
-                                {{ $item->nomor_ncr }}
-                            </a>
-                        </td>
-
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-[220px] whitespace-normal break-words">
-                            {{ $item->nama_proses ?? '-' }}
-                        </td>
-
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-[220px] whitespace-normal break-words">
-                            {{ $item->project->nama_proyek ?? '-' }}
-                        </td>
-
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-[220px] whitespace-normal break-words">
-                            {{ $item->status_temuan ?? '-' }}
-                        </td>
-
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-                            {{ $item->penanggungJawab->name ?? '-' }}
-                        </td>
-
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-                            {{ \Carbon\Carbon::parse($item->tgl_target)->format('d-m-Y') }}
-                        </td>
-
-                        <td class="px-4 py-3">
-                            @if($item->sisa_hari < 0)
-                                <span class="inline-flex items-center gap-1 text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2.5 py-1 rounded-full">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01" />
-                                    </svg>
-                                    Lewat {{ abs($item->sisa_hari) }} hari
-                                </span>
-                            @elseif($item->sisa_hari == 0)
-                                <span class="inline-flex items-center gap-1 text-xs font-semibold bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-2.5 py-1 rounded-full">
-                                    Hari ini!
-                                </span>
-                            @elseif($item->sisa_hari <= 2)
-                                <span class="inline-flex items-center gap-1 text-xs font-semibold bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 px-2.5 py-1 rounded-full">
-                                    {{ $item->sisa_hari }} hari lagi
-                                </span>
-                            @else
-                                <span class="inline-flex items-center gap-1 text-xs font-semibold bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 px-2.5 py-1 rounded-full">
-                                    {{ $item->sisa_hari }} hari lagi
-                                </span>
-                            @endif
-                        </td>
-
-                        <td class="px-4 py-3">
-                            @php $st = strtolower($item->keterangan ?? ''); @endphp
-                            @if($st == 'open')
-                                <span class="inline-flex items-center gap-1 text-xs font-semibold bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-2.5 py-1 rounded-full">
-                                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>OPEN
-                                </span>
-                            @elseif($st == 'process')
-                                <span class="inline-flex items-center gap-1 text-xs font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-2.5 py-1 rounded-full">
-                                    <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>PROCESS
-                                </span>
-                            @endif
-                        </td>
-
-                        <td class="px-4 py-3">
-                            <a href="{{ route('ncr.show', $item->nomor_ncr) }}"
-                                class="inline-flex items-center gap-1 text-xs font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 px-2.5 py-1.5 rounded-lg transition-colors">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        <button
+                            type="button"
+                            @click="activeTab = 'executive'"
+                            class="group inline-flex shrink-0 items-center gap-2 border-b-2 px-3 py-4 text-sm font-semibold transition"
+                            :class="activeTab === 'executive'
+                                ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-300'
+                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-200'"
+                        >
+                            <span class="flex h-8 w-8 items-center justify-center rounded-xl transition"
+                                :class="activeTab === 'executive'
+                                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300'
+                                    : 'bg-gray-50 text-gray-400 group-hover:text-gray-600 dark:bg-gray-800 dark:text-gray-500 dark:group-hover:text-gray-300'"
+                            >
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
                                 </svg>
-                                Detail
-                            </a>
-                        </td>
+                            </span>
+                            Executive Summary
+                        </button>
 
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                        <button
+                            type="button"
+                            @click="activeTab = 'ncr'; setTimeout(() => window.dispatchEvent(new Event('dashboard:ncr-tab-active')), 80)"
+                            class="group inline-flex shrink-0 items-center gap-2 border-b-2 px-3 py-4 text-sm font-semibold transition"
+                            :class="activeTab === 'ncr'
+                                ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-300'
+                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-200'"
+                        >
+                            <span class="flex h-8 w-8 items-center justify-center rounded-xl transition"
+                                :class="activeTab === 'ncr'
+                                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300'
+                                    : 'bg-gray-50 text-gray-400 group-hover:text-gray-600 dark:bg-gray-800 dark:text-gray-500 dark:group-hover:text-gray-300'"
+                            >
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 17v-6a2 2 0 012-2h8M9 17H5a2 2 0 01-2-2V5a2 2 0 012-2h6a2 2 0 012 2v4m-4 8h10a2 2 0 002-2v-5a2 2 0 00-2-2h-2" />
+                                </svg>
+                            </span>
+                            NCR Management Summary
+                        </button>
 
+                        <button
+                            type="button"
+                            @click="activeTab = 'feedback'"
+                            class="group inline-flex shrink-0 items-center gap-2 border-b-2 px-3 py-4 text-sm font-semibold transition"
+                            :class="activeTab === 'feedback'
+                                ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-300'
+                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-200'"
+                        >
+                            <span class="flex h-8 w-8 items-center justify-center rounded-xl transition"
+                                :class="activeTab === 'feedback'
+                                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300'
+                                    : 'bg-gray-50 text-gray-400 group-hover:text-gray-600 dark:bg-gray-800 dark:text-gray-500 dark:group-hover:text-gray-300'"
+                            >
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z" />
+                                </svg>
+                            </span>
+                            Customer Feedback Summary
+                        </button>
 
+                    </nav>
+
+                    {{-- Filter Periode Bulan - Tahun --}}
+                    <form method="GET" class="flex flex-wrap items-center gap-2 pb-4 lg:pb-0">
+                        <span class="text-xs font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
+                            Periode
+                        </span>
+
+                        <select name="from"
+                                onchange="this.form.submit()"
+                                class="rounded-xl border-gray-200 bg-white text-sm text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                            @foreach($availableMonths as $month)
+                                <option value="{{ $month['value'] }}"
+                                    {{ request('from', $defaultFrom) == $month['value'] ? 'selected' : '' }}>
+                                    {{ $month['label'] }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <span class="text-sm text-gray-400">s/d</span>
+
+                        <select name="to"
+                                onchange="this.form.submit()"
+                                class="rounded-xl border-gray-200 bg-white text-sm text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                            @foreach($availableMonths as $month)
+                                <option value="{{ $month['value'] }}"
+                                    {{ request('to', $defaultTo) == $month['value'] ? 'selected' : '' }}>
+                                    {{ $month['label'] }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+
+                </div>
+            </div>
+
+            {{-- Tab Content --}}
+            <div class="p-4 sm:p-6">
+
+                {{--
+                    EXECUTIVE SUMMARY
+                    Isi: Stat Cards + AI Insight
+                --}}
+                <div
+                    x-show="activeTab === 'executive'"
+                    class="space-y-6"
+                >
+                    <x-dashboard.stat-cards
+                        :is-admin="$isAdmin"
+                        :total-ncr="$totalNcr"
+                        :total-open="$totalOpen"
+                        :total-proses="$totalProses"
+                        :total-close="$totalClose"
+                        :total-project="$totalProject"
+                        :total-user="$totalUser"
+                    />
+
+                    <x-dashboard.ai-insight
+                        :ai-insights="$aiInsights"
+                        :periode-label="$periodeLabel"
+                    />
+                </div>
+
+                {{--
+                    NCR MANAGEMENT SUMMARY
+                    Isi: KPI NCR, chart tren, proporsi status.
+                    Filter periode sekarang juga tersedia di dashboard utama.
+                    Jika chart tidak muncul, pastikan component chart-script sudah diperbarui.
+                --}}
+                <div
+                    x-show="activeTab === 'ncr'"
+                    class="space-y-6"
+                >
+                    <x-dashboard.ncr-management-summary
+                        :available-months="$availableMonths"
+                        :default-from="$defaultFrom"
+                        :default-to="$defaultTo"
+                        :from="$from"
+                        :to="$to"
+                        :is-admin="$isAdmin"
+                        :periode-label="$periodeLabel"
+                        :filtered-total-ncr="$filteredTotalNcr"
+                        :filtered-total-open="$filteredTotalOpen"
+                        :filtered-total-proses="$filteredTotalProses"
+                        :filtered-total-close="$filteredTotalClose"
+                        :feedback-percentage="$feedbackPercentage"
+                    />
+                </div>
+
+                {{--
+                    CUSTOMER FEEDBACK SUMMARY
+                    Isi: Skor rata-rata, KPI feedback, total survey, range nilai.
+                --}}
+                <div
+                    x-show="activeTab === 'feedback'"
+                    class="space-y-6"
+                >
+                    <x-dashboard.customer-feedback-summary
+                        :avg-feedback-score="$avgFeedbackScore"
+                        :feedback-percentage="$feedbackPercentage"
+                        :total-feedback="$totalFeedback"
+                        :max-feedback-score="$maxFeedbackScore"
+                        :min-feedback-score="$minFeedbackScore"
+                    />
+                </div>
+
+            </div>
         </div>
-        @endif
-    </div>
 
+    </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    let chartTren = null;
-    let chartDonut = null;
-    let rebuildTimer = null;
-
-    function getChartTheme() {
-        const isDark = document.documentElement.classList.contains('dark');
-
-        return {
-            isDark,
-            gridColor: isDark
-                ? 'rgba(107, 114, 128, 0.22)'
-                : 'rgba(107, 114, 128, 0.10)',
-            tickColor: isDark ? '#9ca3af' : '#6b7280',
-            labelColor: isDark ? '#d1d5db' : '#374151',
-            donutBorderColor: isDark ? '#1f2937' : '#ffffff',
-            tooltipBg: isDark ? 'rgba(17, 24, 39, 0.92)' : 'rgba(255, 255, 255, 0.96)',
-            tooltipTitle: isDark ? '#f9fafb' : '#111827',
-            tooltipBody: isDark ? '#e5e7eb' : '#374151',
-        };
-    }
-
-    function destroyCharts() {
-        if (chartTren) {
-            chartTren.destroy();
-            chartTren = null;
-        }
-
-        if (chartDonut) {
-            chartDonut.destroy();
-            chartDonut = null;
-        }
-    }
-
-    function createCharts(animated = true) {
-        const theme = getChartTheme();
-
-        destroyCharts();
-
-        const trenCanvas = document.getElementById('chartTren');
-        const donutCanvas = document.getElementById('chartDonut');
-
-        if (!trenCanvas || !donutCanvas) return;
-
-        const ctxTren = trenCanvas.getContext('2d');
-        const ctxDonut = donutCanvas.getContext('2d');
-
-        chartTren = new Chart(ctxTren, {
-            type: 'bar',
-            data: {
-                labels: @json($bulanLabel),
-                datasets: [
-                    {
-                        label: 'Open',
-                        data: @json($dataOpen),
-                        backgroundColor: 'rgba(248, 113, 113, 0.82)',
-                        borderRadius: 6,
-                        maxBarThickness: 22,
-                    },
-                    {
-                        label: 'Process',
-                        data: @json($dataProses),
-                        backgroundColor: 'rgba(251, 191, 36, 0.82)',
-                        borderRadius: 6,
-                        maxBarThickness: 22,
-                    },
-                    {
-                        label: 'Close',
-                        data: @json($dataClose),
-                        backgroundColor: 'rgba(74, 222, 128, 0.82)',
-                        borderRadius: 6,
-                        maxBarThickness: 22,
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: animated ? {
-                    duration: 450,
-                    easing: 'easeOutCubic',
-                } : false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: theme.tooltipBg,
-                        titleColor: theme.tooltipTitle,
-                        bodyColor: theme.tooltipBody,
-                        borderColor: theme.gridColor,
-                        borderWidth: 1,
-                        padding: 10,
-                        displayColors: true,
-                    },
-                },
-                scales: {
-                    x: {
-                        stacked: false,
-                        grid: {
-                            display: false,
-                            drawBorder: false,
-                        },
-                        border: {
-                            display: false,
-                        },
-                        ticks: {
-                            font: { size: 11 },
-                            color: theme.tickColor,
-                        },
-                    },
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: theme.gridColor,
-                            drawBorder: false,
-                        },
-                        border: {
-                            display: false,
-                        },
-                        ticks: {
-                            font: { size: 11 },
-                            color: theme.tickColor,
-                            precision: 0,
-                        },
-                    },
-                },
-            },
-        });
-
-        chartDonut = new Chart(ctxDonut, {
-            type: 'doughnut',
-            data: {
-                labels: ['Open', 'Process', 'Close'],
-                datasets: [{
-                    data: [{{ $filteredTotalOpen }}, {{ $filteredTotalProses }}, {{ $filteredTotalClose }}],
-                    backgroundColor: [
-                        'rgba(248, 113, 113, 0.88)',
-                        'rgba(251, 191, 36, 0.88)',
-                        'rgba(74, 222, 128, 0.88)',
-                    ],
-                    borderColor: theme.donutBorderColor,
-                    borderWidth: 3,
-                    hoverOffset: 8,
-                }],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '72%',
-                animation: animated ? {
-                    duration: 500,
-                    easing: 'easeOutCubic',
-                } : false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: theme.tooltipBg,
-                        titleColor: theme.tooltipTitle,
-                        bodyColor: theme.tooltipBody,
-                        borderColor: theme.gridColor,
-                        borderWidth: 1,
-                        padding: 10,
-                        callbacks: {
-                            label: function(ctx) {
-                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                                const pct = total > 0 ? Math.round(ctx.raw / total * 100) : 0;
-                                return ` ${ctx.label}: ${ctx.raw} (${pct}%)`;
-                            }
-                        }
-                    },
-                },
-            },
-        });
-    }
-
-    createCharts(true);
-
-    const observer = new MutationObserver((mutations) => {
-        const classChanged = mutations.some(
-            mutation => mutation.type === 'attributes' && mutation.attributeName === 'class'
-        );
-
-        if (!classChanged) return;
-
-        clearTimeout(rebuildTimer);
-        rebuildTimer = setTimeout(() => {
-            createCharts(true);
-        }, 120);
-    });
-
-    observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['class'],
-    });
-});
-</script>
+<x-dashboard.chart-script
+    :bulan-label="$bulanLabel"
+    :data-open="$dataOpen"
+    :data-proses="$dataProses"
+    :data-close="$dataClose"
+    :filtered-total-open="$filteredTotalOpen"
+    :filtered-total-proses="$filteredTotalProses"
+    :filtered-total-close="$filteredTotalClose"
+/>
 @endsection

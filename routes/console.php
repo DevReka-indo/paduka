@@ -11,3 +11,6 @@ Artisan::command('inspire', function () {
 Schedule::command('ncr:reminder-terlambat')
     ->dailyAt('08:00')
     ->withoutOverlapping();
+
+Schedule::command('telescope:prune --hours=48')
+    ->daily();

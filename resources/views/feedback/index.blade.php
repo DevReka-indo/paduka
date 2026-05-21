@@ -1,813 +1,161 @@
 @extends('layouts.app')
 
 @section('content')
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-
-    :root {
-        --bg: #f4f5f7;
-        --surface: #ffffff;
-        --surface-2: #f9fafb;
-        --border: #e5e7eb;
-        --text-primary: #111827;
-        --text-secondary: #6b7280;
-        --text-muted: #9ca3af;
-        --accent: #1d4ed8;
-        --accent-light: #dbeafe;
-        --success: #059669;
-        --success-light: #d1fae5;
-        --danger: #dc2626;
-        --danger-light: #fee2e2;
-        --warning: #d97706;
-        --warning-light: #fef3c7;
-        --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-        --shadow: 0 4px 16px rgba(0,0,0,.06);
-        --radius: 10px;
-    }
-
-    .fb-wrapper {
-        font-family: 'DM Sans', sans-serif;
-        background: var(--bg);
-        min-height: 100vh;
-        padding: 32px 24px;
-        color: var(--text-primary);
-    }
-
-    /* ── Header ── */
-    .fb-header {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        margin-bottom: 28px;
-        gap: 16px;
-        flex-wrap: wrap;
-    }
-
-    .fb-title-group {}
-
-    .fb-eyebrow {
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-        color: var(--accent);
-        margin-bottom: 4px;
-    }
-
-    .fb-title {
-        font-size: 26px;
-        font-weight: 700;
-        color: var(--text-primary);
-        letter-spacing: -.02em;
-        line-height: 1.2;
-    }
-
-    .fb-subtitle {
-        font-size: 13.5px;
-        color: var(--text-secondary);
-        margin-top: 4px;
-    }
-
-    /* ── Stats strip ── */
-    .fb-stats {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 24px;
-        flex-wrap: wrap;
-    }
-
-    .fb-stat-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 14px 20px;
-        flex: 1;
-        min-width: 130px;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .fb-stat-label {
-        font-size: 11.5px;
-        color: var(--text-muted);
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: .05em;
-        margin-bottom: 6px;
-    }
-
-    .fb-stat-value {
-        font-size: 24px;
-        font-weight: 700;
-        color: var(--text-primary);
-        font-family: 'DM Mono', monospace;
-        letter-spacing: -.03em;
-    }
-
-    .fb-stat-value.good { color: var(--success); }
-    .fb-stat-value.warn { color: var(--warning); }
-
-    /* ── Toolbar ── */
-    .fb-toolbar {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 16px;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .fb-search-wrap {
-        position: relative;
-        flex: 1;
-        min-width: 220px;
-        max-width: 420px;
-    }
-
-    .fb-search-icon {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-muted);
-        pointer-events: none;
-    }
-
-    .fb-search {
-        width: 100%;
-        padding: 9px 14px 9px 38px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        font-family: 'DM Sans', sans-serif;
-        font-size: 13.5px;
-        color: var(--text-primary);
-        background: var(--surface);
-        box-shadow: var(--shadow-sm);
-        outline: none;
-        transition: border-color .15s, box-shadow .15s;
-    }
-
-    .fb-search:focus {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(29,78,216,.1);
-    }
-
-    .fb-search::placeholder { color: var(--text-muted); }
-
-    .fb-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 9px 16px;
-        border-radius: 8px;
-        font-family: 'DM Sans', sans-serif;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        border: 1px solid transparent;
-        transition: all .15s;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-
-    .fb-btn-primary {
-        background: var(--accent);
-        color: #fff;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .fb-btn-primary:hover { background: #1e40af; }
-
-    .fb-btn-ghost {
-        background: var(--surface);
-        color: var(--text-secondary);
-        border-color: var(--border);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .fb-btn-ghost:hover { background: var(--surface-2); color: var(--text-primary); }
-
-    /* ── Flash message ── */
-    .fb-flash {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: var(--success-light);
-        border: 1px solid #a7f3d0;
-        border-radius: 8px;
-        padding: 12px 16px;
-        font-size: 13.5px;
-        color: var(--success);
-        font-weight: 500;
-        margin-bottom: 16px;
-    }
-
-    /* ── Table card ── */
-    .fb-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        overflow: hidden;
-    }
-
-    .fb-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .fb-table thead {
-        background: var(--surface-2);
-        border-bottom: 1px solid var(--border);
-    }
-
-    .fb-table th {
-        padding: 11px 16px;
-        text-align: left;
-        font-size: 11.5px;
-        font-weight: 600;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: .06em;
-        white-space: nowrap;
-    }
-
-    .fb-table th:last-child { text-align: right; }
-
-    .fb-table tbody tr {
-        border-bottom: 1px solid var(--border);
-        transition: background .1s;
-    }
-
-    .fb-table tbody tr:last-child { border-bottom: none; }
-    .fb-table tbody tr:hover { background: #f8fafd; }
-
-    .fb-table td {
-        padding: 13px 16px;
-        font-size: 13.5px;
-        color: var(--text-primary);
-        vertical-align: middle;
-    }
-
-    .fb-table td:last-child { text-align: right; }
-
-    /* ── Name cell ── */
-    .fb-name-cell { display: flex; flex-direction: column; gap: 1px; }
-    .fb-name { font-weight: 600; font-size: 13.5px; }
-    .fb-jabatan { font-size: 11.5px; color: var(--text-muted); }
-
-    /* ── Badge ── */
-    .fb-badge {
-        display: inline-block;
-        padding: 3px 9px;
-        border-radius: 20px;
-        font-size: 11.5px;
-        font-weight: 600;
-        font-family: 'DM Mono', monospace;
-    }
-
-    .fb-badge-green  { background: var(--success-light); color: #065f46; }
-    .fb-badge-yellow { background: var(--warning-light); color: #92400e; }
-    .fb-badge-red    { background: var(--danger-light);  color: #991b1b; }
-
-    /* ── Actions ── */
-    .fb-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-
-    .fb-action-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 5px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        text-decoration: none;
-        border: 1px solid transparent;
-        cursor: pointer;
-        transition: all .13s;
-        background: none;
-        white-space: nowrap;
-        font-family: 'DM Sans', sans-serif;
-    }
-
-    .fb-action-detail {
-        background: var(--accent-light);
-        color: var(--accent);
-        border-color: #bfdbfe;
-    }
-
-    .fb-action-detail:hover { background: #bfdbfe; }
-
-    .fb-action-pdf {
-        background: var(--success-light);
-        color: var(--success);
-        border-color: #a7f3d0;
-    }
-
-    .fb-action-pdf:hover { background: #a7f3d0; }
-
-    .fb-action-delete {
-        background: var(--danger-light);
-        color: var(--danger);
-        border-color: #fecaca;
-    }
-
-    .fb-action-delete:hover { background: #fecaca; }
-
-    /* ── Empty state ── */
-    .fb-empty {
-        padding: 56px 24px;
-        text-align: center;
-        color: var(--text-muted);
-    }
-
-    .fb-empty-icon {
-        margin-bottom: 14px;
-        display: flex;
-        justify-content: center;
-    }
-
-    .fb-empty-icon img {
-        width: 110px;
-        height: auto;
-        object-fit: contain;
-        opacity: .95;
-    }
-    .fb-empty-text { font-size: 14px; font-weight: 500; }
-    .fb-empty-sub  { font-size: 12.5px; margin-top: 4px; }
-
-    /* ── Pagination ── */
-    .fb-pagination { padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface-2); }
-
-    /* Tailwind pagination override */
-    .fb-pagination nav span[aria-current="page"] span,
-    .fb-pagination nav .relative.z-10 {
-        background: var(--accent) !important;
-        color: #fff !important;
-        border-color: var(--accent) !important;
-    }
-
-    /* ── Responsive ── */
-    @media (max-width: 768px) {
-        .fb-wrapper { padding: 16px; }
-        .fb-col-hide { display: none; }
-        .fb-title { font-size: 20px; }
-    }
-
-    .fb-chart-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-
-    .fb-chart-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 18px;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .fb-chart-title {
-        font-size: 14px;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 4px;
-    }
-
-    .fb-chart-subtitle {
-        font-size: 12px;
-        color: var(--text-muted);
-        margin-bottom: 14px;
-    }
-
-    .fb-chart-box {
-        height: 280px;
-    }
-
-    @media (max-width: 900px) {
-        .fb-chart-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    /* ================= DARK MODE - mengikuti pola halaman NCR ================= */
-    .dark .fb-wrapper {
-        background: #111827;
-        color: #e5e7eb;
-    }
-
-    .dark .fb-title,
-    .dark .fb-stat-value,
-    .dark .fb-chart-title,
-    .dark .fb-table td,
-    .dark .fb-name {
-        color: #f3f4f6;
-    }
-
-    .dark .fb-subtitle,
-    .dark .fb-stat-label,
-    .dark .fb-chart-subtitle,
-    .dark .fb-jabatan,
-    .dark .fb-empty,
-    .dark .fb-empty-sub,
-    .dark .fb-table th {
-        color: #9ca3af;
-    }
-
-    .dark .fb-stat-card,
-    .dark .fb-card,
-    .dark .fb-chart-card {
-        background: #1f2937;
-        border-color: #374151;
-        box-shadow: none;
-    }
-
-    .dark .fb-table thead {
-        background: rgba(55, 65, 81, 0.5);
-        border-color: #374151;
-    }
-
-    .dark .fb-table tbody tr {
-        border-color: #374151;
-    }
-
-    .dark .fb-table tbody tr:hover {
-        background: rgba(55, 65, 81, 0.45);
-    }
-
-    .dark .fb-search {
-        background: #111827;
-        border-color: #4b5563;
-        color: #e5e7eb;
-    }
-
-    .dark .fb-search::placeholder {
-        color: #6b7280;
-    }
-
-    .dark .fb-search-icon {
-        color: #6b7280;
-    }
-
-    .dark .fb-search:focus {
-        border-color: #6366f1;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, .22);
-    }
-
-    .dark .fb-btn-ghost {
-        background: #1f2937;
-        border-color: #374151;
-        color: #d1d5db;
-    }
-
-    .dark .fb-btn-ghost:hover {
-        background: #374151;
-        color: #f9fafb;
-    }
-
-    .dark .fb-pagination {
-        background: #1f2937;
-        border-color: #374151;
-    }
-
-    .dark .fb-flash {
-        background: rgba(16, 185, 129, .12);
-        border-color: rgba(16, 185, 129, .35);
-        color: #34d399;
-    }
-
-    .dark .fb-badge-green {
-        background: rgba(16, 185, 129, .15);
-        color: #34d399;
-    }
-
-    .dark .fb-badge-yellow {
-        background: rgba(245, 158, 11, .15);
-        color: #fbbf24;
-    }
-
-    .dark .fb-badge-red {
-        background: rgba(239, 68, 68, .15);
-        color: #f87171;
-    }
-
-    .dark .fb-action-detail {
-        background: rgba(99, 102, 241, .18);
-        color: #818cf8;
-        border-color: rgba(99, 102, 241, .35);
-    }
-
-    .dark .fb-action-detail:hover {
-        background: rgba(99, 102, 241, .3);
-    }
-
-    .dark .fb-action-pdf {
-        background: rgba(16, 185, 129, .15);
-        color: #34d399;
-        border-color: rgba(16, 185, 129, .35);
-    }
-
-    .dark .fb-action-pdf:hover {
-        background: rgba(16, 185, 129, .25);
-    }
-
-    .dark .fb-action-delete {
-        background: rgba(239, 68, 68, .15);
-        color: #f87171;
-        border-color: rgba(239, 68, 68, .35);
-    }
-
-    .dark .fb-action-delete:hover {
-        background: rgba(239, 68, 68, .25);
-    }
-
-    .fb-score-box {
-        padding: 14px 16px;
-        border-radius: 8px;
-        text-align: center;
-    }
-
-    .fb-score-high {
-        background: #bbf7d0;
-    }
-
-    .fb-score-low {
-        background: #fecaca;
-    }
-
-    .fb-score-label {
-        font-size: 13px;
-        font-weight: 500;
-        color: #111827;
-        margin-bottom: 8px;
-    }
-
-    .fb-score-value {
-        font-size: 34px;
-        font-weight: 500;
-        font-family: 'DM Mono', monospace;
-        line-height: 1;
-    }
-
-    .fb-score-high .fb-score-value {
-        color: #0f766e;
-    }
-
-    .fb-score-low .fb-score-value {
-        color: #dc2626;
-    }
-
-    .dark .fb-score-high {
-        background: rgba(16, 185, 129, .18);
-    }
-
-    .dark .fb-score-low {
-        background: rgba(239, 68, 68, .18);
-    }
-
-    .dark .fb-score-label {
-        color: #e5e7eb;
-    }
-
-    .fb-inline-search {
-        flex: 1;
-        min-width: 220px;
-        padding: 10px 12px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        background: var(--surface);
-        color: var(--text-primary);
-        font-family: 'DM Sans', sans-serif;
-        font-size: 13.5px;
-        outline: none;
-    }
-
-    .fb-inline-search::placeholder {
-        color: var(--text-muted);
-    }
-
-    .dark .fb-inline-search {
-        background: #111827;
-        border-color: #4b5563;
-        color: #e5e7eb;
-    }
-
-    .dark .fb-inline-search::placeholder {
-        color: #6b7280;
-    }
-</style>
-
-<div class="fb-wrapper">
-
-    {{-- Header --}}
-    <div class="fb-header">
-
-        <div class="fb-title-group">
-            <h1 class="fb-title">Feedback Pelanggan</h1>
-            <p class="fb-subtitle">Kelola dan pantau hasil survei kepuasan pelanggan</p>
+<div class="min-h-screen bg-slate-50 px-4 py-6 dark:bg-gray-950 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-[1600px] space-y-6">
+
+        {{-- Header --}}
+        <div class="relative overflow-hidden rounded-3xl border border-white/70 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div class="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl"></div>
+            <div class="absolute -bottom-24 left-10 h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl"></div>
+
+            <div class="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <p class="text-xs font-extrabold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
+                        Customer Feedback
+                    </p>
+                    <h1 class="mt-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                        Feedback Pelanggan
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Kelola dan pantau hasil survei kepuasan pelanggan.
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="{{ route('feedback.form') }}" target="_blank"
+                       class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Form Survey
+                    </a>
+
+                    <button type="button" onclick="copySurveyLink()"
+                        class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <rect x="9" y="9" width="13" height="13" rx="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                        Copy Link
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <div class="flex items-center gap-2">
-
-            {{-- Buka Form --}}
-            <a href="{{ route('feedback.form') }}" target="_blank"
-                class="fb-btn fb-btn-primary">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                    <path d="M12 5v14M5 12h14"/>
-                </svg>
-                Form Survey
-            </a>
-
-            {{-- Copy Link --}}
-            <button onclick="copySurveyLink()"
-                class="fb-btn fb-btn-ghost">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                    <rect x="9" y="9" width="13" height="13" rx="2"/>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                </svg>
-                Copy Link
-            </button>
-
-        </div>
-
-    </div>
-
-    {{-- Flash message --}}
-    @if(session('success'))
-    <div class="fb-flash">
-        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/>
-        </svg>
-        {{ session('success') }}
-    </div>
-    @endif
-
-    {{-- Filter Tahun & Caturwulan --}}
-    <div class="fb-card" style="margin-bottom:20px;">
-        <form method="GET"
-            action="{{ route('feedback.index') }}"
-            style="padding:18px 20px;display:flex;gap:12px;align-items:end;flex-wrap:wrap;">
-
-            {{-- Tahun --}}
-            <div style="min-width:160px;">
-                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-secondary);">
-                    Tahun
-                </label>
-
-                <select name="year" class="fb-search" style="padding-left:14px;">
-                    @for($year = date('Y'); $year >= date('Y') - 5; $year--)
-                        <option value="{{ $year }}"
-                            {{ (string) $selectedYear === (string) $year ? 'selected' : '' }}>
-                            {{ $year }}
-                        </option>
-                    @endfor
-                </select>
-            </div>
-
-            {{-- Caturwulan --}}
-            <div style="min-width:220px;">
-                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-secondary);">
-                    Caturwulan
-                </label>
-
-                <select name="cw" class="fb-search" style="padding-left:14px;">
-                    <option value="">Semua Caturwulan</option>
-
-                    <option value="1" {{ $selectedCw == '1' ? 'selected' : '' }}>
-                        CW-1 (Jan - Apr)
-                    </option>
-
-                    <option value="2" {{ $selectedCw == '2' ? 'selected' : '' }}>
-                        CW-2 (Mei - Agu)
-                    </option>
-
-                    <option value="3" {{ $selectedCw == '3' ? 'selected' : '' }}>
-                        CW-3 (Sep - Des)
-                    </option>
-                </select>
-            </div>
-
-            {{-- Bulan --}}
-            <div style="min-width:220px;">
-                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-secondary);">
-                    Bulan
-                </label>
-
-                <select name="month" class="fb-search" style="padding-left:14px;">
-                    <option value="">Semua Bulan</option>
-
-                    @foreach([
-                        1 => 'Januari',
-                        2 => 'Februari',
-                        3 => 'Maret',
-                        4 => 'April',
-                        5 => 'Mei',
-                        6 => 'Juni',
-                        7 => 'Juli',
-                        8 => 'Agustus',
-                        9 => 'September',
-                        10 => 'Oktober',
-                        11 => 'November',
-                        12 => 'Desember'
-                    ] as $num => $name)
-
-                        <option value="{{ $num }}"
-                            {{ (string)$selectedMonth === (string)$num ? 'selected' : '' }}>
-                            {{ $name }}
-                        </option>
-
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Dari Tanggal --}}
-            <div style="min-width:180px;">
-                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-secondary);">
-                    Dari Tanggal
-                </label>
-
-                <input
-                    type="date"
-                    name="date_from"
-                    value="{{ $dateFrom }}"
-                    class="fb-search"
-                    style="padding-left:14px;"
-                >
-            </div>
-
-            {{-- Sampai Tanggal --}}
-            <div style="min-width:180px;">
-                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-secondary);">
-                    Sampai Tanggal
-                </label>
-
-                <input
-                    type="date"
-                    name="date_to"
-                    value="{{ $dateTo }}"
-                    class="fb-search"
-                    style="padding-left:14px;"
-                >
-            </div>
-
-            {{-- Button --}}
-            <div style="display:flex;gap:8px;">
-                <button type="submit" class="fb-btn fb-btn-primary">
-                    <svg width="14" height="14" fill="none" stroke="currentColor"
-                        stroke-width="2.5" viewBox="0 0 24 24">
-                        <path d="M3 4h18M6 12h12M10 20h4"/>
-                    </svg>
-                    Terapkan
-                </button>
-
+        {{-- Navigation --}}
+        <div class="rounded-3xl border border-gray-100 bg-white p-2 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div class="flex flex-wrap gap-2">
                 <a href="{{ route('feedback.index') }}"
-                class="fb-btn fb-btn-ghost">
-                    Reset
+                   class="rounded-2xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm">
+                    Data Feedback
+                </a>
+
+                <a href="{{ route('feedback.project') }}"
+                   class="rounded-2xl px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+                    Master Project
+                </a>
+
+                <a href="{{ route('feedback.barang') }}"
+                   class="rounded-2xl px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+                    Master Barang
                 </a>
             </div>
+        </div>
 
-        </form>
-    </div>
+        @if(session('success'))
+            <div class="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+                <svg class="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/>
+                </svg>
+                {{ session('success') }}
+            </div>
+        @endif
 
-    @if($selectedYear || $selectedCw || $selectedMonth || $dateFrom || $dateTo)
-    <div class="fb-card"
-        style="
-            margin-bottom:20px;
-            background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);
-            border:1px solid #bfdbfe;
-        ">
+        {{-- Filter --}}
+        <div class="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <form method="GET" action="{{ route('feedback.index') }}" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Tahun
+                    </label>
+                    <select name="year" class="w-full rounded-xl border-gray-200 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                        @for($year = date('Y'); $year >= date('Y') - 5; $year--)
+                            <option value="{{ $year }}" {{ (string) $selectedYear === (string) $year ? 'selected' : '' }}>
+                                {{ $year }}
+                            </option>
+                        @endfor
+                    </select>
+                </div>
 
-        <div style="
-            padding:14px 18px;
-            display:flex;
-            align-items:center;
-            gap:10px;
-            color:#1e40af;
-            font-size:13.5px;
-            font-weight:500;
-        ">
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Caturwulan
+                    </label>
+                    <select name="cw" class="w-full rounded-xl border-gray-200 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                        <option value="">Semua Caturwulan</option>
+                        <option value="1" {{ $selectedCw == '1' ? 'selected' : '' }}>CW-1 (Jan - Apr)</option>
+                        <option value="2" {{ $selectedCw == '2' ? 'selected' : '' }}>CW-2 (Mei - Agu)</option>
+                        <option value="3" {{ $selectedCw == '3' ? 'selected' : '' }}>CW-3 (Sep - Des)</option>
+                    </select>
+                </div>
 
-            <svg width="18" height="18"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24">
-                <path d="M12 8v4l3 3"/>
-                <circle cx="12" cy="12" r="9"/>
-            </svg>
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Bulan
+                    </label>
+                    <select name="month" class="w-full rounded-xl border-gray-200 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                        <option value="">Semua Bulan</option>
+                        @foreach([
+                            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                        ] as $num => $name)
+                            <option value="{{ $num }}" {{ (string)$selectedMonth === (string)$num ? 'selected' : '' }}>
+                                {{ $name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-            <div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Dari Tanggal
+                    </label>
+                    <input type="date" name="date_from" value="{{ $dateFrom }}"
+                        class="w-full rounded-xl border-gray-200 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                </div>
+
+                <div>
+                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Sampai Tanggal
+                    </label>
+                    <input type="date" name="date_to" value="{{ $dateTo }}"
+                        class="w-full rounded-xl border-gray-200 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                </div>
+
+                <div class="flex items-end gap-2">
+                    <button type="submit"
+                        class="inline-flex w-full items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700">
+                        Terapkan
+                    </button>
+
+                    <a href="{{ route('feedback.index') }}"
+                       class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                        Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        @if($selectedYear || $selectedCw || $selectedMonth || $dateFrom || $dateTo)
+            <div class="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300">
                 Menampilkan data kepuasan pelanggan
-
                 @if($dateFrom && $dateTo)
-                    dari
-                    <strong>{{ \Carbon\Carbon::parse($dateFrom)->format('d M Y') }}</strong>
-                    sampai
-                    <strong>{{ \Carbon\Carbon::parse($dateTo)->format('d M Y') }}</strong>
+                    dari <strong>{{ \Carbon\Carbon::parse($dateFrom)->format('d M Y') }}</strong>
+                    sampai <strong>{{ \Carbon\Carbon::parse($dateTo)->format('d M Y') }}</strong>
                 @elseif($selectedMonth)
-                    bulan <strong>
-                        {{ \Carbon\Carbon::create()->month((int)$selectedMonth)->translatedFormat('F') }}
-                    </strong>
+                    bulan <strong>{{ \Carbon\Carbon::create()->month((int)$selectedMonth)->translatedFormat('F') }}</strong>
                 @elseif($selectedCw)
                     pada <strong>CW-{{ $selectedCw }}</strong>
                 @endif
@@ -816,470 +164,197 @@
                     tahun <strong>{{ $selectedYear }}</strong>
                 @endif
             </div>
-
-        </div>
-    </div>
-    @endif
-
-    {{-- Stats strip --}}
-    <div class="fb-stats">
-        <div class="fb-stat-card">
-            <div class="fb-stat-label">Total Feedback</div>
-            <div class="fb-stat-value">{{ $feedbacks->total() }}</div>
-        </div>
-
-        <div class="fb-stat-card">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div class="fb-score-box fb-score-high">
-                    <div class="fb-score-label">Nilai Tertinggi</div>
-                    <div class="fb-score-value">
-                        {{ $maxFilteredScore ? number_format($maxFilteredScore, 2) : '—' }}
-                    </div>
-                </div>
-
-                <div class="fb-score-box fb-score-low">
-                    <div class="fb-score-label">Nilai Terendah</div>
-                    <div class="fb-score-value">
-                        {{ $minFilteredScore ? number_format($minFilteredScore, 2) : '—' }}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="fb-stat-card">
-            <div class="fb-stat-label">Nilai Rata - Rata</div>
-
-            <div class="fb-stat-value good">
-                {{ $avgFilteredScore ? number_format($avgFilteredScore, 2) : '—' }}
-            </div>
-        </div>
-
-        <div class="fb-stat-card">
-            <div class="fb-stat-label">Presentase</div>
-
-            <div class="fb-stat-value good">
-                {{ $nilaiFinal ? number_format($nilaiFinal, 2) . '%' : '—' }}
-            </div>
-        </div>
-
-
-    </div>
-
-    {{-- Master Data Stats --}}
-    <div class="fb-stats" style="margin-top:16px;">
-
-        {{-- count total project --}}
-        <div class="fb-stat-card">
-            <div class="fb-stat-label">Total Project</div>
-            <div class="fb-stat-value">
-                {{ $feedbackProjects->total() }}
-            </div>
-        </div>
-
-        {{-- count total project items --}}
-        <div class="fb-stat-card">
-            <div class="fb-stat-label">Total Item Project</div>
-            <div class="fb-stat-value">
-                {{ $feedbackProjectItems->total() }}
-            </div>
-        </div>
-
-    </div>
-
-    {{-- Charts --}}
-    <div class="fb-chart-grid">
-        <div class="fb-chart-card">
-            <div class="fb-chart-title">Distribusi nilai Feedback per Proyek</div>
-            <div class="fb-chart-subtitle">Top 10 proyek berdasarkan nilai rata-rata survey</div>
-            <div class="fb-chart-box">
-                <canvas id="chartProyek"></canvas>
-            </div>
-        </div>
-
-        <div class="fb-chart-card">
-            <div class="fb-chart-title">Distribusi nilai  Feedback per Produk</div>
-            <div class="fb-chart-subtitle">Top 10 produk berdasarkan nilai rata-rata survey</div>
-            <div class="fb-chart-box">
-                <canvas id="chartProduk"></canvas>
-            </div>
-        </div>
-    </div>
-
-    {{-- Toolbar --}}
-    <div class="fb-toolbar">
-        <form method="GET" action="{{ route('feedback.index') }}" style="display:flex;gap:8px;flex:1;flex-wrap:wrap;">
-            <div class="fb-search-wrap">
-                <svg class="fb-search-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-                <input
-                    type="text"
-                    name="search"
-                    class="fb-search"
-                    placeholder="Cari nama, perusahaan, proyek..."
-                    value="{{ request('search') }}"
-                    autocomplete="off"
-                >
-            </div>
-            <button type="submit" class="fb-btn fb-btn-primary">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-                Cari
-            </button>
-            @if(request('search'))
-            <a href="{{ route('feedback.index') }}" class="fb-btn fb-btn-ghost">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                    <path d="M18 6 6 18M6 6l12 12"/>
-                </svg>
-                Reset
-            </a>
-            @endif
-        </form>
-    </div>
-
-    {{-- Table card --}}
-    <div class="fb-card">
-        <table class="fb-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Pelanggan</th>
-                    <th class="fb-col-hide">Perusahaan</th>
-                    <th class="fb-col-hide">Proyek</th>
-                    <th>Skor</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($feedbacks as $index => $f)
-                <tr>
-                    <td style="color:var(--text-muted);font-size:12px;font-family:'DM Mono',monospace;width:40px;">
-                        {{ $feedbacks->firstItem() + $index }}
-                    </td>
-                    <td>
-                        <div class="fb-name-cell">
-                            <span class="fb-name">{{ $f->nama_lengkap ?: '—' }}</span>
-                            @if($f->jabatan_unit_kerja)
-                            <span class="fb-jabatan">{{ $f->jabatan_unit_kerja }}</span>
-                            @endif
-                        </div>
-                    </td>
-                    <td class="fb-col-hide" style="color:var(--text-secondary);">{{ $f->perusahaan ?: '—' }}</td>
-                    <td class="fb-col-hide" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ $f->proyek }}">
-                        {{ $f->proyek }}
-                    </td>
-                    <td>
-                        @php
-                            $r = $f->rata_rata;
-                            $cls = $r >= 3.5 ? 'fb-badge-green' : ($r >= 2.5 ? 'fb-badge-yellow' : 'fb-badge-red');
-                        @endphp
-                        <span class="fb-badge {{ $cls }}">{{ number_format($r, 2) }}</span>
-                    </td>
-                    <td>
-                        <div class="fb-actions">
-                            <a href="{{ route('feedback.show', $f->id) }}" class="fb-action-btn fb-action-detail">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
-                                </svg>
-                                Detail
-                            </a>
-                            <a href="{{ route('feedback.pdf', $f->id) }}" class="fb-action-btn fb-action-pdf" target="_blank">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/>
-                                </svg>
-                                PDF
-                            </a>
-                            <form method="POST" action="{{ route('feedback.destroy', $f->id) }}" onsubmit="return confirm('Hapus feedback dari {{ addslashes($f->nama_lengkap ?: 'pelanggan ini') }}?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="fb-action-btn fb-action-delete">
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                        <polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
-                                    </svg>
-                                    Hapus
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6">
-                        <div class="fb-empty">
-                            <div class="fb-empty-icon">
-                                <img src="{{ asset('img/data-not-found.png') }}"
-                                    alt="Data tidak ditemukan">
-                            </div>
-                            <div class="fb-empty-text">
-                                @if(request('search'))
-                                    Tidak ada hasil untuk "{{ request('search') }}"
-                                @else
-                                    Belum ada data feedback
-                                @endif
-                            </div>
-                            <div class="fb-empty-sub">
-                                @if(request('search'))
-                                    Coba kata kunci lain atau <a href="{{ route('feedback.index') }}" style="color:var(--accent);">reset pencarian</a>
-                                @else
-                                    Data akan muncul setelah pelanggan mengisi form survei
-                                @endif
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-
-        @if($feedbacks->hasPages())
-        <div class="fb-pagination">
-            {{ $feedbacks->appends(request()->query())->links() }}
-        </div>
         @endif
+
+        {{-- Stats --}}
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <p class="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Total Feedback</p>
+                <p class="mt-3 text-4xl font-bold text-gray-900 dark:text-white">{{ number_format($feedbacks->total()) }}</p>
+            </div>
+
+            <div class="rounded-3xl border border-emerald-100 bg-emerald-50 p-5 shadow-sm dark:border-emerald-900/30 dark:bg-emerald-900/20">
+                <p class="text-xs font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Nilai Rata-rata</p>
+                <p class="mt-3 text-4xl font-bold text-emerald-700 dark:text-emerald-300">
+                    {{ $avgFilteredScore ? number_format($avgFilteredScore, 2) : '—' }}
+                </p>
+            </div>
+
+            <div class="rounded-3xl border border-indigo-100 bg-indigo-50 p-5 shadow-sm dark:border-indigo-900/30 dark:bg-indigo-900/20">
+                <p class="text-xs font-bold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">Presentase</p>
+                <p class="mt-3 text-4xl font-bold text-indigo-700 dark:text-indigo-300">
+                    {{ $nilaiFinal ? number_format($nilaiFinal, 2) . '%' : '—' }}
+                </p>
+            </div>
+
+            <div class="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <p class="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Range Nilai</p>
+                <div class="mt-4 grid grid-cols-2 gap-3">
+                    <div class="rounded-2xl bg-emerald-50 p-3 dark:bg-emerald-900/20">
+                        <p class="text-xs text-emerald-700 dark:text-emerald-300">Tertinggi</p>
+                        <p class="mt-1 text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+                            {{ $maxFilteredScore ? number_format($maxFilteredScore, 2) : '—' }}
+                        </p>
+                    </div>
+                    <div class="rounded-2xl bg-red-50 p-3 dark:bg-red-900/20">
+                        <p class="text-xs text-red-700 dark:text-red-300">Terendah</p>
+                        <p class="mt-1 text-2xl font-bold text-red-700 dark:text-red-300">
+                            {{ $minFilteredScore ? number_format($minFilteredScore, 2) : '—' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Charts --}}
+        <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <div class="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <h2 class="text-base font-bold text-gray-900 dark:text-white">Distribusi Nilai Feedback per Proyek</h2>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Top 10 proyek berdasarkan nilai rata-rata survey.</p>
+                <div class="mt-5 h-72">
+                    <canvas id="chartProyek"></canvas>
+                </div>
+            </div>
+
+            <div class="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <h2 class="text-base font-bold text-gray-900 dark:text-white">Distribusi Nilai Feedback per Produk</h2>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Top 10 produk berdasarkan nilai rata-rata survey.</p>
+                <div class="mt-5 h-72">
+                    <canvas id="chartProduk"></canvas>
+                </div>
+            </div>
+        </div>
+
+        {{-- Search --}}
+        <div class="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <form method="GET" action="{{ route('feedback.index') }}" class="flex flex-col gap-3 md:flex-row">
+                <div class="relative flex-1">
+                    <svg class="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" name="search" value="{{ request('search') }}"
+                        placeholder="Cari nama, perusahaan, proyek, atau produk..."
+                        class="w-full rounded-xl border-gray-200 py-2.5 pl-11 pr-4 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                </div>
+
+                <button type="submit"
+                    class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700">
+                    Cari
+                </button>
+
+                @if(request('search'))
+                    <a href="{{ route('feedback.index') }}"
+                       class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                        Reset
+                    </a>
+                @endif
+            </form>
+        </div>
+
+        {{-- Table --}}
+        <div class="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800/70 dark:text-gray-400">
+                        <tr>
+                            <th class="px-5 py-4 text-left font-bold">#</th>
+                            <th class="px-5 py-4 text-left font-bold">Pelanggan</th>
+                            <th class="px-5 py-4 text-left font-bold">Perusahaan</th>
+                            <th class="px-5 py-4 text-left font-bold">Proyek</th>
+                            <th class="px-5 py-4 text-left font-bold">Skor</th>
+                            <th class="px-5 py-4 text-right font-bold">Aksi</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                        @forelse($feedbacks as $index => $f)
+                            <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                <td class="px-5 py-4 text-gray-400">
+                                    {{ $feedbacks->firstItem() + $index }}
+                                </td>
+
+                                <td class="px-5 py-4">
+                                    <p class="font-semibold text-gray-900 dark:text-white">{{ $f->nama_lengkap ?: '—' }}</p>
+                                    @if($f->jabatan_unit_kerja)
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $f->jabatan_unit_kerja }}</p>
+                                    @endif
+                                </td>
+
+                                <td class="px-5 py-4 text-gray-600 dark:text-gray-300">{{ $f->perusahaan ?: '—' }}</td>
+
+                                <td class="max-w-[240px] truncate px-5 py-4 text-gray-600 dark:text-gray-300" title="{{ $f->proyek }}">
+                                    {{ $f->proyek ?: '—' }}
+                                </td>
+
+                                <td class="px-5 py-4">
+                                    @php
+                                        $r = $f->rata_rata;
+                                        $badgeClass = $r >= 3.5
+                                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'
+                                            : ($r >= 2.5
+                                                ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300'
+                                                : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300');
+                                    @endphp
+                                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-bold {{ $badgeClass }}">
+                                        {{ number_format($r, 2) }}
+                                    </span>
+                                </td>
+
+                                <td class="px-5 py-4">
+                                    <div class="flex justify-end gap-2">
+                                        <a href="{{ route('feedback.show', $f->id) }}"
+                                           class="rounded-xl bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-300">
+                                            Detail
+                                        </a>
+
+                                        <a href="{{ route('feedback.pdf', $f->id) }}" target="_blank"
+                                           class="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300">
+                                            PDF
+                                        </a>
+
+                                        <form method="POST" action="{{ route('feedback.destroy', $f->id) }}"
+                                              onsubmit="return confirm('Hapus feedback dari {{ addslashes($f->nama_lengkap ?: 'pelanggan ini') }}?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 dark:bg-red-900/20 dark:text-red-300">
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-5 py-16 text-center">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <img src="{{ asset('img/data-not-found.png') }}" alt="Data tidak ditemukan" class="h-28 w-auto opacity-90">
+                                        <p class="font-semibold text-gray-500 dark:text-gray-400">
+                                            @if(request('search'))
+                                                Tidak ada hasil untuk "{{ request('search') }}"
+                                            @else
+                                                Belum ada data feedback
+                                            @endif
+                                        </p>
+                                        <p class="text-sm text-gray-400 dark:text-gray-500">
+                                            Data akan muncul setelah pelanggan mengisi form survei.
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            @if($feedbacks->hasPages())
+                <div class="border-t border-gray-100 px-5 py-4 dark:border-gray-800">
+                    {{ $feedbacks->appends(request()->query())->links() }}
+                </div>
+            @endif
+        </div>
+
     </div>
-
-        {{-- Feedback Project Section --}}
-        <div class="fb-card" style="margin-top:24px;margin-bottom:24px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap;">
-                <div>
-                    <div class="fb-chart-title">Master Project Feedback</div>
-                    <div class="fb-chart-subtitle" style="margin-bottom:0;">
-                        Daftar project yang dapat dipilih pelanggan saat mengisi form survey
-                    </div>
-                </div>
-
-
-                <a href="{{ route('feedback-projects.create') }}" class="fb-btn fb-btn-primary">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path d="M12 5v14M5 12h14"/>
-                    </svg>
-                    Tambah Project
-                </a>
-            </div>
-
-            <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
-                <form method="GET" action="{{ route('feedback.index') }}" style="display:flex;gap:10px;flex-wrap:wrap;">
-                    <input
-                        type="text"
-                        name="project_search"
-                        value="{{ request('project_search') }}"
-                        placeholder="Cari nama project / deskripsi..."
-                        class="fb-inline-search"
-                    >
-
-                    <button type="submit" class="fb-btn fb-btn-primary">
-                        Cari
-                    </button>
-
-                    @if(request('project_search'))
-                        <a href="{{ route('feedback.index') }}" class="fb-btn" style="background:#e5e7eb;color:#374151;">
-                            Reset
-                        </a>
-                    @endif
-                </form>
-            </div>
-
-            <table class="fb-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Nama Project</th>
-                        <th class="fb-col-hide">Deskripsi</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($feedbackProjects as $index => $project)
-                    <tr>
-                        <td style="color:var(--text-muted);font-size:12px;font-family:'DM Mono',monospace;width:40px;">
-                            {{ $feedbackProjects->firstItem() + $index }}
-                        </td>
-
-                        <td>
-                            <span class="fb-name">{{ $project->nama_project }}</span>
-                        </td>
-
-                        <td class="fb-col-hide" style="color:var(--text-secondary);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ $project->deskripsi }}">
-                            {{ $project->deskripsi ?: '—' }}
-                        </td>
-
-                        <td>
-                            @if($project->is_active)
-                                <span class="fb-badge fb-badge-green">Aktif</span>
-                            @else
-                                <span class="fb-badge fb-badge-red">Nonaktif</span>
-                            @endif
-                        </td>
-
-                        <td>
-                            <div class="fb-actions">
-                                <a href="{{ route('feedback-projects.edit', $project->id) }}" class="fb-action-btn fb-action-detail">
-                                    Edit
-                                </a>
-
-                                <form method="POST"
-                                    action="{{ route('feedback-projects.destroy', $project->id) }}"
-                                    onsubmit="return confirm('Hapus project {{ addslashes($project->nama_project) }}?')">
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button type="submit" class="fb-action-btn fb-action-delete">
-                                        Hapus
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="5">
-                            <div class="fb-empty">
-                                <div class="fb-empty-icon">
-                                    <img src="{{ asset('img/data-not-found.png') }}"
-                                        alt="Data tidak ditemukan">
-                                </div>
-                                <div class="fb-empty-text">Belum ada master project feedback</div>
-                                <div class="fb-empty-sub">Klik Tambah Project untuk membuat pilihan dropdown survey.</div>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-
-            @if($feedbackProjects->hasPages())
-                <div style="padding:16px 20px;">
-                    {{ $feedbackProjects->links() }}
-                </div>
-            @endif
-        </div>
-
-        {{-- Feedback Project Item Section --}}
-        <div class="fb-card" style="margin-top:24px;margin-bottom:24px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap;">
-                <div>
-                    <div class="fb-chart-title">Master Barang / Komponen Project</div>
-                    <div class="fb-chart-subtitle" style="margin-bottom:0;">
-                        Daftar barang atau komponen yang terkait dengan project feedback
-                    </div>
-                </div>
-
-                <a href="{{ route('feedback-project-items.create') }}" class="fb-btn fb-btn-primary">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path d="M12 5v14M5 12h14"/>
-                    </svg>
-                    Tambah Barang
-                </a>
-            </div>
-
-            {{-- search field project item --}}
-            <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
-                <form method="GET" action="{{ route('feedback.index') }}" style="display:flex;gap:10px;flex-wrap:wrap;">
-                    <input
-                        type="text"
-                        name="item_search"
-                        value="{{ request('item_search') }}"
-                        placeholder="Cari project / nama barang..."
-                        class="fb-inline-search"
-                    >
-
-                    <button type="submit" class="fb-btn fb-btn-primary">
-                        Cari
-                    </button>
-
-                    @if(request('item_search'))
-                        <a href="{{ route('feedback.index') }}" class="fb-btn" style="background:#e5e7eb;color:#374151;">
-                            Reset
-                        </a>
-                    @endif
-                </form>
-            </div>
-
-            <table class="fb-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Project</th>
-                        <th>Nama Barang</th>
-                        <th class="fb-col-hide">Deskripsi</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($feedbackProjectItems as $index => $item)
-                    <tr>
-                        <td style="color:var(--text-muted);font-size:12px;font-family:'DM Mono',monospace;width:40px;">
-                           {{ $feedbackProjectItems->firstItem() + $index }}
-                        </td>
-
-                        <td>
-                            <span class="fb-name">
-                                {{ $item->project->nama_project ?? '—' }}
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="fb-name">{{ $item->nama_barang }}</span>
-                        </td>
-
-                        <td class="fb-col-hide" style="color:var(--text-secondary);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ $item->deskripsi }}">
-                            {{ $item->deskripsi ?: '—' }}
-                        </td>
-
-                        <td>
-                            @if($item->is_active)
-                                <span class="fb-badge fb-badge-green">Aktif</span>
-                            @else
-                                <span class="fb-badge fb-badge-red">Nonaktif</span>
-                            @endif
-                        </td>
-
-                        <td>
-                            <div class="fb-actions">
-                                <a href="{{ route('feedback-project-items.edit', $item->id) }}" class="fb-action-btn fb-action-detail">
-                                    Edit
-                                </a>
-
-                                <form method="POST"
-                                    action="{{ route('feedback-project-items.destroy', $item->id) }}"
-                                    onsubmit="return confirm('Hapus barang {{ addslashes($item->nama_barang) }}?')">
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button type="submit" class="fb-action-btn fb-action-delete">
-                                        Hapus
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6">
-                            <div class="fb-empty">
-                                <div class="fb-empty-icon">
-                                    <img src="{{ asset('img/data-not-found.png') }}"
-                                        alt="Data tidak ditemukan">
-                                </div>
-                                <div class="fb-empty-text">Belum ada master barang project</div>
-                                <div class="fb-empty-sub">Klik Tambah Barang untuk membuat daftar barang/komponen per project.</div>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-
-            @if($feedbackProjectItems->hasPages())
-                <div style="padding:16px 20px;">
-                    {{ $feedbackProjectItems->links() }}
-                </div>
-            @endif
-        </div>
-
 </div>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
@@ -1289,10 +364,7 @@
 <script>
 const notyf = new Notyf({
     duration: 2000,
-    position: {
-        x: 'right',
-        y: 'top'
-    }
+    position: { x: 'right', y: 'top' }
 });
 
 function copySurveyLink() {
@@ -1319,15 +391,12 @@ function getChartTheme() {
     const isDark = document.documentElement.classList.contains('dark');
 
     return {
-        isDark,
-        gridColor: isDark
-            ? 'rgba(107, 114, 128, 0.22)'
-            : 'rgba(107, 114, 128, 0.10)',
-        tickColor: isDark ? '#9ca3af' : '#6b7280',
-        tooltipBg: isDark ? 'rgba(17, 24, 39, 0.92)' : 'rgba(17, 24, 39, 0.95)',
-        tooltipTitle: '#ffffff',
-        tooltipBody: '#ffffff',
-        donutBorderColor: isDark ? '#1f2937' : '#ffffff'
+        gridColor: isDark ? 'rgba(148, 163, 184, 0.16)' : 'rgba(148, 163, 184, 0.22)',
+        tickColor: isDark ? '#94a3b8' : '#64748b',
+        tooltipBg: isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.98)',
+        tooltipTitle: isDark ? '#f8fafc' : '#0f172a',
+        tooltipBody: isDark ? '#cbd5e1' : '#334155',
+        donutBorderColor: isDark ? '#111827' : '#ffffff',
     };
 }
 
@@ -1351,7 +420,9 @@ function createCharts(animated = true) {
     const chartProyekEl = document.getElementById('chartProyek');
     const chartProdukEl = document.getElementById('chartProduk');
 
-    if (!chartProyekEl || !chartProdukEl) return;
+    if (!chartProyekEl || !chartProdukEl || typeof Chart === 'undefined') {
+        return;
+    }
 
     chartProyek = new Chart(chartProyekEl.getContext('2d'), {
         type: 'bar',
@@ -1360,69 +431,41 @@ function createCharts(animated = true) {
             datasets: [{
                 label: 'Rata-rata Skor',
                 data: proyekData,
-                backgroundColor: '#1d4ed8',
-                borderRadius: 8,
-                maxBarThickness: 44
+                backgroundColor: 'rgba(79, 70, 229, 0.88)',
+                borderRadius: 10,
+                maxBarThickness: 44,
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            animation: animated ? {
-                duration: 450,
-                easing: 'easeOutCubic'
-            } : false,
+            animation: animated ? { duration: 450, easing: 'easeOutCubic' } : false,
             plugins: {
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
                     backgroundColor: theme.tooltipBg,
                     titleColor: theme.tooltipTitle,
                     bodyColor: theme.tooltipBody,
                     borderColor: theme.gridColor,
                     borderWidth: 1,
-                    padding: 10,
-                    cornerRadius: 8
-                }
+                    padding: 12,
+                },
             },
             scales: {
                 y: {
                     beginAtZero: true,
                     max: 4,
-                    border: {
-                        display: false
-                    },
-                    ticks: {
-                        stepSize: 1,
-                        color: theme.tickColor,
-                        font: {
-                            size: 11
-                        }
-                    },
-                    grid: {
-                        color: theme.gridColor,
-                        drawBorder: false
-                    }
+                    grid: { color: theme.gridColor },
+                    border: { display: false },
+                    ticks: { stepSize: 1, color: theme.tickColor },
                 },
                 x: {
-                    border: {
-                        display: false
-                    },
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        color: theme.tickColor,
-                        maxRotation: 35,
-                        minRotation: 0,
-                        font: {
-                            size: 11
-                        }
-                    }
-                }
-            }
-        }
+                    grid: { display: false },
+                    border: { display: false },
+                    ticks: { color: theme.tickColor, maxRotation: 35 },
+                },
+            },
+        },
     });
 
     chartProduk = new Chart(chartProdukEl.getContext('2d'), {
@@ -1432,30 +475,27 @@ function createCharts(animated = true) {
             datasets: [{
                 data: produkData,
                 backgroundColor: [
-                    '#1d4ed8',
-                    '#059669',
-                    '#d97706',
-                    '#dc2626',
-                    '#7c3aed',
-                    '#0891b2',
-                    '#65a30d',
-                    '#be123c',
-                    '#4338ca',
-                    '#0f766e'
+                    'rgba(79, 70, 229, 0.9)',
+                    'rgba(16, 185, 129, 0.9)',
+                    'rgba(245, 158, 11, 0.9)',
+                    'rgba(239, 68, 68, 0.9)',
+                    'rgba(124, 58, 237, 0.9)',
+                    'rgba(6, 182, 212, 0.9)',
+                    'rgba(132, 204, 22, 0.9)',
+                    'rgba(244, 63, 94, 0.9)',
+                    'rgba(67, 56, 202, 0.9)',
+                    'rgba(20, 184, 166, 0.9)',
                 ],
-                borderWidth: 3,
+                borderWidth: 4,
                 borderColor: theme.donutBorderColor,
-                hoverOffset: 8
+                hoverOffset: 8,
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             cutout: '62%',
-            animation: animated ? {
-                duration: 450,
-                easing: 'easeOutCubic'
-            } : false,
+            animation: animated ? { duration: 450, easing: 'easeOutCubic' } : false,
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -1463,10 +503,8 @@ function createCharts(animated = true) {
                         color: theme.tickColor,
                         boxWidth: 12,
                         padding: 14,
-                        font: {
-                            size: 11
-                        }
-                    }
+                        font: { size: 11 },
+                    },
                 },
                 tooltip: {
                     backgroundColor: theme.tooltipBg,
@@ -1474,11 +512,10 @@ function createCharts(animated = true) {
                     bodyColor: theme.tooltipBody,
                     borderColor: theme.gridColor,
                     borderWidth: 1,
-                    padding: 10,
-                    cornerRadius: 8
-                }
-            }
-        }
+                    padding: 12,
+                },
+            },
+        },
     });
 }
 
@@ -1493,15 +530,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!classChanged) return;
 
         clearTimeout(rebuildTimer);
-
-        rebuildTimer = setTimeout(() => {
-            createCharts(false);
-        }, 120);
+        rebuildTimer = setTimeout(() => createCharts(false), 120);
     });
 
     observer.observe(document.documentElement, {
         attributes: true,
-        attributeFilter: ['class']
+        attributeFilter: ['class'],
     });
 });
 </script>

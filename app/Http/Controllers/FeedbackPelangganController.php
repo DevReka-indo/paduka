@@ -9,9 +9,156 @@ use Illuminate\Support\Facades\DB;
 use App\Models\FeedbackProject;
 use App\Models\FeedbackProjectItem;
 
-
 class FeedbackPelangganController extends Controller
 {
+    // public function index(Request $request)
+    // {
+    //     $query = FeedbackPelanggan::query()->latest();
+
+    //     if ($request->filled('search')) {
+    //         $query->where(function ($q) use ($request) {
+    //             $q->where('nama_lengkap', 'like', '%' . $request->search . '%')
+    //                 ->orWhere('perusahaan', 'like', '%' . $request->search . '%')
+    //                 ->orWhere('proyek', 'like', '%' . $request->search . '%')
+    //                 ->orWhere('identitas_barang', 'like', '%' . $request->search . '%');
+    //         });
+    //     }
+
+    //     $selectedYear = $request->get('year', date('Y'));
+    //     $selectedCw = $request->get('cw');
+    //     $selectedMonth = $request->get('month');
+    //     $dateFrom = $request->get('date_from');
+    //     $dateTo = $request->get('date_to');
+
+    //     $applyDateFilters = function ($query) use ($selectedYear, $selectedCw, $selectedMonth, $dateFrom, $dateTo) {
+    //         if ($selectedYear) {
+    //             $query->whereYear('created_at', $selectedYear);
+    //         }
+
+    //         if ($dateFrom && $dateTo) {
+    //             $query->whereBetween('created_at', [
+    //                 $dateFrom . ' 00:00:00',
+    //                 $dateTo . ' 23:59:59',
+    //             ]);
+    //         } elseif ($selectedMonth) {
+    //             $query->whereMonth('created_at', $selectedMonth);
+    //         } elseif ($selectedCw) {
+    //             $months = match ($selectedCw) {
+    //                 '1' => [1, 2, 3, 4],
+    //                 '2' => [5, 6, 7, 8],
+    //                 '3' => [9, 10, 11, 12],
+    //                 default => [],
+    //             };
+
+    //             if (!empty($months)) {
+    //                 $query->whereIn(DB::raw('MONTH(created_at)'), $months);
+    //             }
+    //         }
+    //     };
+
+    //     $applyDateFilters($query);
+
+    //     $filteredQuery = clone $query;
+    //     $filteredFeedbacks = $filteredQuery->get();
+
+    //     $avgFilteredScore = $filteredFeedbacks->avg('rata_rata');
+    //     $maxFilteredScore = $filteredFeedbacks->max('rata_rata');
+    //     $minFilteredScore = $filteredFeedbacks->min('rata_rata');
+
+    //     $nilaiFinal = $avgFilteredScore
+    //         ? ($avgFilteredScore / 3) * 100
+    //         : null;
+
+    //     $feedbacks = $query
+    //         ->paginate(10)
+    //         ->withQueryString();
+
+    //     $avgScoreSql = "
+    //         (
+    //             q1_pengiriman_tepat_waktu +
+    //             q2_kemudahan_pengoperasian_produk +
+    //             q3_kemudahan_perawatan +
+    //             q4_pendampingan_support_trial +
+    //             q5_responsif_penanganan_complain +
+    //             q6_teknisi_ramah_sopan +
+    //             q7_penanganan_complain_tepat_cepat +
+    //             q8_media_complain_mudah_diakses +
+    //             q9_produk_sesuai_standar_po
+    //         ) / 9
+    //     ";
+
+    //     $chartProyek = FeedbackPelanggan::query()
+    //         ->select([
+    //             'proyek',
+    //             DB::raw("ROUND(AVG($avgScoreSql), 2) as rata_rata_skor"),
+    //         ])
+    //         ->tap($applyDateFilters)
+    //         ->whereNotNull('proyek')
+    //         ->where('proyek', '!=', '')
+    //         ->groupBy('proyek')
+    //         ->orderByDesc('rata_rata_skor')
+    //         ->limit(10)
+    //         ->get();
+
+    //     $chartProduk = FeedbackPelanggan::query()
+    //         ->select([
+    //             'identitas_barang',
+    //             DB::raw("ROUND(AVG($avgScoreSql), 2) as rata_rata_skor"),
+    //         ])
+    //         ->tap($applyDateFilters)
+    //         ->whereNotNull('identitas_barang')
+    //         ->where('identitas_barang', '!=', '')
+    //         ->groupBy('identitas_barang')
+    //         ->orderByDesc('rata_rata_skor')
+    //         ->limit(10)
+    //         ->get();
+
+    //     $projectSearch = trim($request->get('project_search', ''));
+
+    //     $feedbackProjects = FeedbackProject::query()
+    //         ->when($projectSearch !== '', function ($query) use ($projectSearch) {
+    //             $query->where(function ($q) use ($projectSearch) {
+    //                 $q->where('nama_project', 'like', "%{$projectSearch}%")
+    //                     ->orWhere('deskripsi', 'like', "%{$projectSearch}%");
+    //             });
+    //         })
+    //         ->latest()
+    //         ->paginate(10, ['*'], 'project_page')
+    //         ->withQueryString();
+
+    //     $itemSearch = trim($request->get('item_search', ''));
+
+    //     $feedbackProjectItems = FeedbackProjectItem::query()
+    //         ->when($itemSearch !== '', function ($query) use ($itemSearch) {
+    //             $query->where('nama_barang', 'like', "%{$itemSearch}%")
+    //                 ->orWhereHas('project', function ($q) use ($itemSearch) {
+    //                     $q->where('nama_project', 'like', "%{$itemSearch}%");
+    //                 });
+    //         })
+    //         ->with('project')
+    //         ->latest()
+    //         ->paginate(10, ['*'], 'item_page')
+    //         ->withQueryString();
+
+    //     return view('feedback.index', compact(
+    //         'feedbacks',
+    //         'chartProyek',
+    //         'chartProduk',
+    //         'feedbackProjects',
+    //         'feedbackProjectItems',
+    //         'projectSearch',
+    //         'itemSearch',
+    //         'selectedYear',
+    //         'selectedCw',
+    //         'selectedMonth',
+    //         'dateFrom',
+    //         'dateTo',
+    //         'avgFilteredScore',
+    //         'maxFilteredScore',
+    //         'minFilteredScore',
+    //         'nilaiFinal'
+    //     ));
+    // }
     public function index(Request $request)
     {
         $query = FeedbackPelanggan::query()->latest();
@@ -37,10 +184,7 @@ class FeedbackPelangganController extends Controller
             }
 
             if ($dateFrom && $dateTo) {
-                $query->whereBetween('created_at', [
-                    $dateFrom . ' 00:00:00',
-                    $dateTo . ' 23:59:59',
-                ]);
+                $query->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
             } elseif ($selectedMonth) {
                 $query->whereMonth('created_at', $selectedMonth);
             } elseif ($selectedCw) {
@@ -59,40 +203,32 @@ class FeedbackPelangganController extends Controller
 
         $applyDateFilters($query);
 
-        $filteredQuery = clone $query;
-        $filteredFeedbacks = $filteredQuery->get();
+        $filteredFeedbacks = (clone $query)->get();
 
         $avgFilteredScore = $filteredFeedbacks->avg('rata_rata');
         $maxFilteredScore = $filteredFeedbacks->max('rata_rata');
         $minFilteredScore = $filteredFeedbacks->min('rata_rata');
 
-        $nilaiFinal = $avgFilteredScore
-            ? ($avgFilteredScore / 3) * 100
-            : null;
+        $nilaiFinal = $avgFilteredScore ? ($avgFilteredScore / 3) * 100 : null;
 
-        $feedbacks = $query
-            ->paginate(10)
-            ->withQueryString();
+        $feedbacks = $query->paginate(10)->withQueryString();
 
         $avgScoreSql = "
-            (
-                q1_pengiriman_tepat_waktu +
-                q2_kemudahan_pengoperasian_produk +
-                q3_kemudahan_perawatan +
-                q4_pendampingan_support_trial +
-                q5_responsif_penanganan_complain +
-                q6_teknisi_ramah_sopan +
-                q7_penanganan_complain_tepat_cepat +
-                q8_media_complain_mudah_diakses +
-                q9_produk_sesuai_standar_po
-            ) / 9
-        ";
+        (
+            q1_pengiriman_tepat_waktu +
+            q2_kemudahan_pengoperasian_produk +
+            q3_kemudahan_perawatan +
+            q4_pendampingan_support_trial +
+            q5_responsif_penanganan_complain +
+            q6_teknisi_ramah_sopan +
+            q7_penanganan_complain_tepat_cepat +
+            q8_media_complain_mudah_diakses +
+            q9_produk_sesuai_standar_po
+        ) / 9
+    ";
 
         $chartProyek = FeedbackPelanggan::query()
-            ->select([
-                'proyek',
-                DB::raw("ROUND(AVG($avgScoreSql), 2) as rata_rata_skor"),
-            ])
+            ->select(['proyek', DB::raw("ROUND(AVG($avgScoreSql), 2) as rata_rata_skor")])
             ->tap($applyDateFilters)
             ->whereNotNull('proyek')
             ->where('proyek', '!=', '')
@@ -102,10 +238,7 @@ class FeedbackPelangganController extends Controller
             ->get();
 
         $chartProduk = FeedbackPelanggan::query()
-            ->select([
-                'identitas_barang',
-                DB::raw("ROUND(AVG($avgScoreSql), 2) as rata_rata_skor"),
-            ])
+            ->select(['identitas_barang', DB::raw("ROUND(AVG($avgScoreSql), 2) as rata_rata_skor")])
             ->tap($applyDateFilters)
             ->whereNotNull('identitas_barang')
             ->where('identitas_barang', '!=', '')
@@ -114,60 +247,53 @@ class FeedbackPelangganController extends Controller
             ->limit(10)
             ->get();
 
+        return view('feedback.index', compact('feedbacks', 'chartProyek', 'chartProduk', 'selectedYear', 'selectedCw', 'selectedMonth', 'dateFrom', 'dateTo', 'avgFilteredScore', 'maxFilteredScore', 'minFilteredScore', 'nilaiFinal'));
+    }
+
+    public function project(Request $request)
+    {
         $projectSearch = trim($request->get('project_search', ''));
 
         $feedbackProjects = FeedbackProject::query()
             ->when($projectSearch !== '', function ($query) use ($projectSearch) {
                 $query->where(function ($q) use ($projectSearch) {
-                    $q->where('nama_project', 'like', "%{$projectSearch}%")
-                        ->orWhere('deskripsi', 'like', "%{$projectSearch}%");
+                    $q->where('nama_project', 'like', "%{$projectSearch}%")->orWhere('deskripsi', 'like', "%{$projectSearch}%");
                 });
             })
             ->latest()
-            ->paginate(10, ['*'], 'project_page')
+            ->paginate(10)
             ->withQueryString();
 
+        return view('feedback.project', compact('feedbackProjects', 'projectSearch'));
+    }
+
+    public function barang(Request $request)
+    {
         $itemSearch = trim($request->get('item_search', ''));
 
         $feedbackProjectItems = FeedbackProjectItem::query()
             ->when($itemSearch !== '', function ($query) use ($itemSearch) {
-                $query->where('nama_barang', 'like', "%{$itemSearch}%")
-                    ->orWhereHas('project', function ($q) use ($itemSearch) {
-                        $q->where('nama_project', 'like', "%{$itemSearch}%");
-                    });
+                $query->where('nama_barang', 'like', "%{$itemSearch}%")->orWhereHas('project', function ($q) use ($itemSearch) {
+                    $q->where('nama_project', 'like', "%{$itemSearch}%");
+                });
             })
             ->with('project')
             ->latest()
-            ->paginate(10, ['*'], 'item_page')
+            ->paginate(10)
             ->withQueryString();
 
-        return view('feedback.index', compact(
-            'feedbacks',
-            'chartProyek',
-            'chartProduk',
-            'feedbackProjects',
-            'feedbackProjectItems',
-            'projectSearch',
-            'itemSearch',
-            'selectedYear',
-            'selectedCw',
-            'selectedMonth',
-            'dateFrom',
-            'dateTo',
-            'avgFilteredScore',
-            'maxFilteredScore',
-            'minFilteredScore',
-            'nilaiFinal'
-        ));
+        return view('feedback.barang', compact('feedbackProjectItems', 'itemSearch'));
     }
 
     public function form()
     {
         $projects = FeedbackProject::query()
             ->where('is_active', true)
-            ->with(['items' => function ($query) {
-                $query->where('is_active', true)->orderBy('nama_barang');
-            }])
+            ->with([
+                'items' => function ($query) {
+                    $query->where('is_active', true)->orderBy('nama_barang');
+                },
+            ])
             ->orderBy('nama_project')
             ->get();
 
@@ -198,13 +324,9 @@ class FeedbackPelangganController extends Controller
             'tanda_tangan' => 'nullable|string',
         ]);
 
-        $project = FeedbackProject::query()
-            ->findOrFail($validated['feedback_project_id']);
+        $project = FeedbackProject::query()->findOrFail($validated['feedback_project_id']);
 
-        $item = FeedbackProjectItem::query()
-            ->where('id', $validated['feedback_project_item_id'])
-            ->where('feedback_project_id', $project->id)
-            ->firstOrFail();
+        $item = FeedbackProjectItem::query()->where('id', $validated['feedback_project_item_id'])->where('feedback_project_id', $project->id)->firstOrFail();
 
         $validated['proyek'] = $project->nama_project;
         $validated['identitas_barang'] = $item->nama_barang;
@@ -230,8 +352,7 @@ class FeedbackPelangganController extends Controller
     {
         $feedback = FeedbackPelanggan::findOrFail($id);
 
-        $pdf = Pdf::loadView('feedback.pdf', compact('feedback'))
-            ->setPaper('a4', 'portrait');
+        $pdf = Pdf::loadView('feedback.pdf', compact('feedback'))->setPaper('a4', 'portrait');
 
         return $pdf->stream('feedback-pelanggan-' . $feedback->id . '.pdf');
     }
@@ -241,10 +362,6 @@ class FeedbackPelangganController extends Controller
         $feedback = FeedbackPelanggan::findOrFail($id);
         $feedback->delete();
 
-        return redirect()
-            ->route('feedback.index')
-            ->with('success', 'Data feedback pelanggan berhasil dihapus.');
+        return redirect()->route('feedback.index')->with('success', 'Data feedback pelanggan berhasil dihapus.');
     }
-
-
 }
