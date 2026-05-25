@@ -221,6 +221,39 @@
                 </a>
                 @endif
 
+                @php
+                    $allowedUnitsDurability = [30, 31, 1];
+                    $canAccessDurability = auth()->check()
+                        && auth()->user()->unitKerja()
+                            ->whereIn('unit_kerja.id', $allowedUnitsDurability)
+                            ->exists();
+                @endphp
+
+                @if ($canAccessDurability)
+                    <a href="{{ route('durability.index') }}"
+                        :title="$store.sidebar.collapsed ? 'Durability Produk' : ''"
+                        class="group flex items-center gap-3 px-1.5 py-2 rounded-xl text-sm font-medium transition-all duration-200
+                        {{ request()->routeIs('durability.*')
+                            ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 shadow-sm ring-1 ring-indigo-100 dark:ring-indigo-700'
+                            : 'text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-gray-100' }}">
+                        <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition
+                            {{ request()->routeIs('durability.*')
+                                ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300'
+                                : 'bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400 group-hover:bg-slate-200 dark:group-hover:bg-gray-600 group-hover:text-slate-700 dark:group-hover:text-gray-200' }}">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4M7.5 4.5h9A2.5 2.5 0 0119 7v10a2.5 2.5 0 01-2.5 2.5h-9A2.5 2.5 0 015 17V7a2.5 2.5 0 012.5-2.5z" />
+                            </svg>
+                        </span>
+
+                        <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
+                            :class="$store.sidebar.collapsed ? 'opacity-0 w-0' : 'opacity-100'">
+                            Durability Produk
+                        </span>
+                    </a>
+                @endif
+
+
 
             </div>
 

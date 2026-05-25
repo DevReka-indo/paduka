@@ -13,6 +13,7 @@ use App\Http\Controllers\FeedbackPelangganController;
 use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\FeedbackProjectController;
 use App\Http\Controllers\FeedbackProjectItemController;
+use App\Http\Controllers\DurabilityController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -104,7 +105,6 @@ Route::middleware('auth')->group(function () {
             ->only(['create', 'store', 'edit', 'update', 'destroy']);
 
 
-
         Route::get('/ncr/file/{path}', function (string $path) {
             $decoded = base64_decode($path);
 
@@ -144,7 +144,10 @@ Route::middleware('auth')->group(function () {
             return view('visual-check.index');
         })->name('visual-check.index');
 
+        Route::get('/durability', [DurabilityController::class, 'index'])->name('durability.index');
+
         Route::get('/bantuan', [App\Http\Controllers\BantuanController::class, 'index'])->name('bantuan.index');
+
 });
 
 Route::middleware(['auth', 'isAdmin'])->group(function () {
