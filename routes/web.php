@@ -144,7 +144,12 @@ Route::middleware('auth')->group(function () {
             return view('visual-check.index');
         })->name('visual-check.index');
 
+        // Durability Menu
         Route::get('/durability', [DurabilityController::class, 'index'])->name('durability.index');
+        Route::get('/durability/penggantian-komponen', [DurabilityController::class, 'penggantianKomponen'])->name('durability.penggantian-komponen');
+        Route::get('/durability/durability-komponen', [DurabilityController::class, 'durabilityKomponen'])->name('durability.durability-komponen');
+        Route::get('/durability/lokasi', [DurabilityController::class, 'lokasi'])->name('durability.lokasi');
+        Route::get('/durability/tabel-detail', [DurabilityController::class, 'index'])->name('durability.tabel-detail');
 
         Route::get('/bantuan', [App\Http\Controllers\BantuanController::class, 'index'])->name('bantuan.index');
 

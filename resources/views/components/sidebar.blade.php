@@ -154,7 +154,7 @@
                 </div>
 
                 @php
-                    $allowedUnits = [30, 31, 1];
+                    $allowedUnits = [30, 31, 1, 9];
                     $canAccessFeedback = auth()->check()
                         && auth()->user()->unitKerja()
                             ->whereIn('unit_kerja.id', $allowedUnits)
@@ -222,7 +222,7 @@
                 @endif
 
                 @php
-                    $allowedUnitsDurability = [30, 31, 1];
+                    $allowedUnitsDurability = [30, 31, 1, 9];
                     $canAccessDurability = auth()->check()
                         && auth()->user()->unitKerja()
                             ->whereIn('unit_kerja.id', $allowedUnitsDurability)
@@ -230,27 +230,100 @@
                 @endphp
 
                 @if ($canAccessDurability)
-                    <a href="{{ route('durability.index') }}"
-                        :title="$store.sidebar.collapsed ? 'Durability Produk' : ''"
-                        class="group flex items-center gap-3 px-1.5 py-2 rounded-xl text-sm font-medium transition-all duration-200
-                        {{ request()->routeIs('durability.*')
-                            ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 shadow-sm ring-1 ring-indigo-100 dark:ring-indigo-700'
-                            : 'text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-gray-100' }}">
-                        <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition
-                            {{ request()->routeIs('durability.*')
-                                ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300'
-                                : 'bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400 group-hover:bg-slate-200 dark:group-hover:bg-gray-600 group-hover:text-slate-700 dark:group-hover:text-gray-200' }}">
-                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4M7.5 4.5h9A2.5 2.5 0 0119 7v10a2.5 2.5 0 01-2.5 2.5h-9A2.5 2.5 0 015 17V7a2.5 2.5 0 012.5-2.5z" />
-                            </svg>
-                        </span>
+                    @php
+                        $isDurabilityParentActive = request()->routeIs('durability.*');
 
-                        <span class="whitespace-nowrap overflow-hidden transition-all duration-200"
-                            :class="$store.sidebar.collapsed ? 'opacity-0 w-0' : 'opacity-100'">
-                            Durability Produk
-                        </span>
-                    </a>
+                        $isDurabilityResumeActive = request()->routeIs('durability.index');
+
+                        $isDurabilityPenggantianKomponenActive = request()->routeIs('durability.penggantian-komponen');
+
+                        $isDurabilityKomponenActive = request()->routeIs('durability.durability-komponen');
+
+                        $isDurabilityLokasiActive = request()->routeIs('durability.lokasi');
+                    @endphp
+
+                    {{-- Durability Produk Dropdown --}}
+                    <div x-data="{ open: {{ $isDurabilityParentActive ? 'true' : 'false' }} }" class="space-y-1">
+                        <button type="button"
+                            @click="$store.sidebar.collapsed ? (window.location.href = '{{ route('durability.index') }}') : (open = !open)"
+                            @dblclick="window.location.href = '{{ route('durability.index') }}'"
+                            :title="$store.sidebar.collapsed ? 'Durability Produk' : ''"
+                            class="group w-full flex items-center justify-between gap-3 px-1.5 py-2 rounded-xl text-sm font-medium transition-all duration-200
+                            {{ $isDurabilityParentActive
+                                ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 shadow-sm ring-1 ring-indigo-100 dark:ring-indigo-700'
+                                : 'text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-gray-100' }}">
+
+                            <div class="flex items-center gap-3 min-w-0">
+                                <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition
+                                    {{ $isDurabilityParentActive
+                                        ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-700 dark:text-indigo-300'
+                                        : 'bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400 group-hover:bg-slate-200 dark:group-hover:bg-gray-600 group-hover:text-slate-700 dark:group-hover:text-gray-200' }}">
+                                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4M7.5 4.5h9A2.5 2.5 0 0119 7v10a2.5 2.5 0 01-2.5 2.5h-9A2.5 2.5 0 015 17V7a2.5 2.5 0 012.5-2.5z" />
+                                    </svg>
+                                </span>
+
+                                <span
+                                    class="whitespace-nowrap overflow-hidden transition-all duration-200"
+                                    :class="$store.sidebar.collapsed ? 'opacity-0 w-0' : 'opacity-100'">
+                                    Durability Product
+                                </span>
+                            </div>
+
+                            <svg class="w-4 h-4 flex-shrink-0 transition-all duration-200"
+                                :class="{ 'rotate-180': open, 'opacity-0 w-0': $store.sidebar.collapsed }"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <div
+                            x-show="open && !$store.sidebar.collapsed"
+                            x-collapse
+                            class="ml-4 pl-4 border-l border-slate-200 dark:border-gray-600 space-y-1">
+
+                            <a href="{{ route('durability.index') }}"
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200
+                                {{ $isDurabilityResumeActive
+                                    ? 'bg-slate-100 dark:bg-gray-700 text-slate-900 dark:text-gray-100 font-medium'
+                                    : 'text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-800 dark:hover:text-gray-200' }}">
+                                <span class="w-1.5 h-1.5 rounded-full flex-shrink-0
+                                    {{ $isDurabilityResumeActive ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-gray-600' }}"></span>
+                                Resume
+                            </a>
+
+                            <a href="{{ route('durability.penggantian-komponen') }}"
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200
+                                {{ $isDurabilityPenggantianKomponenActive
+                                    ? 'bg-slate-100 dark:bg-gray-700 text-slate-900 dark:text-gray-100 font-medium'
+                                    : 'text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-800 dark:hover:text-gray-200' }}">
+                                <span class="w-1.5 h-1.5 rounded-full flex-shrink-0
+                                    {{ $isDurabilityPenggantianKomponenActive ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-gray-600' }}"></span>
+                                Penggantian Komponen
+                            </a>
+
+                            <a href="{{ route('durability.durability-komponen') }}"
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200
+                                {{ $isDurabilityKomponenActive
+                                    ? 'bg-slate-100 dark:bg-gray-700 text-slate-900 dark:text-gray-100 font-medium'
+                                    : 'text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-800 dark:hover:text-gray-200' }}">
+                                <span class="w-1.5 h-1.5 rounded-full flex-shrink-0
+                                    {{ $isDurabilityKomponenActive ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-gray-600' }}"></span>
+                                Ketahanan Komponen
+                            </a>
+
+                            <a href="{{ route('durability.lokasi') }}"
+                                class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200
+                                {{ $isDurabilityLokasiActive
+                                    ? 'bg-slate-100 dark:bg-gray-700 text-slate-900 dark:text-gray-100 font-medium'
+                                    : 'text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-800 dark:hover:text-gray-200' }}">
+                                <span class="w-1.5 h-1.5 rounded-full flex-shrink-0
+                                    {{ $isDurabilityLokasiActive ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-gray-600' }}"></span>
+                                Lokasi
+                            </a>
+                        </div>
+                    </div>
                 @endif
 
 
