@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,7 +18,7 @@
 
     {{-- Anti-flash dark mode --}}
     <script>
-        (function () {
+        (function() {
             if (localStorage.getItem('theme') === 'dark') {
                 document.documentElement.classList.add('dark');
             }
@@ -45,7 +46,9 @@
         });
     </script>
 </head>
-<body class="font-sans antialiased bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+
+<body
+    class="font-sans antialiased bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200">
 
     <div class="flex min-h-screen">
 
@@ -53,16 +56,14 @@
         @include('components.sidebar')
 
         {{-- Main Content Area — reaktif langsung via $store.sidebar.collapsed --}}
-        <div
-            x-data
-            class="flex-1 flex flex-col transition-all duration-300 ease-in-out"
+        <div x-data class="flex-1 flex flex-col transition-all duration-300 ease-in-out"
             :class="$store.sidebar.collapsed ? 'ml-[72px]' : 'ml-64'">
 
             {{-- Topbar --}}
             @include('layouts.navigation')
 
             {{-- Page Content --}}
-            <main class="flex-1 p-6">
+            <main class="flex-1 p-4 sm:p-6 lg:p-8">
                 <div class="@yield('content_width', 'w-full')">
                     @yield('content')
                 </div>
@@ -82,4 +83,5 @@
     {{-- Font Awesome JS --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
 </body>
+
 </html>

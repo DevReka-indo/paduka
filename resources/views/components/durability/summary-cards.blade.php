@@ -45,7 +45,7 @@
                 </p>
                 <p class="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
                     {{ round($komponenDurabilityTertinggi->rata_rentang ?? 0) }}
-                    <span class="text-base font-semibold text-gray-500 dark:text-gray-400">Hari</span>
+                    <span class="text-base font-semibold text-gray-500 dark:text-gray-400">Bulan</span>
                 </p>
             </div>
         </div>
@@ -70,7 +70,7 @@
                 </p>
                 <p class="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">
                     {{ round($komponenDurabilityTerendah->rata_rentang ?? 0) }}
-                    <span class="text-base font-semibold text-gray-500 dark:text-gray-400">Hari</span>
+                    <span class="text-base font-semibold text-gray-500 dark:text-gray-400">Bulan</span>
                 </p>
             </div>
         </div>

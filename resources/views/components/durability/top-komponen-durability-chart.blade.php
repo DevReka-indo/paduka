@@ -3,7 +3,7 @@
         Top 10 Komponen Durability Tertinggi
     </h2>
     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        Rata-rata Rentang Penggantian (Hari)
+        Rata-rata Rentang Penggantian (Bulan)
     </p>
 
     <div class="mt-3 inline-flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">

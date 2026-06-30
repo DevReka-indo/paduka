@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     return topKomponenDurabilityFullLabels[index] ?? context[0].label;
                                 },
                                 label: function(context) {
-                                    return 'Rata-rata: ' + Number(context.raw).toLocaleString('id-ID') + ' Hari';
+                                    return 'Rata-rata: ' + Number(context.raw).toLocaleString('id-ID') + ' Bulan';
                                 }
                             }
                         }

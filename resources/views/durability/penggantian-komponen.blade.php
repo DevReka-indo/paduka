@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('header')
+    Database Komponen
+@endsection
+
 @section('content_width', 'w-full')
 
 @section('content')

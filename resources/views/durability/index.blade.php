@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('header')
+    Resume Durability Product
+@endsection
+
 @section('content_width', 'w-full')
 
 @section('content')
@@ -20,42 +24,62 @@
                         Dashboard Durability Product
                     </h1>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Monitoring durability component dan frekuensi penggantian berdasarkan data LPPB.
+                        Monitoring durability component dan frekuensi penggantian berdasarkan tanggal kerusakan komponen.
                     </p>
                 </div>
 
-                <form method="GET" action="{{ route('durability.index') }}" class="flex flex-col gap-3 sm:flex-row">
-                    <select name="tahun"
-                        class="rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                        <option value="">Semua Tahun</option>
-                        @foreach ($tahunList as $tahun)
-                            <option value="{{ $tahun }}" @selected(request('tahun') == $tahun)>
-                                {{ $tahun }}
-                            </option>
-                        @endforeach
-                    </select>
+                <div class="flex flex-col gap-3 lg:items-end">
+                    {{-- <a href="{{ route('durability.import.form') }}"
+                       class="inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700">
+                        <i class="fa-solid fa-upload mr-2"></i>
+                        Import Data
+                    </a> --}}
 
-                    <select name="produk_id"
-                        class="rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                        <option value="">Semua Produk</option>
-                        @foreach ($produkList as $produk)
-                            <option value="{{ $produk->id }}" @selected(request('produk_id') == $produk->id)>
-                                {{ $produk->nama_produk }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <form method="GET" action="{{ route('durability.index') }}" class="flex flex-col gap-3 sm:flex-row">
 
-                    <button type="submit"
-                        class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
-                        <i class="fa-solid fa-filter mr-2"></i>
-                        Filter
-                    </button>
+                        <select name="proyek_id"
+                            class="rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                            <option value="">Semua Proyek</option>
+                            @foreach ($proyekList as $proyek)
+                                <option value="{{ $proyek->nama_proyek }}"
+                                        @selected(request('proyek_id') == $proyek->nama_proyek)>
+                                    {{ $proyek->nama_proyek }}
+                                </option>
+                            @endforeach
+                        </select>
 
-                    <a href="{{ route('durability.index') }}"
-                       class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
-                        Reset
-                    </a>
-                </form>
+                        <select name="tahun"
+                            class="rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                            <option value="">Semua Tahun</option>
+                            @foreach ($tahunList as $tahun)
+                                <option value="{{ $tahun }}" @selected(request('tahun') == $tahun)>
+                                    {{ $tahun }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <select name="produk_id"
+                            class="rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                            <option value="">Semua Produk</option>
+                            @foreach ($produkList as $produk)
+                                <option value="{{ $produk->id }}" @selected(request('produk_id') == $produk->id)>
+                                    {{ $produk->nama_produk }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <button type="submit"
+                            class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
+                            <i class="fa-solid fa-filter mr-2"></i>
+                            Filter
+                        </button>
+
+                        <a href="{{ route('durability.index') }}"
+                           class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                            Reset
+                        </a>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -103,6 +127,7 @@
             />
 
             <x-durability.top-komponen-durability-chart />
+
         </div>
 
         <div class="flex justify-end">
@@ -112,7 +137,6 @@
                 Lihat Tabel Detail
             </a>
         </div>
-
     </div>
 </div>
 

@@ -11,7 +11,7 @@
                 Trend Penggantian Komponen
             </h2>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Jumlah penggantian berdasarkan bulan terbit LPPB.
+                Frekuensi penggantian berdasarkan tanggal kerusakan komponen
             </p>
         </div>
 

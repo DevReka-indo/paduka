@@ -4,12 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Durability;
 use App\Models\DurabilityProduk;
+use App\Models\DurabilityProyek;
 use App\Models\DurabilityTrainset;
 use App\Models\DurabilityLokasi;
 use App\Models\DurabilityKomponen;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Imports\DurabilityImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Throwable;
+use Illuminate\Validation\ValidationException;
 
 class DurabilityController extends Controller
 {
@@ -18,6 +23,7 @@ class DurabilityController extends Controller
         $selectedTahun = $request->tahun;
         $selectedProduk = $request->produk_id;
         $selectedTrainsetProduk = $request->trainset_produk_id;
+        $selectedProyek = $request->proyek_id;
 
         $trendFrom = $request->trend_from;
         $trendTo = $request->trend_to;
@@ -37,6 +43,12 @@ class DurabilityController extends Controller
         if ($selectedProduk) {
             $baseQuery->whereHas('komponen', function ($query) use ($selectedProduk) {
                 $query->where('produk_id', $selectedProduk);
+            });
+        }
+
+        if ($selectedProyek) {
+            $baseQuery->whereHas('proyek', function ($query) use ($selectedProyek) {
+                $query->where('nama_proyek', $selectedProyek);
             });
         }
 
@@ -89,8 +101,8 @@ class DurabilityController extends Controller
         */
 
         $availableTrendMonths = (clone $baseQuery)
-            ->select(DB::raw("DATE_FORMAT(tgl_terbit_lppb, '%Y-%m') as bulan"))
-            ->whereNotNull('tgl_terbit_lppb')
+            ->select(DB::raw("DATE_FORMAT(tgl_kerusakan, '%Y-%m') as bulan"))
+            ->whereNotNull('tgl_kerusakan')
             ->distinct()
             ->orderBy('bulan')
             ->pluck('bulan')
@@ -109,19 +121,19 @@ class DurabilityController extends Controller
 
         $trendQuery = (clone $baseQuery)
             ->select(
-                DB::raw("DATE_FORMAT(tgl_terbit_lppb, '%Y-%m') as bulan"),
+                DB::raw("DATE_FORMAT(tgl_kerusakan, '%Y-%m') as bulan"),
                 DB::raw('SUM(jumlah_penggantian) as total_penggantian')
             )
-            ->whereNotNull('tgl_terbit_lppb')
+            ->whereNotNull('tgl_kerusakan')
             ->whereNotNull('jumlah_penggantian');
 
         if ($trendFrom) {
-            $trendQuery->whereDate('tgl_terbit_lppb', '>=', $trendFrom . '-01');
+            $trendQuery->whereDate('tgl_kerusakan', '>=', $trendFrom . '-01');
         }
 
         if ($trendTo) {
             $trendQuery->whereDate(
-                'tgl_terbit_lppb',
+                'tgl_kerusakan',
                 '<=',
                 Carbon::createFromFormat('Y-m', $trendTo)->endOfMonth()->format('Y-m-d')
             );
@@ -240,6 +252,17 @@ class DurabilityController extends Controller
             ->orderBy('nama_produk')
             ->get();
 
+        // $proyekList = DurabilityProyek::query()
+        //     ->orderBy('nama_proyek')
+        //     ->distinct()
+        //     ->orderBy('nama_proyek')
+        //     ->get();
+
+        $proyekList = DurabilityProyek::query()
+            ->selectRaw('DISTINCT TRIM(nama_proyek) as nama_proyek')
+            ->orderBy('nama_proyek')
+            ->get();
+
         $view = $request->routeIs('durability.tabel-detail')
             ? 'durability.tabel-detail'
             : 'durability.index';
@@ -248,6 +271,8 @@ class DurabilityController extends Controller
             'durability',
             'tahunList',
             'produkList',
+            'proyekList',
+            'selectedProyek',
             'selectedTahun',
             'selectedProduk',
             'selectedTrainsetProduk',
@@ -264,6 +289,171 @@ class DurabilityController extends Controller
             'topTrainsetPenggantian',
             'topKomponenDurability'
         ));
+    }
+
+    public function create()
+    {
+        $produkList = DurabilityProduk::query()
+            ->orderBy('nama_produk')
+            ->get();
+
+        $komponenList = DurabilityKomponen::query()
+            ->with('produk')
+            ->orderBy('nama_komponen')
+            ->get();
+
+        $trainsetList = DurabilityTrainset::query()
+            ->orderBy('nomor_trainset')
+            ->orderBy('tipe_car')
+            ->get();
+
+        $lokasiList = DurabilityLokasi::query()
+            ->orderBy('nama_lokasi')
+            ->get();
+
+        return view('durability.create', compact(
+            'produkList',
+            'komponenList',
+            'trainsetList',
+            'lokasiList'
+        ));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'tahun' => ['required', 'integer', 'min:2000', 'max:2100'],
+
+            'nomor_po' => ['nullable', 'string', 'max:255'],
+            'customer' => ['nullable', 'string', 'max:255'],
+            'nama_proyek' => ['nullable', 'string', 'max:255'],
+
+            'nama_produk' => ['required', 'string', 'max:255'],
+            'nama_komponen' => ['required', 'string', 'max:255'],
+            'nomor_trainset' => ['nullable', 'string', 'max:255'],
+            'tipe_car' => ['nullable', 'string', 'max:255'],
+            'nama_lokasi' => ['nullable', 'string', 'max:255'],
+
+            'tgl_kerusakan' => ['nullable', 'date'],
+            'tgl_terbit_lppb' => ['nullable', 'date'],
+            'case_keterangan' => ['nullable', 'string'],
+            'rentang_penggantian' => ['nullable', 'integer', 'min:0'],
+            'jumlah_penggantian' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $proyek = $this->resolveDurabilityProyek($request);
+        $produk = $this->resolveDurabilityProduk($request);
+        $komponen = $this->resolveDurabilityKomponen($request, $produk);
+        $trainset = $this->resolveDurabilityTrainset($request);
+        $lokasi = $this->resolveDurabilityLokasi($request);
+
+        Durability::create([
+            'tahun' => $validated['tahun'],
+            'proyek_id' => $proyek->id,
+            'komponen_id' => $komponen->id,
+            'trainset_id' => $trainset?->id,
+            'lokasi_id' => $lokasi?->id,
+            'tgl_kerusakan' => $validated['tgl_kerusakan'] ?? null,
+            'tgl_terbit_lppb' => $validated['tgl_terbit_lppb'] ?? null,
+            'case_keterangan' => $validated['case_keterangan'] ?? null,
+            'rentang_penggantian' => $validated['rentang_penggantian'] ?? null,
+            'jumlah_penggantian' => $validated['jumlah_penggantian'],
+        ]);
+
+        return redirect()
+            ->route('durability.tabel-detail')
+            ->with('success', 'Data durability berhasil ditambahkan.');
+    }
+
+    public function edit(Durability $durability)
+    {
+        $durability->load([
+            'proyek',
+            'komponen.produk',
+            'trainset',
+            'lokasi',
+        ]);
+
+        $produkList = DurabilityProduk::query()
+            ->orderBy('nama_produk')
+            ->get();
+
+        $komponenList = DurabilityKomponen::query()
+            ->with('produk')
+            ->orderBy('nama_komponen')
+            ->get();
+
+        $trainsetList = DurabilityTrainset::query()
+            ->orderBy('nomor_trainset')
+            ->orderBy('tipe_car')
+            ->get();
+
+        $lokasiList = DurabilityLokasi::query()
+            ->orderBy('nama_lokasi')
+            ->get();
+
+        return view('durability.edit', compact(
+            'durability',
+            'produkList',
+            'komponenList',
+            'trainsetList',
+            'lokasiList'
+        ));
+    }
+
+    public function update(Request $request, Durability $durability)
+    {
+        $validated = $request->validate([
+            'tahun' => ['required', 'integer', 'min:2000', 'max:2100'],
+
+            'nomor_po' => ['nullable', 'string', 'max:255'],
+            'customer' => ['nullable', 'string', 'max:255'],
+            'nama_proyek' => ['nullable', 'string', 'max:255'],
+
+            'nama_produk' => ['required', 'string', 'max:255'],
+            'nama_komponen' => ['required', 'string', 'max:255'],
+            'nomor_trainset' => ['nullable', 'string', 'max:255'],
+            'tipe_car' => ['nullable', 'string', 'max:255'],
+            'nama_lokasi' => ['nullable', 'string', 'max:255'],
+
+            'tgl_kerusakan' => ['nullable', 'date'],
+            'tgl_terbit_lppb' => ['nullable', 'date'],
+            'case_keterangan' => ['nullable', 'string'],
+            'rentang_penggantian' => ['nullable', 'integer', 'min:0'],
+            'jumlah_penggantian' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $proyek = $this->resolveDurabilityProyek($request);
+        $produk = $this->resolveDurabilityProduk($request);
+        $komponen = $this->resolveDurabilityKomponen($request, $produk);
+        $trainset = $this->resolveDurabilityTrainset($request);
+        $lokasi = $this->resolveDurabilityLokasi($request);
+
+        $durability->update([
+            'tahun' => $validated['tahun'],
+            'proyek_id' => $proyek->id,
+            'komponen_id' => $komponen->id,
+            'trainset_id' => $trainset?->id,
+            'lokasi_id' => $lokasi?->id,
+            'tgl_kerusakan' => $validated['tgl_kerusakan'] ?? null,
+            'tgl_terbit_lppb' => $validated['tgl_terbit_lppb'] ?? null,
+            'case_keterangan' => $validated['case_keterangan'] ?? null,
+            'rentang_penggantian' => $validated['rentang_penggantian'] ?? null,
+            'jumlah_penggantian' => $validated['jumlah_penggantian'],
+        ]);
+
+        return redirect()
+            ->route('durability.tabel-detail')
+            ->with('success', 'Data durability berhasil diperbarui.');
+    }
+
+    public function destroy(Durability $durability)
+    {
+        $durability->delete();
+
+        return redirect()
+            ->route('durability.tabel-detail')
+            ->with('success', 'Data durability berhasil dihapus.');
     }
 
     public function penggantianKomponen(Request $request)
@@ -530,11 +720,11 @@ class DurabilityController extends Controller
 
         $chartColors = $chartValues
             ->map(function ($value) {
-                if ($value > 90) {
+                if ($value >= 12) {
                     return 'rgba(16, 185, 129, 0.95)';
                 }
 
-                if ($value >= 31) {
+                if ($value >= 6) {
                     return 'rgba(245, 158, 11, 0.95)';
                 }
 
@@ -778,6 +968,328 @@ class DurabilityController extends Controller
             'chartTrainsetLabels',
             'chartTrainsetValues'
         ));
+    }
+
+    public function importForm()
+    {
+        return view('durability.import');
+    }
+
+    private function normalizeImportKey($value): string
+    {
+        $value = strtolower(trim((string) $value));
+
+        return preg_replace('/\s+/', ' ', $value);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
+        ]);
+
+        try {
+            $import = new DurabilityImport();
+
+            Excel::import($import, $request->file('file'));
+
+            $rows = $import->rows();
+
+            DB::transaction(function () use ($rows) {
+                /*
+                |--------------------------------------------------------------------------
+                | Delete old data
+                |--------------------------------------------------------------------------
+                | Hapus tabel utama dulu karena tabel ini menyimpan FK ke master.
+                | Setelah itu hapus master.
+                */
+                DB::table('durability')->delete();
+                DB::table('durability_komponen')->delete();
+                DB::table('durability_produk')->delete();
+                DB::table('durability_trainset')->delete();
+                DB::table('durability_lokasi')->delete();
+                DB::table('durability_proyek')->delete();
+
+                /*
+                |--------------------------------------------------------------------------
+                | Rebuild master data
+                |--------------------------------------------------------------------------
+                */
+                $produkMap = [];
+                $komponenMap = [];
+                $lokasiMap = [];
+                $trainsetMap = [];
+                $proyekMap = [];
+
+                foreach ($rows as $row) {
+                    $now = now();
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Produk
+                    |--------------------------------------------------------------------------
+                    */
+                    $produkKey = $this->normalizeImportKey($row['nama_produk']);
+
+                    if (!isset($produkMap[$produkKey])) {
+                        $produkId = DB::table('durability_produk')->insertGetId([
+                            'nama_produk' => $row['nama_produk'],
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ]);
+
+                        $produkMap[$produkKey] = $produkId;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Komponen
+                    |--------------------------------------------------------------------------
+                    */
+                    $komponenKey = $produkKey . '|' . $this->normalizeImportKey($row['detail_komponen']);
+
+                    if (!isset($komponenMap[$komponenKey])) {
+                        $komponenId = DB::table('durability_komponen')->insertGetId([
+                            'produk_id' => $produkMap[$produkKey],
+                            'nama_komponen' => $row['detail_komponen'],
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ]);
+
+                        $komponenMap[$komponenKey] = $komponenId;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Lokasi
+                    |--------------------------------------------------------------------------
+                    */
+                    $lokasiKey = $this->normalizeImportKey($row['lokasi']);
+
+                    if (!isset($lokasiMap[$lokasiKey])) {
+                        $lokasiId = DB::table('durability_lokasi')->insertGetId([
+                            'nama_lokasi' => $row['lokasi'],
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ]);
+
+                        $lokasiMap[$lokasiKey] = $lokasiId;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Trainset
+                    |--------------------------------------------------------------------------
+                    */
+                    $trainsetKey = $this->normalizeImportKey($row['trainset'] . '|' . $row['car']);
+
+                    if (!isset($trainsetMap[$trainsetKey])) {
+                        $trainsetId = DB::table('durability_trainset')->insertGetId([
+                            'nomor_trainset' => $row['trainset'],
+                            'tipe_car' => $row['car'],
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ]);
+
+                        $trainsetMap[$trainsetKey] = $trainsetId;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Proyek
+                    |--------------------------------------------------------------------------
+                    */
+                    $nomorPo = $row['nomor_po'] ?: null;
+                    $customer = $row['customer'] ?: '-';
+                    $namaProyek = $row['proyek'] ?: '-';
+
+                    $proyekKey = $nomorPo
+                        ? 'po:' . $this->normalizeImportKey($nomorPo)
+                        : 'no-po:' . $this->normalizeImportKey($customer . '|' . $namaProyek);
+
+                    if (!isset($proyekMap[$proyekKey])) {
+                        $proyekId = DB::table('durability_proyek')->insertGetId([
+                            'nomor_po' => $nomorPo,
+                            'customer' => $customer,
+                            'nama_proyek' => $namaProyek,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ]);
+
+                        $proyekMap[$proyekKey] = $proyekId;
+                    }
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Insert durability rows
+                |--------------------------------------------------------------------------
+                */
+                $durabilityRows = [];
+
+                foreach ($rows as $row) {
+                    $produkKey = $this->normalizeImportKey($row['nama_produk']);
+                    $komponenKey = $produkKey . '|' . $this->normalizeImportKey($row['detail_komponen']);
+                    $lokasiKey = $this->normalizeImportKey($row['lokasi']);
+                    $trainsetKey = $this->normalizeImportKey($row['trainset'] . '|' . $row['car']);
+                    $nomorPo = $row['nomor_po'] ?: null;
+                    $customer = $row['customer'] ?: '-';
+                    $namaProyek = $row['proyek'] ?: '-';
+
+                    $proyekKey = $nomorPo
+                        ? 'po:' . $this->normalizeImportKey($nomorPo)
+                        : 'no-po:' . $this->normalizeImportKey($customer . '|' . $namaProyek);
+
+                    $durabilityRows[] = [
+                        'tahun' => $row['tahun'],
+                        'proyek_id' => $proyekMap[$proyekKey],
+                        'komponen_id' => $komponenMap[$komponenKey],
+                        'trainset_id' => $trainsetMap[$trainsetKey],
+                        'lokasi_id' => $lokasiMap[$lokasiKey],
+                        'tgl_kerusakan' => $row['tgl_kerusakan'],
+                        'tgl_terbit_lppb' => $row['tgl_terbit_lppb'],
+                        'case_keterangan' => $row['case_keterangan'],
+                        'rentang_penggantian' => $row['rentang_penggantian'],
+                        'jumlah_penggantian' => $row['jumlah_penggantian'],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+
+                foreach (array_chunk($durabilityRows, 500) as $chunk) {
+                    DB::table('durability')->insert($chunk);
+                }
+            });
+
+            return back()->with(
+                'success',
+                count($rows) . ' data durability berhasil di-import. Data master durability dan data utama sudah dibuat ulang dari Excel.'
+            );
+        } catch (ValidationException $e) {
+            $messages = collect($e->errors())
+                ->flatten()
+                ->take(10)
+                ->implode(' | ');
+
+            return back()
+                ->withInput()
+                ->with('error', 'Import gagal. Data lama tidak diubah. Detail: ' . $messages);
+        } catch (Throwable $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Import gagal. Data lama tidak diubah. Pesan error: ' . $e->getMessage());
+        }
+    }
+
+    private function resolveDurabilityProyek(Request $request): DurabilityProyek
+    {
+        $nomorPo = $request->filled('nomor_po')
+            ? trim($request->nomor_po)
+            : null;
+
+        $customer = $request->filled('customer')
+            ? trim($request->customer)
+            : '-';
+
+        $namaProyek = $request->filled('nama_proyek')
+            ? trim($request->nama_proyek)
+            : '-';
+
+        if ($nomorPo) {
+            return DurabilityProyek::query()->updateOrCreate(
+                [
+                    'nomor_po' => $nomorPo,
+                ],
+                [
+                    'customer' => $customer,
+                    'nama_proyek' => $namaProyek,
+                ]
+            );
+        }
+
+        return DurabilityProyek::query()->firstOrCreate(
+            [
+                'nomor_po' => null,
+                'customer' => $customer,
+                'nama_proyek' => $namaProyek,
+            ]
+        );
+    }
+
+    private function resolveDurabilityProduk(Request $request): DurabilityProduk
+    {
+        $namaProduk = trim((string) $request->nama_produk);
+
+        return DurabilityProduk::query()->firstOrCreate(
+            [
+                'nama_produk' => $namaProduk,
+            ],
+            [
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+    }
+
+    private function resolveDurabilityKomponen(Request $request, DurabilityProduk $produk): DurabilityKomponen
+    {
+        $namaKomponen = trim((string) $request->nama_komponen);
+
+        return DurabilityKomponen::query()->firstOrCreate(
+            [
+                'produk_id' => $produk->id,
+                'nama_komponen' => $namaKomponen,
+            ],
+            [
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+    }
+
+    private function resolveDurabilityTrainset(Request $request): ?DurabilityTrainset
+    {
+        $nomorTrainset = $request->filled('nomor_trainset')
+            ? trim((string) $request->nomor_trainset)
+            : null;
+
+        $tipeCar = $request->filled('tipe_car')
+            ? trim((string) $request->tipe_car)
+            : null;
+
+        if (!$nomorTrainset && !$tipeCar) {
+            return null;
+        }
+
+        return DurabilityTrainset::query()->firstOrCreate(
+            [
+                'nomor_trainset' => $nomorTrainset,
+                'tipe_car' => $tipeCar,
+            ],
+            [
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+    }
+
+    private function resolveDurabilityLokasi(Request $request): ?DurabilityLokasi
+    {
+        if (!$request->filled('nama_lokasi')) {
+            return null;
+        }
+
+        $namaLokasi = trim((string) $request->nama_lokasi);
+
+        return DurabilityLokasi::query()->firstOrCreate(
+            [
+                'nama_lokasi' => $namaLokasi,
+            ],
+            [
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
     }
 
 

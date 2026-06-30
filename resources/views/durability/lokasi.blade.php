@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('header')
+    Lokasi Penggantian Komponen
+@endsection
+
 @section('content_width', 'w-full')
 
 @section('content')
@@ -113,7 +117,7 @@
             <div class="xl:col-span-5 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <div class="border-b border-gray-100 px-6 py-5 dark:border-gray-800">
                     <h2 class="text-base font-bold text-gray-900 dark:text-white">
-                        Tabel Lokasi Penggantian
+                        Lokasi Penggantian
                     </h2>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Ringkasan total penggantian berdasarkan lokasi.
@@ -125,8 +129,8 @@
                         <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800/70 dark:text-gray-400">
                             <tr>
                                 <th class="px-5 py-4 text-left font-bold">Lokasi</th>
-                                <th class="px-5 py-4 text-center font-bold">Jumlah Penggantian</th>
-                                <th class="px-5 py-4 text-right font-bold">Jumlah Produk</th>
+                                <th class="px-5 py-4 text-center font-bold">Penggantian Komponen</th>
+                                <th class="px-5 py-4 text-right font-bold">Penggantian Produk</th>
                             </tr>
                         </thead>
 
@@ -172,11 +176,11 @@
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
                             <h2 class="text-base font-bold text-gray-900 dark:text-white">
-                                Data Trainset Dengan Penggantian
+                                Total Penggantian Berdasarkan Trainset
                             </h2>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            {{-- <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Total penggantian berdasarkan trainset.
-                            </p>
+                            </p> --}}
                         </div>
                     </div>
 

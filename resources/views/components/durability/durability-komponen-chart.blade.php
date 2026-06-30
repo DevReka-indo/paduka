@@ -12,24 +12,24 @@
                 Rata-rata Durability Semua Komponen
             </h2>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Satuan: Hari. Semakin tinggi semakin baik.
+                Satuan: Bulan. Semakin tinggi semakin baik.
             </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-4 text-xs font-semibold text-gray-500 dark:text-gray-400">
             <span class="inline-flex items-center gap-2">
                 <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
-                Durability Tinggi (&gt; 90 hari)
+                Durability Tinggi (&gt; 12 Bulan)
             </span>
 
             <span class="inline-flex items-center gap-2">
                 <span class="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
-                Durability Sedang (31 - 90 hari)
+                Durability Sedang (6 - 11 Bulan)
             </span>
 
             <span class="inline-flex items-center gap-2">
                 <span class="h-2.5 w-2.5 rounded-full bg-red-500"></span>
-                Durability Rendah (&le; 30 hari)
+                Durability Rendah (&le; 6 Bulan)
             </span>
         </div>
     </div>
@@ -42,7 +42,7 @@
         <div class="mt-5 flex items-start gap-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300">
             <i class="fa-solid fa-circle-info mt-0.5"></i>
             <p>
-                Durability dihitung berdasarkan rata-rata rentang penggantian komponen dalam satuan hari.
+                Durability dihitung berdasarkan rata-rata rentang penggantian komponen dalam satuan bulan.
             </p>
         </div>
     </div>
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             weight: 'bold'
                         },
                         formatter: function(value) {
-                            return Number(value).toLocaleString('id-ID') + ' hari';
+                            return Number(value).toLocaleString('id-ID') + ' bulan';
                         }
                     },
                     tooltip: {
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     kategori = 'Sedang';
                                 }
 
-                                return 'Rata-rata: ' + value + ' hari (' + kategori + ')';
+                                return 'Rata-rata: ' + value + ' bulan (' + kategori + ')';
                             }
                         }
                     }
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         suggestedMax: Math.max(...values, 0) * 1.15,
                         title: {
                             display: true,
-                            text: 'Rata-rata Durability (Hari)',
+                            text: 'Rata-rata Durability (Bulan)',
                             color: theme.tickColor,
                             font: {
                                 weight: 'bold'

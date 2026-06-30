@@ -144,12 +144,45 @@ Route::middleware('auth')->group(function () {
             return view('visual-check.index');
         })->name('visual-check.index');
 
-        // Durability Menu
-        Route::get('/durability', [DurabilityController::class, 'index'])->name('durability.index');
-        Route::get('/durability/penggantian-komponen', [DurabilityController::class, 'penggantianKomponen'])->name('durability.penggantian-komponen');
-        Route::get('/durability/durability-komponen', [DurabilityController::class, 'durabilityKomponen'])->name('durability.durability-komponen');
-        Route::get('/durability/lokasi', [DurabilityController::class, 'lokasi'])->name('durability.lokasi');
-        Route::get('/durability/tabel-detail', [DurabilityController::class, 'index'])->name('durability.tabel-detail');
+    // Durability Menu
+    Route::prefix('durability')
+        ->name('durability.')
+        ->group(function () {
+            Route::get('/', [DurabilityController::class, 'index'])->name('index');
+
+            Route::get('/penggantian-komponen', [DurabilityController::class, 'penggantianKomponen'])
+                ->name('penggantian-komponen');
+
+            Route::get('/durability-komponen', [DurabilityController::class, 'durabilityKomponen'])
+                ->name('durability-komponen');
+
+            Route::get('/lokasi', [DurabilityController::class, 'lokasi'])
+                ->name('lokasi');
+
+            Route::get('/tabel-detail', [DurabilityController::class, 'index'])
+                ->name('tabel-detail');
+
+            Route::get('/import', [DurabilityController::class, 'importForm'])
+                ->name('import.form');
+
+            Route::post('/import', [DurabilityController::class, 'import'])
+                ->name('import');
+
+            Route::get('/create', [DurabilityController::class, 'create'])
+                ->name('create');
+
+            Route::post('/', [DurabilityController::class, 'store'])
+                ->name('store');
+
+            Route::get('/{durability}/edit', [DurabilityController::class, 'edit'])
+                ->name('edit');
+
+            Route::put('/{durability}', [DurabilityController::class, 'update'])
+                ->name('update');
+
+            Route::delete('/{durability}', [DurabilityController::class, 'destroy'])
+                ->name('destroy');
+        });
 
         Route::get('/bantuan', [App\Http\Controllers\BantuanController::class, 'index'])->name('bantuan.index');
 
