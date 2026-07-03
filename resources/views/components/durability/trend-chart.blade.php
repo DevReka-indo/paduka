@@ -20,32 +20,105 @@
             @if(request('tahun'))
                 <input type="hidden" name="tahun" value="{{ request('tahun') }}">
             @endif
+            @php
+                $selectedProdukIds = request()->input('produk_id', []);
+                $selectedProdukIds = is_array($selectedProdukIds)
+                    ? array_filter($selectedProdukIds)
+                    : array_filter([$selectedProdukIds]);
+            @endphp
 
-            @if(request('produk_id'))
-                <input type="hidden" name="produk_id" value="{{ request('produk_id') }}">
+            @foreach($selectedProdukIds as $produkId)
+                <input type="hidden" name="produk_id[]" value="{{ $produkId }}">
+            @endforeach
+            @if(request('proyek_id'))
+                <input type="hidden" name="proyek_id" value="{{ request('proyek_id') }}">
             @endif
 
-            <select name="trend_from"
-                class="rounded-xl border-gray-200 bg-white text-xs text-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                <option value="">Dari Bulan</option>
-                @foreach($availableTrendMonths as $month)
-                    <option value="{{ $month['value'] }}" @selected($trendFrom === $month['value'])>
-                        {{ $month['label'] }}
-                    </option>
-                @endforeach
-            </select>
+            {{-- Dropdown: Dari Bulan --}}
+            <div class="relative"
+                x-data="{
+                    open: false,
+                    selected: '{{ $trendFrom ?? '' }}',
+                    label: '{{ $trendFrom ? \Carbon\Carbon::createFromFormat('Y-m', $trendFrom)->translatedFormat('M Y') : 'Dari Bulan' }}'
+                }"
+                @click.outside="open = false">
+                <input type="hidden" name="trend_from" :value="selected">
+                <button type="button" @click="open = !open"
+                    class="flex w-36 items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">
+                    <span x-text="label" class="truncate"></span>
+                    <svg class="h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open"
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 -translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-100"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 -translate-y-1"
+                    class="absolute left-0 z-50 mt-1 w-40 rounded-2xl border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                    <div class="max-h-52 overflow-y-auto">
+                        <button type="button" @click="selected = ''; label = 'Dari Bulan'; open = false"
+                            class="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700"
+                            :class="selected === '' ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'">
+                            Dari Bulan
+                        </button>
+                        @foreach($availableTrendMonths as $month)
+                            <button type="button"
+                                @click="selected = '{{ $month['value'] }}'; label = '{{ $month['label'] }}'; open = false"
+                                class="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700"
+                                :class="selected === '{{ $month['value'] }}' ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'">
+                                {{ $month['label'] }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
 
             <span class="text-xs text-gray-400">s/d</span>
 
-            <select name="trend_to"
-                class="rounded-xl border-gray-200 bg-white text-xs text-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                <option value="">Sampai Bulan</option>
-                @foreach($availableTrendMonths as $month)
-                    <option value="{{ $month['value'] }}" @selected($trendTo === $month['value'])>
-                        {{ $month['label'] }}
-                    </option>
-                @endforeach
-            </select>
+            {{-- Dropdown: Sampai Bulan --}}
+            <div class="relative"
+                x-data="{
+                    open: false,
+                    selected: '{{ $trendTo ?? '' }}',
+                    label: '{{ $trendTo ? \Carbon\Carbon::createFromFormat('Y-m', $trendTo)->translatedFormat('M Y') : 'Sampai Bulan' }}'
+                }"
+                @click.outside="open = false">
+                <input type="hidden" name="trend_to" :value="selected">
+                <button type="button" @click="open = !open"
+                    class="flex w-36 items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">
+                    <span x-text="label" class="truncate"></span>
+                    <svg class="h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="open"
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 -translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-100"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 -translate-y-1"
+                    class="absolute left-0 z-50 mt-1 w-40 rounded-2xl border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                    <div class="max-h-52 overflow-y-auto">
+                        <button type="button" @click="selected = ''; label = 'Sampai Bulan'; open = false"
+                            class="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700"
+                            :class="selected === '' ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'">
+                            Sampai Bulan
+                        </button>
+                        @foreach($availableTrendMonths as $month)
+                            <button type="button"
+                                @click="selected = '{{ $month['value'] }}'; label = '{{ $month['label'] }}'; open = false"
+                                class="w-full px-4 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-700"
+                                :class="selected === '{{ $month['value'] }}' ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'">
+                                {{ $month['label'] }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
 
             <button type="submit"
                 class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700">

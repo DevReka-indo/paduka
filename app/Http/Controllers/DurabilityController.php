@@ -21,8 +21,16 @@ class DurabilityController extends Controller
     public function index(Request $request)
     {
         $selectedTahun = $request->tahun;
-        $selectedProduk = $request->produk_id;
-        $selectedTrainsetProduk = $request->trainset_produk_id;
+
+        // $selectedProduk = $request->produk_id;
+        $selectedProduk = $request->input('produk_id', []);
+        $selectedProduk = is_array($selectedProduk)
+            ? array_filter($selectedProduk)
+            : array_filter([$selectedProduk]);
+
+        // $selectedTrainsetProduk = $request->trainset_produk_id;
+        $selectedTrainsetProduk = $request->input('trainset_produk_id', []);
+        $selectedTrainsetProduk = is_array($selectedTrainsetProduk) ? $selectedTrainsetProduk : array_filter([$selectedTrainsetProduk]);
         $selectedProyek = $request->proyek_id;
 
         $trendFrom = $request->trend_from;
@@ -40,9 +48,9 @@ class DurabilityController extends Controller
             $baseQuery->where('tahun', $selectedTahun);
         }
 
-        if ($selectedProduk) {
+        if (!empty($selectedProduk)) {
             $baseQuery->whereHas('komponen', function ($query) use ($selectedProduk) {
-                $query->where('produk_id', $selectedProduk);
+                $query->whereIn('produk_id', $selectedProduk);
             });
         }
 
@@ -187,20 +195,26 @@ class DurabilityController extends Controller
             ->select(
                 'durability_trainset.nomor_trainset',
                 'durability_trainset.tipe_car',
-                DB::raw('MAX(durability_produk.nama_produk) as nama_produk'),
+                'durability_produk.nama_produk',
                 DB::raw('SUM(durability.jumlah_penggantian) as total_penggantian')
             )
             ->whereNotNull('durability.jumlah_penggantian');
 
-        if ($selectedTrainsetProduk) {
-            $topTrainsetQuery->where('durability_produk.id', $selectedTrainsetProduk);
+        // if ($selectedTrainsetProduk) {
+        //     $topTrainsetQuery->where('durability_produk.id', $selectedTrainsetProduk);
+        // }
+
+        if (!empty($selectedTrainsetProduk)) {
+            $topTrainsetQuery->whereIn('durability_produk.id', $selectedTrainsetProduk);
         }
 
         $topTrainsetPenggantian = $topTrainsetQuery
             ->groupBy(
                 'durability_trainset.id',
                 'durability_trainset.nomor_trainset',
-                'durability_trainset.tipe_car'
+                'durability_trainset.tipe_car',
+                'durability_produk.id',
+                'durability_produk.nama_produk'
             )
             ->orderByDesc('total_penggantian')
             ->limit(10)
@@ -460,7 +474,9 @@ class DurabilityController extends Controller
     {
         $dateFrom = $request->date_from;
         $dateTo = $request->date_to;
-        $produkId = $request->produk_id;
+        // $produkId = $request->produk_id;
+        $produkId = $request->input('produk_id', []);
+        $produkId = is_array($produkId) ? $produkId : array_filter([$produkId]);
         $trainsetId = $request->trainset_id;
         $lokasiId = $request->lokasi_id;
 
@@ -480,9 +496,9 @@ class DurabilityController extends Controller
             $baseQuery->whereDate('tgl_terbit_lppb', '<=', $dateTo);
         }
 
-        if ($produkId) {
+        if (!empty($produkId)) {
             $baseQuery->whereHas('komponen', function ($query) use ($produkId) {
-                $query->where('produk_id', $produkId);
+                $query->whereIn('produk_id', $produkId);
             });
         }
 
@@ -643,7 +659,9 @@ class DurabilityController extends Controller
     {
         $dateFrom = $request->date_from;
         $dateTo = $request->date_to;
-        $produkId = $request->produk_id;
+        // $produkId = $request->produk_id;
+        $produkId = $request->input('produk_id', []);
+        $produkId = is_array($produkId) ? $produkId : array_filter([$produkId]);
         $trainsetId = $request->trainset_id;
         $lokasiId = $request->lokasi_id;
 
@@ -663,9 +681,9 @@ class DurabilityController extends Controller
             $baseQuery->whereDate('tgl_terbit_lppb', '<=', $dateTo);
         }
 
-        if ($produkId) {
+        if (!empty($produkId)) {
             $baseQuery->whereHas('komponen', function ($query) use ($produkId) {
-                $query->where('produk_id', $produkId);
+                $query->whereIn('produk_id', $produkId);
             });
         }
 
@@ -792,7 +810,11 @@ class DurabilityController extends Controller
         $dateFrom = $request->date_from;
         $dateTo = $request->date_to;
 
-        $produkId = $request->produk_id;
+        $produkId = $request->input('produk_id', []);
+        $produkId = is_array($produkId)
+            ? array_filter($produkId)
+            : array_filter([$produkId]);
+
         $komponenId = $request->komponen_id;
         $lokasiId = $request->lokasi_id;
         $sort = $request->sort ?? 'desc';
@@ -878,8 +900,8 @@ class DurabilityController extends Controller
             )
             ->whereNotNull('durability.jumlah_penggantian');
 
-        if ($produkId) {
-            $trainsetQuery->where('durability_produk.id', $produkId);
+        if (!empty($produkId)) {
+            $trainsetQuery->whereIn('durability_produk.id', $produkId);
         }
 
         if ($komponenId) {

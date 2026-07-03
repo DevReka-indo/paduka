@@ -6,12 +6,103 @@
 
 @section('content_width', 'w-full')
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-calendar {
+        border-radius: 1rem;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+        font-family: inherit;
+    }
+
+    .dark .flatpickr-calendar {
+        background: #1f2937;
+        border-color: #374151;
+        color: #f9fafb;
+    }
+
+    .dark .flatpickr-day {
+        color: #d1d5db;
+    }
+
+    .dark .flatpickr-day:hover {
+        background: #374151;
+        border-color: #374151;
+    }
+
+    .dark .flatpickr-day.selected,
+    .dark .flatpickr-day.selected:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+    }
+
+    .dark .flatpickr-day.inRange {
+        background: #1e3a8a;
+        border-color: #1e3a8a;
+        color: #bfdbfe;
+    }
+
+    .dark .flatpickr-day.today {
+        border-color: #2563eb;
+        color: #60a5fa;
+    }
+
+    .dark .flatpickr-day.today:hover {
+        background: #1e3a8a;
+    }
+
+    .dark .flatpickr-day.flatpickr-disabled,
+    .dark .flatpickr-day.flatpickr-disabled:hover {
+        color: #4b5563;
+    }
+
+    .dark .flatpickr-months .flatpickr-month,
+    .dark .flatpickr-weekdays,
+    .dark span.flatpickr-weekday {
+        background: #1f2937;
+        color: #9ca3af;
+        fill: #9ca3af;
+    }
+
+    .dark .flatpickr-current-month input.cur-year,
+    .dark .flatpickr-current-month .flatpickr-monthDropdown-months {
+        color: #f9fafb;
+        background: #1f2937;
+    }
+
+    .dark .flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
+        background: #1f2937;
+        color: #f9fafb;
+    }
+
+    .dark .flatpickr-prev-month,
+    .dark .flatpickr-next-month {
+        color: #9ca3af;
+        fill: #9ca3af;
+    }
+
+    .dark .flatpickr-prev-month:hover,
+    .dark .flatpickr-next-month:hover {
+        color: #f9fafb;
+        fill: #f9fafb;
+    }
+
+    .dark .flatpickr-time {
+        background: #1f2937;
+        border-color: #374151;
+        color: #f9fafb;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="min-h-screen bg-slate-50 px-4 py-6 dark:bg-gray-950 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-[1600px] space-y-6">
 
         {{-- Header --}}
-        <div class="relative overflow-hidden rounded-3xl border border-white/70 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div class="relative rounded-3xl border border-white/70 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div class="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl"></div>
             <div class="absolute -bottom-24 left-10 h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl"></div>
 
@@ -28,82 +119,242 @@
                     </p>
                 </div>
 
-                <form method="GET" action="{{ route('durability.penggantian-komponen') }}" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
-                    <div>
-                        <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                            Dari
-                        </label>
-                        <input type="date" name="date_from" value="{{ $dateFrom }}"
-                            class="w-full rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                    </div>
+                <form method="GET" action="{{ route('durability.penggantian-komponen') }}" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:flex xl:flex-wrap xl:items-end">
 
-                    <div>
-                        <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                            Sampai
-                        </label>
-                        <input type="date" name="date_to" value="{{ $dateTo }}"
-                            class="w-full rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                {{-- Dari Tanggal --}}
+                <div>
+                    <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Dari
+                    </label>
+                    <div class="relative">
+                        <input type="text" name="date_from" id="date_from" value="{{ $dateFrom }}"
+                            placeholder="Pilih tanggal..."
+                            readonly
+                            class="w-full cursor-pointer rounded-xl border border-gray-200 bg-white py-2 pl-3 pr-9 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                        <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                            <i class="fa-regular fa-calendar text-gray-400 text-xs"></i>
+                        </div>
                     </div>
+                </div>
 
-                    <div>
-                        <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                            Produk
-                        </label>
-                        <select name="produk_id"
-                            class="w-full rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                            <option value="">Semua</option>
-                            @foreach($produkList as $produk)
-                                <option value="{{ $produk->id }}" @selected((string) $produkId === (string) $produk->id)>
-                                    {{ $produk->nama_produk }}
-                                </option>
-                            @endforeach
-                        </select>
+                {{-- Sampai Tanggal --}}
+                <div>
+                    <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Sampai
+                    </label>
+                    <div class="relative">
+                        <input type="text" name="date_to" id="date_to" value="{{ $dateTo }}"
+                            placeholder="Pilih tanggal..."
+                            readonly
+                            class="w-full cursor-pointer rounded-xl border border-gray-200 bg-white py-2 pl-3 pr-9 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                        <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                            <i class="fa-regular fa-calendar text-gray-400 text-xs"></i>
+                        </div>
                     </div>
+                </div>
 
+                {{-- Dropdown: Produk (multi-select) --}}
+                <div>
+                    <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Produk
+                    </label>
+                    @php
+                        $produkIdArr = is_array($produkId) ? array_map('strval', $produkId) : [];
+                    @endphp
+                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                        <button type="button" @click="open = !open"
+                            class="flex w-48 items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">
+                            <span class="truncate">
+                                @if(empty($produkIdArr))
+                                    Semua Produk
+                                @elseif(count($produkIdArr) === 1)
+                                    {{ $produkList->firstWhere('id', (int) $produkIdArr[0])?->nama_produk ?? 'Semua Produk' }}
+                                @else
+                                    {{ count($produkIdArr) }} Produk dipilih
+                                @endif
+                            </span>
+                            <svg class="h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+
+                        <div x-show="open"
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 -translate-y-1"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 -translate-y-1"
+                            class="absolute left-0 z-50 mt-1 w-64 rounded-2xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+
+                            {{-- Search --}}
+                            <div class="p-2 border-b border-gray-100 dark:border-gray-700">
+                                <input type="text" placeholder="Cari produk..."
+                                    class="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                                    x-on:input="
+                                        const q = $event.target.value.toLowerCase();
+                                        $el.closest('.absolute').querySelectorAll('[data-produk-item]').forEach(el => {
+                                            el.style.display = el.dataset.name.toLowerCase().includes(q) ? '' : 'none';
+                                        });
+                                    ">
+                            </div>
+
+                            {{-- List --}}
+                            <div class="max-h-56 overflow-y-auto p-1">
+                                @foreach($produkList as $produk)
+                                    <label data-produk-item data-name="{{ strtolower($produk->nama_produk) }}"
+                                        class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700">
+                                        <input type="checkbox"
+                                            name="produk_id[]"
+                                            value="{{ $produk->id }}"
+                                            {{ in_array((string) $produk->id, $produkIdArr) ? 'checked' : '' }}
+                                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        {{ $produk->nama_produk }}
+                                    </label>
+                                @endforeach
+                            </div>
+
+                            {{-- Footer --}}
+                            <div class="flex items-center justify-between border-t border-gray-100 p-2 dark:border-gray-700">
+                                <button type="button"
+                                    class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                    onclick="this.closest('.absolute').querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false)">
+                                    Reset
+                                </button>
+                                <button type="submit"
+                                    class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
+                                    Terapkan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                    {{-- Dropdown: Trainset --}}
                     <div>
                         <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                             Trainset
                         </label>
-                        <select name="trainset_id"
-                            class="w-full rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                            <option value="">Semua</option>
-                            @foreach($trainsetList as $trainset)
-                                <option value="{{ $trainset->id }}" @selected((string) $trainsetId === (string) $trainset->id)>
-                                    {{ $trainset->nomor_trainset ? 'TS-' . $trainset->nomor_trainset : '-' }}
-                                    {{ $trainset->tipe_car ? ' / ' . $trainset->tipe_car : '' }}
-                                </option>
-                            @endforeach
-                        </select>
+                        @php
+                            $selectedTrainsetObj = $trainsetId ? $trainsetList->firstWhere('id', (int) $trainsetId) : null;
+                            $trainsetLabel = $selectedTrainsetObj
+                                ? ('TS-' . $selectedTrainsetObj->nomor_trainset . ($selectedTrainsetObj->tipe_car ? ' / ' . $selectedTrainsetObj->tipe_car : ''))
+                                : 'Semua';
+                        @endphp
+                        <div class="relative"
+                            x-data="{ open: false, selected: '{{ $trainsetId ?? '' }}', label: '{{ $trainsetLabel }}' }"
+                            @click.outside="open = false">
+                            <input type="hidden" name="trainset_id" :value="selected">
+                            <button type="button" @click="open = !open"
+                                class="flex w-44 items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">
+                                <span x-text="label" class="truncate"></span>
+                                <svg class="h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <div x-show="open"
+                                x-transition:enter="transition ease-out duration-150"
+                                x-transition:enter-start="opacity-0 -translate-y-1"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-100"
+                                x-transition:leave-start="opacity-100 translate-y-0"
+                                x-transition:leave-end="opacity-0 -translate-y-1"
+                                class="absolute left-0 z-50 mt-1 w-52 rounded-2xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                                <div class="p-2 border-b border-gray-100 dark:border-gray-700">
+                                    <input type="text" placeholder="Cari trainset..."
+                                        class="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                                        x-on:input="
+                                            const q = $event.target.value.toLowerCase();
+                                            $el.closest('.absolute').querySelectorAll('[data-opt]').forEach(el => {
+                                                el.style.display = el.dataset.name.toLowerCase().includes(q) ? '' : 'none';
+                                            });
+                                        ">
+                                </div>
+                                <div class="max-h-52 overflow-y-auto py-1">
+                                    <button type="button" @click="selected = ''; label = 'Semua'; open = false"
+                                        class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                                        :class="selected === '' ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'">
+                                        Semua
+                                    </button>
+                                    @foreach($trainsetList as $trainset)
+                                        @php
+                                            $tsLabel = ($trainset->nomor_trainset ? 'TS-' . $trainset->nomor_trainset : '-')
+                                                . ($trainset->tipe_car ? ' / ' . $trainset->tipe_car : '');
+                                        @endphp
+                                        <button type="button" data-opt data-name="{{ strtolower($tsLabel) }}"
+                                            @click="selected = '{{ $trainset->id }}'; label = '{{ $tsLabel }}'; open = false"
+                                            class="w-full truncate px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                                            :class="selected === '{{ $trainset->id }}' ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'">
+                                            {{ $tsLabel }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
+                    {{-- Dropdown: Lokasi --}}
                     <div>
                         <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                             Lokasi
                         </label>
-                        <select name="lokasi_id"
-                            class="w-full rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                            <option value="">Semua</option>
-                            @foreach($lokasiList as $lokasi)
-                                <option value="{{ $lokasi->id }}" @selected((string) $lokasiId === (string) $lokasi->id)>
-                                    {{ $lokasi->nama_lokasi }}
-                                </option>
-                            @endforeach
-                        </select>
+                        @php
+                            $selectedLokasiObj = $lokasiId ? $lokasiList->firstWhere('id', (int) $lokasiId) : null;
+                            $lokasiLabel = $selectedLokasiObj?->nama_lokasi ?? 'Semua';
+                        @endphp
+                        <div class="relative"
+                            x-data="{ open: false, selected: '{{ $lokasiId ?? '' }}', label: '{{ $lokasiLabel }}' }"
+                            @click.outside="open = false">
+                            <input type="hidden" name="lokasi_id" :value="selected">
+                            <button type="button" @click="open = !open"
+                                class="flex w-44 items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700">
+                                <span x-text="label" class="truncate"></span>
+                                <svg class="h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            <div x-show="open"
+                                x-transition:enter="transition ease-out duration-150"
+                                x-transition:enter-start="opacity-0 -translate-y-1"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-100"
+                                x-transition:leave-start="opacity-100 translate-y-0"
+                                x-transition:leave-end="opacity-0 -translate-y-1"
+                                class="absolute left-0 z-50 mt-1 w-48 rounded-2xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                                <div class="max-h-52 overflow-y-auto py-1">
+                                    <button type="button" @click="selected = ''; label = 'Semua'; open = false"
+                                        class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                                        :class="selected === '' ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'">
+                                        Semua
+                                    </button>
+                                    @foreach($lokasiList as $lokasi)
+                                        <button type="button" data-opt data-name="{{ strtolower($lokasi->nama_lokasi) }}"
+                                            @click="selected = '{{ $lokasi->id }}'; label = '{{ $lokasi->nama_lokasi }}'; open = false"
+                                            class="w-full truncate px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                                            :class="selected === '{{ $lokasi->id }}' ? 'font-semibold text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'">
+                                            {{ $lokasi->nama_lokasi }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
+                    {{-- Tombol --}}
                     <div class="flex items-end gap-2">
                         <button type="submit"
-                            class="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
+                            class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
                             <i class="fa-solid fa-filter mr-2"></i>
                             Filter
                         </button>
-
                         <a href="{{ route('durability.penggantian-komponen') }}"
-                            class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                            class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                             Reset
                         </a>
                     </div>
+
                 </form>
+
             </div>
         </div>
 
@@ -115,10 +366,15 @@
                     periode <strong>{{ $periodeLabel }}</strong>
                 @endif
 
-                @if($produkId)
-                    @php $selectedProduk = $produkList->firstWhere('id', (int) $produkId); @endphp
-                    @if($selectedProduk)
-                        produk <strong>{{ $selectedProduk->nama_produk }}</strong>
+                @if(!empty($produkId))
+                    @php
+                        $selectedProdukNames = $produkList
+                            ->whereIn('id', $produkId)
+                            ->pluck('nama_produk')
+                            ->join(', ');
+                    @endphp
+                    @if($selectedProdukNames)
+                        produk <strong>{{ $selectedProdukNames }}</strong>
                     @endif
                 @endif
 
@@ -246,107 +502,45 @@
             </div>
         </div>
 
-        {{-- Detail Table --}}
-        {{-- <div class="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <div class="border-b border-gray-100 px-6 py-5 dark:border-gray-800">
-                <h2 class="text-base font-bold text-gray-900 dark:text-white">
-                    Tabel Detail Penggantian Komponen
-                </h2>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Ringkasan penggantian per komponen, produk, jumlah record, dan rata-rata rentang penggantian.
-                </p>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800/70 dark:text-gray-400">
-                        <tr>
-                            <th class="px-5 py-4 text-left font-bold">#</th>
-                            <th class="px-5 py-4 text-left font-bold">Komponen</th>
-                            <th class="px-5 py-4 text-left font-bold">Produk</th>
-                            <th class="px-5 py-4 text-right font-bold">Total Penggantian</th>
-                            <th class="px-5 py-4 text-right font-bold">Total Record</th>
-                            <th class="px-5 py-4 text-right font-bold">Rata-rata Rentang</th>
-                            <th class="px-5 py-4 text-left font-bold">Periode Data</th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                        @forelse($detailKomponen as $index => $item)
-                            <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                <td class="px-5 py-4 text-gray-400">
-                                    {{ $detailKomponen->firstItem() + $index }}
-                                </td>
-
-                                <td class="max-w-[360px] px-5 py-4">
-                                    <p class="font-semibold text-gray-900 dark:text-white">
-                                        {{ $item->nama_komponen }}
-                                    </p>
-                                </td>
-
-                                <td class="px-5 py-4 text-gray-600 dark:text-gray-300">
-                                    {{ $item->nama_produk ?? '-' }}
-                                </td>
-
-                                <td class="px-5 py-4 text-right">
-                                    <span class="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
-                                        {{ number_format($item->total_penggantian ?? 0, 0, ',', '.') }} Kali
-                                    </span>
-                                </td>
-
-                                <td class="px-5 py-4 text-right font-semibold text-gray-900 dark:text-white">
-                                    {{ number_format($item->total_record ?? 0, 0, ',', '.') }}
-                                </td>
-
-                                <td class="px-5 py-4 text-right">
-                                    <span class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
-                                        {{ round($item->rata_rentang ?? 0) }} Hari
-                                    </span>
-                                </td>
-
-                                <td class="px-5 py-4 text-gray-600 dark:text-gray-300">
-                                    @if($item->tanggal_awal && $item->tanggal_akhir)
-                                        {{ \Carbon\Carbon::parse($item->tanggal_awal)->format('Y-m-d') }}
-                                        s/d
-                                        {{ \Carbon\Carbon::parse($item->tanggal_akhir)->format('Y-m-d') }}
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="px-5 py-16 text-center">
-                                    <div class="flex flex-col items-center gap-3">
-                                        <img src="{{ asset('img/data-not-found.png') }}" alt="Data tidak ditemukan" class="h-28 w-auto opacity-90">
-                                        <p class="font-semibold text-gray-500 dark:text-gray-400">
-                                            Belum ada data penggantian komponen.
-                                        </p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div> --}}
-
-            {{-- @if($detailKomponen->hasPages())
-                <div class="border-t border-gray-100 px-5 py-4 dark:border-gray-800">
-                    {{ $detailKomponen->appends(request()->query())->links() }}
-                </div>
-            @endif
-        </div> --}}
-
     </div>
 </div>
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
+    // ─── Flatpickr ────────────────────────────────────────────────
+    const pickerTo = flatpickr('#date_to', {
+        locale: 'id',
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'd M Y',
+        allowInput: false,
+        disableMobile: true,
+        onChange: function(selectedDates, dateStr) {
+            pickerFrom.set('maxDate', dateStr);
+        }
+    });
+
+    const pickerFrom = flatpickr('#date_from', {
+        locale: 'id',
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'd M Y',
+        allowInput: false,
+        disableMobile: true,
+        onChange: function(selectedDates, dateStr) {
+            pickerTo.set('minDate', dateStr);
+        }
+    });
+
+    // ─── Chart ────────────────────────────────────────────────────
     if (typeof ChartDataLabels !== 'undefined') {
         Chart.register(ChartDataLabels);
     }
@@ -360,7 +554,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function getChartTheme() {
         const isDark = document.documentElement.classList.contains('dark');
-
         return {
             gridColor: isDark ? 'rgba(148, 163, 184, 0.16)' : 'rgba(148, 163, 184, 0.22)',
             tickColor: isDark ? '#94a3b8' : '#64748b',
@@ -380,13 +573,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function createChart(animated = true) {
         const canvas = document.getElementById('chartPenggantianKomponen');
-
-        if (!canvas || typeof Chart === 'undefined') {
-            return;
-        }
+        if (!canvas || typeof Chart === 'undefined') return;
 
         const theme = getChartTheme();
-
         destroyChart();
 
         chartPenggantianKomponen = new Chart(canvas.getContext('2d'), {
@@ -405,37 +594,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: animated ? { duration: 450, easing: 'easeOutCubic' } : false,
-                layout: {
-                    padding: {
-                        top: 24,
-                        right: 12,
-                        bottom: 0,
-                        left: 0
-                    }
-                },
+                layout: { padding: { top: 24, right: 12, bottom: 0, left: 0 } },
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: {
-                            color: theme.tickColor,
-                            boxWidth: 10,
-                            boxHeight: 10,
-                            padding: 18,
-                        }
+                        labels: { color: theme.tickColor, boxWidth: 10, boxHeight: 10, padding: 18 }
                     },
                     datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        offset: 4,
-                        clamp: true,
+                        anchor: 'end', align: 'top', offset: 4, clamp: true,
                         color: theme.labelColor,
-                        font: {
-                            size: 10,
-                            weight: 'bold'
-                        },
-                        formatter: function(value) {
-                            return Number(value).toLocaleString('id-ID');
-                        }
+                        font: { size: 10, weight: 'bold' },
+                        formatter: value => Number(value).toLocaleString('id-ID')
                     },
                     tooltip: {
                         backgroundColor: theme.tooltipBg,
@@ -445,13 +614,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         borderWidth: 1,
                         padding: 12,
                         callbacks: {
-                            title: function(context) {
-                                const index = context[0].dataIndex;
-                                return fullLabels[index] ?? context[0].label;
-                            },
-                            label: function(context) {
-                                return 'Jumlah: ' + Number(context.raw).toLocaleString('id-ID') + ' Kali';
-                            }
+                            title: context => fullLabels[context[0].dataIndex] ?? context[0].label,
+                            label: context => 'Jumlah: ' + Number(context.raw).toLocaleString('id-ID') + ' Kali'
                         }
                     }
                 },
@@ -459,41 +623,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     y: {
                         beginAtZero: true,
                         suggestedMax: Math.max(...values, 0) * 1.18,
-                        title: {
-                            display: true,
-                            text: 'Jumlah Penggantian',
-                            color: theme.tickColor,
-                            font: {
-                                weight: 'bold'
-                            }
-                        },
-                        grid: {
-                            color: theme.gridColor
-                        },
-                        border: {
-                            display: false
-                        },
-                        ticks: {
-                            color: theme.tickColor,
-                            precision: 0,
-                        }
+                        title: { display: true, text: 'Jumlah Penggantian', color: theme.tickColor, font: { weight: 'bold' } },
+                        grid: { color: theme.gridColor },
+                        border: { display: false },
+                        ticks: { color: theme.tickColor, precision: 0 }
                     },
                     x: {
-                        grid: {
-                            display: false
-                        },
-                        border: {
-                            display: false
-                        },
-                        ticks: {
-                            color: theme.tickColor,
-                            maxRotation: 50,
-                            minRotation: 50,
-                            autoSkip: false,
-                            font: {
-                                size: 10
-                            }
-                        }
+                        grid: { display: false },
+                        border: { display: false },
+                        ticks: { color: theme.tickColor, maxRotation: 50, minRotation: 50, autoSkip: false, font: { size: 10 } }
                     }
                 }
             }
@@ -504,28 +642,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.rebuildPenggantianKomponenChart = function () {
         clearTimeout(rebuildTimer);
-
-        rebuildTimer = setTimeout(function () {
-            createChart(false);
-        }, 120);
+        rebuildTimer = setTimeout(() => createChart(false), 120);
     };
 
-    const observer = new MutationObserver(function (mutations) {
-        const classChanged = mutations.some(function (mutation) {
-            return mutation.type === 'attributes' && mutation.attributeName === 'class';
-        });
-
-        if (!classChanged) {
-            return;
+    new MutationObserver(mutations => {
+        if (mutations.some(m => m.type === 'attributes' && m.attributeName === 'class')) {
+            window.rebuildPenggantianKomponenChart();
         }
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
-        window.rebuildPenggantianKomponenChart();
-    });
-
-    observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['class'],
-    });
 });
 </script>
 @endpush
