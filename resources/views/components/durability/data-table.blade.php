@@ -1,5 +1,6 @@
 @props([
     'durability' => collect(),
+    'filterOptions' => [],
 ])
 
 <div class="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -16,20 +17,36 @@
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800/70 dark:text-gray-400">
                 <tr>
-                    {{-- <th class="px-5 py-4 text-left font-bold">Tahun</th> --}}
-                    <th class="px-5 py-4 text-left font-bold">Nomor PO</th>
-                    <th class="px-5 py-4 text-left font-bold">Customer</th>
-                    <th class="px-5 py-4 text-left font-bold">Proyek</th>
-                    <th class="px-5 py-4 text-left font-bold">Produk</th>
-                    <th class="px-5 py-4 text-left font-bold">Komponen</th>
-                    <th class="px-5 py-4 text-left font-bold">Trainset</th>
-                    <th class="px-5 py-4 text-left font-bold">Car</th>
-                    <th class="px-5 py-4 text-left font-bold">Lokasi</th>
-                    <th class="px-5 py-4 text-left font-bold">Tgl Kerusakan</th>
-                    <th class="px-5 py-4 text-left font-bold">Tgl LPPB</th>
-                    <th class="px-5 py-4 text-left font-bold">Rentang</th>
-                    <th class="px-5 py-4 text-left font-bold">Jumlah</th>
-                    <th class="px-5 py-4 text-right font-bold">Aksi</th>
+                    @php
+                        $headers = [
+                            ['label' => 'Nomor PO', 'name' => 'nomor_po'],
+                            ['label' => 'Customer', 'name' => 'customer'],
+                            ['label' => 'Proyek', 'name' => 'proyek'],
+                            ['label' => 'Produk', 'name' => 'produk'],
+                            ['label' => 'Komponen', 'name' => 'komponen'],
+                            ['label' => 'Trainset', 'name' => 'trainset'],
+                            ['label' => 'Car', 'name' => 'tipe_car'],
+                            ['label' => 'Lokasi', 'name' => 'lokasi'],
+                            ['label' => 'Tgl Kerusakan', 'name' => 'tgl_kerusakan'],
+                            ['label' => 'Tgl LPPB', 'name' => 'tgl_lppb'],
+                            ['label' => 'Rentang', 'name' => 'rentang'],
+                            ['label' => 'Jumlah', 'name' => 'jumlah'],
+                        ];
+                    @endphp
+
+                    @foreach ($headers as $header)
+                        <th class="px-5 py-4 text-left font-bold">
+                            <x-durability.column-filter
+                                :label="$header['label']"
+                                :name="$header['name']"
+                                :options="$filterOptions[$header['name']] ?? collect()"
+                            />
+                        </th>
+                    @endforeach
+
+                    <th class="px-5 py-4 text-right font-bold">
+                        Aksi
+                    </th>
                 </tr>
             </thead>
 

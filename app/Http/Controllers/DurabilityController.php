@@ -15,6 +15,7 @@ use App\Imports\DurabilityImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\Builder;
 
 class DurabilityController extends Controller
 {
@@ -58,6 +59,12 @@ class DurabilityController extends Controller
             $baseQuery->whereHas('proyek', function ($query) use ($selectedProyek) {
                 $query->where('nama_proyek', $selectedProyek);
             });
+        }
+
+        $columnFilters = $this->getColumnFilters($request);
+
+        if ($request->routeIs('durability.tabel-detail')) {
+            $this->applyColumnFilters($baseQuery, $columnFilters);
         }
 
         /*
@@ -244,8 +251,15 @@ class DurabilityController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $durability = (clone $baseQuery)
-            ->latest('tgl_terbit_lppb')
+        $durabilityQuery = clone $baseQuery;
+
+        if ($request->routeIs('durability.tabel-detail')) {
+            $this->applyTableSorting($durabilityQuery, $request);
+        } else {
+            $durabilityQuery->latest('tgl_terbit_lppb');
+        }
+
+        $durability = $durabilityQuery
             ->paginate(15)
             ->withQueryString();
 
@@ -277,6 +291,10 @@ class DurabilityController extends Controller
             ->orderBy('nama_proyek')
             ->get();
 
+        $columnFilterOptions = $request->routeIs('durability.tabel-detail')
+            ? $this->getColumnFilterOptions()
+            : [];
+
         $view = $request->routeIs('durability.tabel-detail')
             ? 'durability.tabel-detail'
             : 'durability.index';
@@ -301,7 +319,9 @@ class DurabilityController extends Controller
             'trendValues',
             'topKomponenPenggantian',
             'topTrainsetPenggantian',
-            'topKomponenDurability'
+            'topKomponenDurability',
+            'columnFilters',
+            'columnFilterOptions'
         ));
     }
 
@@ -697,11 +717,14 @@ class DurabilityController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Chart: Top 10 Rata-rata Durability Komponen
+        | Chart: Rata-rata Durability Komponen + Pagination Chart
         |--------------------------------------------------------------------------
         */
 
-        $durabilityKomponen = (clone $baseQuery)
+        $chartPerPage = 20;
+        $chartPage = max((int) $request->get('chart_page', 1), 1);
+
+        $durabilityKomponenQuery = (clone $baseQuery)
             ->join('durability_komponen', 'durability.komponen_id', '=', 'durability_komponen.id')
             ->join('durability_produk', 'durability_komponen.produk_id', '=', 'durability_produk.id')
             ->select(
@@ -717,9 +740,25 @@ class DurabilityController extends Controller
                 'durability_komponen.id',
                 'durability_komponen.nama_komponen'
             )
-            ->orderByDesc('rata_durability')
-            ->limit(10)
+            ->orderByDesc('rata_durability');
+
+        $chartTotalItems = (clone $durabilityKomponenQuery)->get()->count();
+        $chartTotalPages = max((int) ceil($chartTotalItems / $chartPerPage), 1);
+
+        if ($chartPage > $chartTotalPages) {
+            $chartPage = $chartTotalPages;
+        }
+
+        $durabilityKomponen = $durabilityKomponenQuery
+            ->offset(($chartPage - 1) * $chartPerPage)
+            ->limit($chartPerPage)
             ->get();
+
+        $chartFromItem = $chartTotalItems > 0
+            ? (($chartPage - 1) * $chartPerPage) + 1
+            : 0;
+
+        $chartToItem = min($chartPage * $chartPerPage, $chartTotalItems);
 
         $chartLabelsFull = $durabilityKomponen
             ->pluck('nama_komponen')
@@ -801,7 +840,13 @@ class DurabilityController extends Controller
             'chartLabels',
             'chartLabelsFull',
             'chartValues',
-            'chartColors'
+            'chartColors',
+            'chartPage',
+            'chartPerPage',
+            'chartTotalItems',
+            'chartTotalPages',
+            'chartFromItem',
+            'chartToItem'
         ));
     }
 
@@ -1312,6 +1357,262 @@ class DurabilityController extends Controller
                 'updated_at' => now(),
             ]
         );
+    }
+
+    private function getColumnFilters(Request $request): array
+    {
+        $keys = [
+            'nomor_po',
+            'customer',
+            'proyek',
+            'produk',
+            'komponen',
+            'trainset',
+            'tipe_car',
+            'lokasi',
+            'tgl_kerusakan',
+            'tgl_lppb',
+            'rentang',
+            'jumlah',
+        ];
+
+        $filters = [];
+
+        foreach ($keys as $key) {
+            $filters[$key] = collect(
+                (array) $request->input("column_filters.$key", [])
+            )
+                ->filter(fn ($value) => $value !== null && $value !== '')
+                ->map(fn ($value) => trim((string) $value))
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return $filters;
+    }
+
+    private function getColumnFilterOptions(): array
+    {
+        return [
+            'nomor_po' => DurabilityProyek::query()
+                ->whereNotNull('nomor_po')
+                ->where('nomor_po', '!=', '')
+                ->distinct()
+                ->orderBy('nomor_po')
+                ->pluck('nomor_po')
+                ->values(),
+
+            'customer' => DurabilityProyek::query()
+                ->whereNotNull('customer')
+                ->where('customer', '!=', '')
+                ->distinct()
+                ->orderBy('customer')
+                ->pluck('customer')
+                ->values(),
+
+            'proyek' => DurabilityProyek::query()
+                ->whereNotNull('nama_proyek')
+                ->where('nama_proyek', '!=', '')
+                ->distinct()
+                ->orderBy('nama_proyek')
+                ->pluck('nama_proyek')
+                ->values(),
+
+            'produk' => DurabilityProduk::query()
+                ->whereNotNull('nama_produk')
+                ->where('nama_produk', '!=', '')
+                ->distinct()
+                ->orderBy('nama_produk')
+                ->pluck('nama_produk')
+                ->values(),
+
+            'komponen' => DurabilityKomponen::query()
+                ->whereNotNull('nama_komponen')
+                ->where('nama_komponen', '!=', '')
+                ->distinct()
+                ->orderBy('nama_komponen')
+                ->pluck('nama_komponen')
+                ->values(),
+
+            'trainset' => DurabilityTrainset::query()
+                ->whereNotNull('nomor_trainset')
+                ->where('nomor_trainset', '!=', '')
+                ->distinct()
+                ->orderBy('nomor_trainset')
+                ->pluck('nomor_trainset')
+                ->values(),
+
+            'tipe_car' => DurabilityTrainset::query()
+                ->whereNotNull('tipe_car')
+                ->where('tipe_car', '!=', '')
+                ->distinct()
+                ->orderBy('tipe_car')
+                ->pluck('tipe_car')
+                ->values(),
+
+            'lokasi' => DurabilityLokasi::query()
+                ->whereNotNull('nama_lokasi')
+                ->where('nama_lokasi', '!=', '')
+                ->distinct()
+                ->orderBy('nama_lokasi')
+                ->pluck('nama_lokasi')
+                ->values(),
+
+            'tgl_kerusakan' => Durability::query()
+                ->whereNotNull('tgl_kerusakan')
+                ->distinct()
+                ->orderBy('tgl_kerusakan')
+                ->pluck('tgl_kerusakan')
+                ->map(fn ($date) => Carbon::parse($date)->format('Y-m-d'))
+                ->values(),
+
+            'tgl_lppb' => Durability::query()
+                ->whereNotNull('tgl_terbit_lppb')
+                ->distinct()
+                ->orderBy('tgl_terbit_lppb')
+                ->pluck('tgl_terbit_lppb')
+                ->map(fn ($date) => Carbon::parse($date)->format('Y-m-d'))
+                ->values(),
+
+            'rentang' => Durability::query()
+                ->whereNotNull('rentang_penggantian')
+                ->distinct()
+                ->orderBy('rentang_penggantian')
+                ->pluck('rentang_penggantian')
+                ->values(),
+
+            'jumlah' => Durability::query()
+                ->whereNotNull('jumlah_penggantian')
+                ->distinct()
+                ->orderBy('jumlah_penggantian')
+                ->pluck('jumlah_penggantian')
+                ->values(),
+        ];
+    }
+
+    private function applyColumnFilters(
+        Builder $query,
+        array $filters
+    ): void {
+        $relationFilters = [
+            'nomor_po' => ['proyek', 'nomor_po'],
+            'customer' => ['proyek', 'customer'],
+            'proyek' => ['proyek', 'nama_proyek'],
+            'produk' => ['komponen.produk', 'nama_produk'],
+            'komponen' => ['komponen', 'nama_komponen'],
+            'trainset' => ['trainset', 'nomor_trainset'],
+            'tipe_car' => ['trainset', 'tipe_car'],
+            'lokasi' => ['lokasi', 'nama_lokasi'],
+        ];
+
+        foreach ($relationFilters as $key => [$relation, $column]) {
+            if (!$filters[$key]) {
+                continue;
+            }
+
+            $query->whereHas(
+                $relation,
+                fn (Builder $relationQuery) => $relationQuery->whereIn(
+                    $column,
+                    $filters[$key]
+                )
+            );
+        }
+
+        if ($filters['tgl_kerusakan']) {
+            $query->whereIn(
+                'tgl_kerusakan',
+                $filters['tgl_kerusakan']
+            );
+        }
+
+        if ($filters['tgl_lppb']) {
+            $query->whereIn(
+                'tgl_terbit_lppb',
+                $filters['tgl_lppb']
+            );
+        }
+
+        if ($filters['rentang']) {
+            $query->whereIn(
+                'rentang_penggantian',
+                $filters['rentang']
+            );
+        }
+
+        if ($filters['jumlah']) {
+            $query->whereIn(
+                'jumlah_penggantian',
+                $filters['jumlah']
+            );
+        }
+    }
+
+    private function applyTableSorting(
+        Builder $query,
+        Request $request
+    ): void {
+        $allowedSorts = [
+            'nomor_po' => 'durability_proyek.nomor_po',
+            'customer' => 'durability_proyek.customer',
+            'proyek' => 'durability_proyek.nama_proyek',
+            'produk' => 'durability_produk.nama_produk',
+            'komponen' => 'durability_komponen.nama_komponen',
+            'trainset' => 'durability_trainset.nomor_trainset',
+            'tipe_car' => 'durability_trainset.tipe_car',
+            'lokasi' => 'durability_lokasi.nama_lokasi',
+            'tgl_kerusakan' => 'durability.tgl_kerusakan',
+            'tgl_lppb' => 'durability.tgl_terbit_lppb',
+            'rentang' => 'durability.rentang_penggantian',
+            'jumlah' => 'durability.jumlah_penggantian',
+        ];
+
+        $sort = $request->string('sort')->toString();
+
+        $direction = $request->input('direction') === 'desc'
+            ? 'desc'
+            : 'asc';
+
+        if (!array_key_exists($sort, $allowedSorts)) {
+            $query->latest('durability.tgl_terbit_lppb');
+
+            return;
+        }
+
+        $query
+            ->leftJoin(
+                'durability_proyek',
+                'durability.proyek_id',
+                '=',
+                'durability_proyek.id'
+            )
+            ->leftJoin(
+                'durability_komponen',
+                'durability.komponen_id',
+                '=',
+                'durability_komponen.id'
+            )
+            ->leftJoin(
+                'durability_produk',
+                'durability_komponen.produk_id',
+                '=',
+                'durability_produk.id'
+            )
+            ->leftJoin(
+                'durability_trainset',
+                'durability.trainset_id',
+                '=',
+                'durability_trainset.id'
+            )
+            ->leftJoin(
+                'durability_lokasi',
+                'durability.lokasi_id',
+                '=',
+                'durability_lokasi.id'
+            )
+            ->select('durability.*')
+            ->orderBy($allowedSorts[$sort], $direction);
     }
 
 

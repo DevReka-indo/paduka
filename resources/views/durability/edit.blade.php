@@ -57,6 +57,8 @@
             :action="route('durability.update', $durability)"
             method="PUT"
             submit-label="Simpan Perubahan"
+            :produk-list="$produkList"
+            :komponen-list="$komponenList"
         />
 
     </div>

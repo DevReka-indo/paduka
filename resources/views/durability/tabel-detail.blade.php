@@ -20,56 +20,110 @@
                     <p class="text-xs font-extrabold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
                         Durability Product
                     </p>
+
                     <h1 class="mt-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                         Tabel Detail Durability Product
                     </h1>
+
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         Detail data durability component dan frekuensi penggantian berdasarkan data LPPB.
                     </p>
                 </div>
 
-                <a href="{{ route('durability.index', request()->query()) }}"
-                   class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                <a
+                    href="{{ route('durability.index', request()->only(['tahun', 'produk_id'])) }}"
+                    class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
                     <i class="fa-solid fa-arrow-left mr-2"></i>
                     Kembali ke Dashboard
                 </a>
             </div>
         </div>
 
-        {{-- Filter & Actions --}}
+        {{-- Filter dan Actions --}}
         <div class="rounded-3xl border border-white/70 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 
                 {{-- Filter Form --}}
-                <form method="GET" action="{{ route('durability.tabel-detail') }}" class="flex flex-wrap items-center gap-2">
-                    <select name="tahun"
-                        class="rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                <form
+                    method="GET"
+                    action="{{ route('durability.tabel-detail') }}"
+                    class="flex flex-wrap items-center gap-2"
+                >
+                    {{-- Pertahankan filter setiap kolom --}}
+                    @foreach ((array) request('column_filters', []) as $column => $values)
+                        @foreach ((array) $values as $value)
+                            <input
+                                type="hidden"
+                                name="column_filters[{{ $column }}][]"
+                                value="{{ $value }}"
+                            >
+                        @endforeach
+                    @endforeach
+
+                    {{-- Pertahankan pengurutan --}}
+                    @if (request('sort'))
+                        <input
+                            type="hidden"
+                            name="sort"
+                            value="{{ request('sort') }}"
+                        >
+                    @endif
+
+                    @if (request('direction'))
+                        <input
+                            type="hidden"
+                            name="direction"
+                            value="{{ request('direction') }}"
+                        >
+                    @endif
+
+                    {{-- Tahun --}}
+                    <select
+                        name="tahun"
+                        class="rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                    >
                         <option value="">Semua Tahun</option>
+
                         @foreach ($tahunList as $tahun)
-                            <option value="{{ $tahun }}" @selected(request('tahun') == $tahun)>
+                            <option
+                                value="{{ $tahun }}"
+                                @selected((string) request('tahun') === (string) $tahun)
+                            >
                                 {{ $tahun }}
                             </option>
                         @endforeach
                     </select>
 
-                    <select name="produk_id"
-                        class="rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                    {{-- Produk --}}
+                    <select
+                        name="produk_id"
+                        class="rounded-xl border-gray-200 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                    >
                         <option value="">Semua Produk</option>
+
                         @foreach ($produkList as $produk)
-                            <option value="{{ $produk->id }}" @selected(request('produk_id') == $produk->id)>
+                            <option
+                                value="{{ $produk->id }}"
+                                @selected((string) request('produk_id') === (string) $produk->id)
+                            >
                                 {{ $produk->nama_produk }}
                             </option>
                         @endforeach
                     </select>
 
-                    <button type="submit"
-                        class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
+                    <button
+                        type="submit"
+                        class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                    >
                         <i class="fa-solid fa-filter mr-2"></i>
                         Filter
                     </button>
 
-                    <a href="{{ route('durability.tabel-detail') }}"
-                        class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+                    <a
+                        href="{{ route('durability.tabel-detail') }}"
+                        class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
                         <i class="fa-solid fa-rotate-left mr-2"></i>
                         Reset
                     </a>
@@ -77,45 +131,58 @@
 
                 {{-- Action Buttons --}}
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('durability.import.form') }}"
-                        class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                    <a
+                        href="{{ route('durability.import.form') }}"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                    >
                         <i class="fa-solid fa-upload text-gray-400"></i>
                         Import Data
                     </a>
 
-                    <a href="{{ route('durability.create') }}"
-                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
+                    <a
+                        href="{{ route('durability.create') }}"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                    >
                         <i class="fa-solid fa-plus"></i>
                         Tambah Data
                     </a>
                 </div>
-
             </div>
         </div>
 
         {{-- Active Filter Info --}}
-        @if(request('tahun') || request('produk_id'))
+        @if (
+            request('tahun')
+            || request('produk_id')
+            || request()->has('column_filters')
+            || request('sort')
+        )
             <div class="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300">
-                Menampilkan data durability
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info"></i>
 
-                @if(request('tahun'))
-                    tahun <strong>{{ request('tahun') }}</strong>
-                @endif
+                        <span>
+                            Filter atau pengurutan sedang diterapkan pada tabel durability.
+                        </span>
+                    </div>
 
-                @if(request('produk_id'))
-                    @php
-                        $selectedProdukName = $produkList->firstWhere('id', request('produk_id'))?->nama_produk;
-                    @endphp
-
-                    @if($selectedProdukName)
-                        untuk produk <strong>{{ $selectedProdukName }}</strong>
-                    @endif
-                @endif
+                    <a
+                        href="{{ route('durability.tabel-detail') }}"
+                        class="inline-flex items-center gap-2 font-semibold hover:underline"
+                    >
+                        <i class="fa-solid fa-filter-circle-xmark"></i>
+                        Hapus semua filter
+                    </a>
+                </div>
             </div>
         @endif
 
         {{-- Tabel Detail --}}
-        <x-durability.data-table :durability="$durability" />
+        <x-durability.data-table
+            :durability="$durability"
+            :filter-options="$columnFilterOptions"
+        />
 
     </div>
 </div>

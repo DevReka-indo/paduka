@@ -341,12 +341,92 @@
             </div>
         @endif
 
-        <x-durability.durability-komponen-chart
-            :chart-labels="$chartLabels"
-            :chart-labels-full="$chartLabelsFull"
-            :chart-values="$chartValues"
-            :chart-colors="$chartColors"
-        />
+        <div class="space-y-5">
+            <x-durability.durability-komponen-chart
+                :chart-labels="$chartLabels"
+                :chart-labels-full="$chartLabelsFull"
+                :chart-values="$chartValues"
+                :chart-colors="$chartColors"
+            />
+
+            <div class="rounded-3xl border border-gray-100 bg-white px-6 py-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        Menampilkan
+                        <strong>{{ number_format($chartFromItem, 0, ',', '.') }}</strong>
+                        -
+                        <strong>{{ number_format($chartToItem, 0, ',', '.') }}</strong>
+                        dari
+                        <strong>{{ number_format($chartTotalItems, 0, ',', '.') }}</strong>
+                        komponen
+                    </p>
+
+                    @if($chartTotalPages > 1)
+                        <div class="flex flex-wrap items-center gap-2">
+                            @php
+                                $baseChartQuery = request()->except(['chart_page', 'page']);
+                                $prevChartPage = max($chartPage - 1, 1);
+                                $nextChartPage = min($chartPage + 1, $chartTotalPages);
+
+                                $startPage = max($chartPage - 2, 1);
+                                $endPage = min($chartPage + 2, $chartTotalPages);
+                            @endphp
+
+                            <a href="{{ route('durability.durability-komponen', array_merge($baseChartQuery, ['chart_page' => $prevChartPage])) }}"
+                                class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700
+                                {{ $chartPage <= 1 ? 'pointer-events-none opacity-50' : '' }}">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </a>
+
+                            @if($startPage > 1)
+                                <a href="{{ route('durability.durability-komponen', array_merge($baseChartQuery, ['chart_page' => 1])) }}"
+                                    class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+                                    1
+                                </a>
+
+                                @if($startPage > 2)
+                                    <span class="px-2 text-gray-400">...</span>
+                                @endif
+                            @endif
+
+                            @for($page = $startPage; $page <= $endPage; $page++)
+                                <a href="{{ route('durability.durability-komponen', array_merge($baseChartQuery, ['chart_page' => $page])) }}"
+                                    class="inline-flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-semibold shadow-sm transition
+                                    {{ $chartPage == $page
+                                        ? 'border-emerald-600 bg-emerald-600 text-white'
+                                        : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                    {{ $page }}
+                                </a>
+                            @endfor
+
+                            @if($endPage < $chartTotalPages)
+                                @if($endPage < $chartTotalPages - 1)
+                                    <span class="px-2 text-gray-400">...</span>
+                                @endif
+
+                                <a href="{{ route('durability.durability-komponen', array_merge($baseChartQuery, ['chart_page' => $chartTotalPages])) }}"
+                                    class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+                                    {{ $chartTotalPages }}
+                                </a>
+                            @endif
+
+                            <a href="{{ route('durability.durability-komponen', array_merge($baseChartQuery, ['chart_page' => $nextChartPage])) }}"
+                                class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700
+                                {{ $chartPage >= $chartTotalPages ? 'pointer-events-none opacity-50' : '' }}">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </a>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="mt-5 flex items-start gap-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+                    <i class="fa-solid fa-circle-info mt-0.5"></i>
+                    <p>
+                        Grafik menampilkan rata-rata durability komponen. Gunakan pagination untuk melihat seluruh komponen berdasarkan filter yang aktif.
+                    </p>
+                </div>
+            </div>
+        </div>
 
     </div>
 </div>

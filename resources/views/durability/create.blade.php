@@ -56,6 +56,8 @@
             :action="route('durability.store')"
             method="POST"
             submit-label="Simpan Data"
+            :produk-list="$produkList"
+            :komponen-list="$komponenList"
         />
 
     </div>

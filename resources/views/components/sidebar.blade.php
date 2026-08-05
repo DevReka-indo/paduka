@@ -246,7 +246,13 @@
 
                     {{-- NCR Dropdown --}}
                     @php
-                        $isNcrParentActive = request()->routeIs('ncr.*');
+                        $isTemuanActive = request()->routeIs('temuan.*');
+                        $isProjectActive = request()->routeIs('projects.*');
+
+                        $isNcrParentActive =
+                            request()->routeIs('ncr.*') ||
+                            $isTemuanActive ||
+                            $isProjectActive;
 
                         $isNcrRegistrasiActive =
                             request()->routeIs('ncr.*') &&
@@ -255,17 +261,23 @@
 
                         $isNcrVerifikasiActive = request()->routeIs('ncr.verifikasi.*');
                         $isNcrTerlambatActive = request()->routeIs('ncr.terlambat');
+
+                        $canManageNcrMaster = in_array($level, ['admin', 'superadmin'], true);
                     @endphp
 
                     <div x-data="{ open: {{ $isNcrParentActive ? 'true' : 'false' }} }" class="space-y-1">
-                        <button type="button"
-                            @click="$store.sidebar.collapsed ? (window.location.href = '{{ route('ncr.index') }}') : (open = !open)"
+                        <button
+                            type="button"
+                            @click="$store.sidebar.collapsed
+                                ? (window.location.href = '{{ route('ncr.index') }}')
+                                : (open = !open)"
                             :title="$store.sidebar.collapsed ? 'NCR' : ''"
-                            class="{{ $menuItemBase }} w-full justify-between {{ $isNcrParentActive ? $menuItemActive : $menuItemIdle }}">
-
+                            class="{{ $menuItemBase }} w-full justify-between {{ $isNcrParentActive ? $menuItemActive : $menuItemIdle }}"
+                        >
                             @if ($isNcrParentActive)
                                 <span
-                                    class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-white/80"></span>
+                                    class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-white/80"
+                                ></span>
                             @endif
 
                             <div class="flex min-w-0 items-center gap-3">
@@ -273,43 +285,106 @@
                                     <i class="fa-solid fa-triangle-exclamation text-[15px]"></i>
                                 </span>
 
-                                <span class="overflow-hidden whitespace-nowrap transition-all duration-200"
-                                    :class="$store.sidebar.collapsed ? 'w-0 opacity-0' : 'opacity-100'">
+                                <span
+                                    class="overflow-hidden whitespace-nowrap transition-all duration-200"
+                                    :class="$store.sidebar.collapsed ? 'w-0 opacity-0' : 'opacity-100'"
+                                >
                                     NCR
                                 </span>
                             </div>
 
-                            <svg class="h-4 w-4 flex-shrink-0 transition-all duration-200"
+                            <svg
+                                class="h-4 w-4 flex-shrink-0 transition-all duration-200"
                                 :class="{ 'rotate-180': open, 'opacity-0 w-0': $store.sidebar.collapsed }"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"
-                                    d="M19 9l-7 7-7-7" />
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2.4"
+                                    d="M19 9l-7 7-7-7"
+                                />
                             </svg>
                         </button>
 
-                        <div x-show="open && !$store.sidebar.collapsed" x-transition
-                            class="ml-5 space-y-1 border-l border-indigo-200/70 pl-4 dark:border-indigo-400/20">
-
-                            <a href="{{ route('ncr.index') }}"
-                                class="{{ $childBase }} {{ $isNcrRegistrasiActive ? $childActive : $childIdle }}">
+                        <div
+                            x-show="open && !$store.sidebar.collapsed"
+                            x-transition
+                            class="ml-5 space-y-1 border-l border-indigo-200/70 pl-4 dark:border-indigo-400/20"
+                        >
+                            <a
+                                href="{{ route('ncr.index') }}"
+                                class="{{ $childBase }} {{ $isNcrRegistrasiActive ? $childActive : $childIdle }}"
+                            >
                                 <span
-                                    class="h-1.5 w-1.5 flex-shrink-0 rounded-full {{ $isNcrRegistrasiActive ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70' : 'bg-slate-300 dark:bg-slate-600' }}"></span>
+                                    class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                        {{ $isNcrRegistrasiActive
+                                            ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                            : 'bg-slate-300 dark:bg-slate-600' }}"
+                                ></span>
+
                                 Registrasi NCR
                             </a>
 
-                            <a href="{{ route('ncr.verifikasi.index') }}"
-                                class="{{ $childBase }} {{ $isNcrVerifikasiActive ? $childActive : $childIdle }}">
+                            <a
+                                href="{{ route('ncr.verifikasi.index') }}"
+                                class="{{ $childBase }} {{ $isNcrVerifikasiActive ? $childActive : $childIdle }}"
+                            >
                                 <span
-                                    class="h-1.5 w-1.5 flex-shrink-0 rounded-full {{ $isNcrVerifikasiActive ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70' : 'bg-slate-300 dark:bg-slate-600' }}"></span>
+                                    class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                        {{ $isNcrVerifikasiActive
+                                            ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                            : 'bg-slate-300 dark:bg-slate-600' }}"
+                                ></span>
+
                                 Verifikasi NCR
                             </a>
 
-                            <a href="{{ route('ncr.terlambat') }}"
-                                class="{{ $childBase }} {{ $isNcrTerlambatActive ? $childActive : $childIdle }}">
+                            <a
+                                href="{{ route('ncr.terlambat') }}"
+                                class="{{ $childBase }} {{ $isNcrTerlambatActive ? $childActive : $childIdle }}"
+                            >
                                 <span
-                                    class="h-1.5 w-1.5 flex-shrink-0 rounded-full {{ $isNcrTerlambatActive ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70' : 'bg-slate-300 dark:bg-slate-600' }}"></span>
+                                    class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                        {{ $isNcrTerlambatActive
+                                            ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                            : 'bg-slate-300 dark:bg-slate-600' }}"
+                                ></span>
+
                                 NCR Terlambat
                             </a>
+
+                            @if ($canManageNcrMaster)
+                                <a
+                                    href="{{ route('temuan.index') }}"
+                                    class="{{ $childBase }} {{ $isTemuanActive ? $childActive : $childIdle }}"
+                                >
+                                    <span
+                                        class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                            {{ $isTemuanActive
+                                                ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                                : 'bg-slate-300 dark:bg-slate-600' }}"
+                                    ></span>
+
+                                    Daftar Lokasi Temuan
+                                </a>
+
+                                <a
+                                    href="{{ route('projects.index') }}"
+                                    class="{{ $childBase }} {{ $isProjectActive ? $childActive : $childIdle }}"
+                                >
+                                    <span
+                                        class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                            {{ $isProjectActive
+                                                ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                                : 'bg-slate-300 dark:bg-slate-600' }}"
+                                    ></span>
+
+                                    Daftar Project
+                                </a>
+                            @endif
                         </div>
                     </div>
 
@@ -456,59 +531,67 @@
                             </div>
                         </div>
                     @endif
+
+                    {{-- Program Kerja dan KPI --}}
+                    @php
+                        $isWorkProgramKpiActive = request()->routeIs(
+                            'work-program-kpi.*'
+                        );
+                    @endphp
+
+                    <a
+                        href="{{ route('work-program-kpi.index') }}"
+                        :title="$store.sidebar.collapsed ? 'Program Kerja & KPI' : ''"
+                        class="{{ $menuItemBase }} {{ $isWorkProgramKpiActive ? $menuItemActive : $menuItemIdle }}"
+                    >
+                        @if ($isWorkProgramKpiActive)
+                            <span
+                                class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-white/80"
+                            ></span>
+                        @endif
+
+                        <span
+                            class="{{ $iconBase }} {{ $isWorkProgramKpiActive ? $iconActive : $iconIdle }}"
+                        >
+                            <i class="fa-solid fa-chart-line text-[15px]"></i>
+                        </span>
+
+                        <span
+                            class="overflow-hidden whitespace-nowrap transition-all duration-200"
+                            :class="$store.sidebar.collapsed ? 'w-0 opacity-0' : 'opacity-100'"
+                        >
+                            Program Kerja & KPI
+                        </span>
+                    </a>
+
+
+                    {{-- Fasilitas Quality Control --}}
+                    @php
+                        $isQcFacilitiesActive = request()->routeIs('qc-facilities.*');
+                    @endphp
+
+                    <a href="{{ route('qc-facilities.index') }}"
+                        :title="$store.sidebar.collapsed ? 'Fasilitas QC' : ''"
+                        class="{{ $menuItemBase }} {{ $isQcFacilitiesActive ? $menuItemActive : $menuItemIdle }}">
+
+                        @if ($isQcFacilitiesActive)
+                            <span
+                                class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-white/80">
+                            </span>
+                        @endif
+
+                        <span
+                            class="{{ $iconBase }} {{ $isQcFacilitiesActive ? $iconActive : $iconIdle }}">
+                            <i class="fa-solid fa-toolbox text-[15px]"></i>
+                        </span>
+
+                        <span
+                            class="overflow-hidden whitespace-nowrap transition-all duration-200"
+                            :class="$store.sidebar.collapsed ? 'w-0 opacity-0' : 'opacity-100'">
+                            Fasilitas QC
+                        </span>
+                    </a>
                 </div>
-
-                {{-- Admin & Superadmin --}}
-                @if (in_array($level, ['admin', 'superadmin']))
-                    <div class="space-y-1">
-                        <p class="{{ $sectionTitle }}"
-                            :class="$store.sidebar.collapsed ? 'h-0 py-0 opacity-0' : 'opacity-100'">
-                            Manajemen
-                        </p>
-
-                        @php $isTemuanActive = request()->routeIs('temuan.*'); @endphp
-
-                        <a href="{{ route('temuan.index') }}"
-                            :title="$store.sidebar.collapsed ? 'Daftar Lokasi Temuan' : ''"
-                            class="{{ $menuItemBase }} {{ $isTemuanActive ? $menuItemActive : $menuItemIdle }}">
-
-                            @if ($isTemuanActive)
-                                <span
-                                    class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-white/80"></span>
-                            @endif
-
-                            <span class="{{ $iconBase }} {{ $isTemuanActive ? $iconActive : $iconIdle }}">
-                                <i class="fa-solid fa-location-dot text-[15px]"></i>
-                            </span>
-
-                            <span class="overflow-hidden whitespace-nowrap transition-all duration-200"
-                                :class="$store.sidebar.collapsed ? 'w-0 opacity-0' : 'opacity-100'">
-                                Daftar Lokasi Temuan
-                            </span>
-                        </a>
-
-                        @php $isProjectActive = request()->routeIs('projects.*'); @endphp
-
-                        <a href="{{ route('projects.index') }}"
-                            :title="$store.sidebar.collapsed ? 'Daftar Project' : ''"
-                            class="{{ $menuItemBase }} {{ $isProjectActive ? $menuItemActive : $menuItemIdle }}">
-
-                            @if ($isProjectActive)
-                                <span
-                                    class="absolute left-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-white/80"></span>
-                            @endif
-
-                            <span class="{{ $iconBase }} {{ $isProjectActive ? $iconActive : $iconIdle }}">
-                                <i class="fa-solid fa-folder-open text-[15px]"></i>
-                            </span>
-
-                            <span class="overflow-hidden whitespace-nowrap transition-all duration-200"
-                                :class="$store.sidebar.collapsed ? 'w-0 opacity-0' : 'opacity-100'">
-                                Daftar Project
-                            </span>
-                        </a>
-                    </div>
-                @endif
 
                 {{-- Bantuan & Info --}}
                 <div class="space-y-1">
@@ -627,67 +710,6 @@
             </div>
         </nav>
 
-        {{-- Profile & Logout --}}
-        {{-- <div class="relative border-t border-slate-200/70 p-3 dark:border-white/10">
-            <div
-                class="flex items-center gap-2 rounded-3xl bg-slate-50/90 p-2 ring-1 ring-slate-200/80
-                    dark:bg-white/[0.06] dark:ring-white/10">
-
-                <a
-                    href="{{ route('profile.edit') }}"
-                    :title="$store.sidebar.collapsed ? @js(Auth::user()->name) : ''"
-                    class="group flex min-w-0 flex-1 items-center gap-2.5 rounded-2xl px-1.5 py-1.5 transition-all duration-200 hover:bg-white dark:hover:bg-white/10">
-
-                    @if (Auth::user()->foto)
-                        <img
-                            src="{{ asset('storage/' . Auth::user()->foto) }}"
-                            alt="{{ Auth::user()->name }}"
-                            class="h-10 w-10 flex-shrink-0 rounded-2xl object-cover ring-2 ring-white shadow-sm dark:ring-white/20">
-                    @else
-                        <div
-                            class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl
-                                bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-sm font-black text-white
-                                shadow-lg shadow-indigo-500/20 ring-2 ring-white dark:ring-white/20">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                        </div>
-                    @endif
-
-                    <div
-                        class="min-w-0 overflow-hidden transition-all duration-200"
-                        :class="$store.sidebar.collapsed ? 'w-0 opacity-0' : 'opacity-100'">
-                        <p class="truncate text-sm font-extrabold leading-tight text-slate-900 dark:text-white">
-                            {{ Auth::user()->name }}
-                        </p>
-                        <p class="mt-0.5 truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                            {{ ucfirst($level ?: 'user') }}
-                            <span class="text-slate-300 dark:text-slate-600">•</span>
-                            {{ Auth::user()->unit_kerja ?? '-' }}
-                        </p>
-                    </div>
-                </a>
-
-                <button
-                    type="button"
-                    x-show="!$store.sidebar.collapsed"
-                    @click="openLogoutModal = true"
-                    title="Keluar"
-                    class="logout-btn flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl
-                        text-slate-400 transition-all duration-200
-                        hover:bg-red-50 hover:text-red-600
-                        dark:text-slate-500 dark:hover:bg-red-500/15 dark:hover:text-red-300">
-                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path
-                            class="logout-door"
-                            stroke="currentColor"
-                            d="M4 19.5C4 20.3 4.7 21 5.5 21H12V3H5.5C4.7 3 4 3.7 4 4.5V19.5Z" />
-                        <g class="logout-arrow">
-                            <line x1="9" y1="12" x2="19" y2="12" stroke="currentColor" />
-                            <polyline points="16 9 19 12 16 15" stroke="currentColor" />
-                        </g>
-                    </svg>
-                </button>
-            </div>
-        </div> --}}
         {{-- Sidebar Footer --}}
         <div class="relative z-20 border-t border-slate-200/70 p-3 dark:border-white/10">
 

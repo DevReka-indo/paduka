@@ -3,6 +3,8 @@
     'action',
     'method' => 'POST',
     'submitLabel' => 'Simpan Data',
+    'produkList' => collect(),
+    'komponenList' => collect(),
 ])
 
 @php
@@ -124,7 +126,7 @@
         </div>
 
         <div class="mb-6 grid gap-4 sm:grid-cols-2">
-            <div>
+            {{-- <div>
                 <label for="nama_produk" class="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-gray-300">
                     Produk <span class="text-red-500">*</span>
                 </label>
@@ -135,19 +137,70 @@
                     class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                     required
                 >
-            </div>
+            </div> --}}
 
             <div>
-                <label for="nama_komponen" class="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-gray-300">
-                    Komponen <span class="text-red-500">*</span>
+                <label
+                    for="nama_produk"
+                    class="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-gray-300"
+                >
+                    Produk <span class="text-red-500">*</span>
                 </label>
+
                 <input
-                    id="nama_komponen" type="text" name="nama_komponen"
-                    value="{{ $namaKomponen }}"
-                    placeholder="ABB GSN201C"
+                    id="nama_produk"
+                    type="text"
+                    name="nama_produk"
+                    value="{{ $namaProduk }}"
+                    list="produk-options"
+                    placeholder="Cari atau masukkan produk baru"
+                    autocomplete="off"
                     class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                     required
                 >
+
+                <datalist id="produk-options">
+                    @foreach ($produkList as $produk)
+                        <option value="{{ $produk->nama_produk }}"></option>
+                    @endforeach
+                </datalist>
+
+                <p class="mt-1 text-xs text-gray-400">
+                    Pilih produk yang tersedia atau ketik nama produk baru.
+                </p>
+            </div>
+
+            <div>
+                <label
+                    for="nama_komponen"
+                    class="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-gray-300"
+                >
+                    Komponen <span class="text-red-500">*</span>
+                </label>
+
+                <input
+                    id="nama_komponen"
+                    type="text"
+                    name="nama_komponen"
+                    value="{{ $namaKomponen }}"
+                    list="komponen-options"
+                    placeholder="Cari atau masukkan komponen baru"
+                    autocomplete="off"
+                    class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                    required
+                >
+
+                <datalist id="komponen-options">
+                    @foreach ($komponenList as $komponen)
+                        <option value="{{ $komponen->nama_komponen }}">
+                            {{ $komponen->produk?->nama_produk }}
+                        </option>
+                    @endforeach
+                </datalist>
+
+                <p class="mt-1 text-xs text-gray-400">
+                    Pilih komponen yang tersedia atau ketik nama komponen baru.
+                </p>
             </div>
 
             <div>

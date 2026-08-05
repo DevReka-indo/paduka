@@ -14,6 +14,11 @@ use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\FeedbackProjectController;
 use App\Http\Controllers\FeedbackProjectItemController;
 use App\Http\Controllers\DurabilityController;
+use App\Http\Controllers\QcFacilityController;
+use App\Http\Controllers\WorkProgramKpiController;
+use App\Http\Controllers\WorkIndicatorController;
+use App\Http\Controllers\WorkAchievementController;
+use App\Http\Controllers\QcFacilityCategoryController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -182,6 +187,106 @@ Route::middleware('auth')->group(function () {
 
             Route::delete('/{durability}', [DurabilityController::class, 'destroy'])
                 ->name('destroy');
+        });
+
+    // Program Kerja dan KPI
+    Route::prefix('program-kerja-kpi')
+        ->name('work-program-kpi.')
+        ->group(function () {
+            // Semua pengguna yang sudah login
+            Route::get('/', [WorkProgramKpiController::class, 'index'])
+                ->name('index');
+
+            // Hanya admin dan superadmin
+            Route::middleware('isAdmin')->group(function () {
+                Route::get(
+                    '/indikator',
+                    [WorkIndicatorController::class, 'index']
+                )->name('indicators.index');
+
+                Route::get(
+                    '/indikator/create',
+                    [WorkIndicatorController::class, 'create']
+                )->name('indicators.create');
+
+                Route::post(
+                    '/indikator',
+                    [WorkIndicatorController::class, 'store']
+                )->name('indicators.store');
+
+                Route::get(
+                    '/indikator/{workIndicator}/edit',
+                    [WorkIndicatorController::class, 'edit']
+                )->name('indicators.edit');
+
+                Route::put(
+                    '/indikator/{workIndicator}',
+                    [WorkIndicatorController::class, 'update']
+                )->name('indicators.update');
+
+                Route::get(
+                    '/capaian',
+                    [WorkAchievementController::class, 'edit']
+                )->name('achievements.edit');
+
+                Route::put(
+                    '/capaian',
+                    [WorkAchievementController::class, 'update']
+                )->name('achievements.update');
+            });
+        });
+
+    // Kategori Fasilitas Quality Control
+    Route::prefix('fasilitas-qc/kategori')
+        ->name('qc-facility-categories.')
+        ->middleware('isAdmin')
+        ->group(function () {
+            Route::get('/', [QcFacilityCategoryController::class, 'index'])
+                ->name('index');
+
+            Route::post('/', [QcFacilityCategoryController::class, 'store'])
+                ->name('store');
+
+            Route::put(
+                '/{qcFacilityCategory}',
+                [QcFacilityCategoryController::class, 'update']
+            )->name('update');
+
+            Route::delete(
+                '/{qcFacilityCategory}',
+                [QcFacilityCategoryController::class, 'destroy']
+            )->name('destroy');
+        });
+
+        // Fasilitas Quality Control
+    Route::prefix('fasilitas-qc')
+        ->name('qc-facilities.')
+        ->group(function () {
+            // Semua pengguna yang sudah login
+            Route::get('/', [QcFacilityController::class, 'index'])
+                ->name('index');
+
+            // Hanya admin dan superadmin
+            Route::middleware('isAdmin')->group(function () {
+                Route::get('/create', [QcFacilityController::class, 'create'])
+                    ->name('create');
+
+                Route::post('/', [QcFacilityController::class, 'store'])
+                    ->name('store');
+
+                Route::get('/{qcFacility}/edit', [QcFacilityController::class, 'edit'])
+                    ->name('edit');
+
+                Route::put('/{qcFacility}', [QcFacilityController::class, 'update'])
+                    ->name('update');
+
+                Route::delete('/{qcFacility}', [QcFacilityController::class, 'destroy'])
+                    ->name('destroy');
+            });
+
+            // Route dinamis diletakkan paling bawah
+            Route::get('/{qcFacility}', [QcFacilityController::class, 'show'])
+                ->name('show');
         });
 
         Route::get('/bantuan', [App\Http\Controllers\BantuanController::class, 'index'])->name('bantuan.index');
