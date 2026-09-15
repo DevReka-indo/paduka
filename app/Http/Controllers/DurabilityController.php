@@ -353,6 +353,18 @@ class DurabilityController extends Controller
         ));
     }
 
+    public function show(Durability $durability)
+    {
+        $durability->load([
+            'proyek',
+            'komponen.produk',
+            'trainset',
+            'lokasi',
+        ]);
+
+        return view('durability.show', compact('durability'));
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

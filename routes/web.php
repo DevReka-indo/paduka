@@ -19,6 +19,14 @@ use App\Http\Controllers\WorkProgramKpiController;
 use App\Http\Controllers\WorkIndicatorController;
 use App\Http\Controllers\WorkAchievementController;
 use App\Http\Controllers\QcFacilityCategoryController;
+use App\Http\Controllers\QcProductElectricalDailyCheckController;
+use App\Http\Controllers\QcProductElectricalDashboardController;
+use App\Http\Controllers\QcFinalElectricalDailyCheckController;
+use App\Http\Controllers\QcFinalElectricalDashboardController;
+use App\Http\Controllers\QcFinalElectricalNcrController;
+use App\Http\Controllers\QcProductFinalMechanicalDailyCheckController;
+use App\Http\Controllers\QcProductFinalMechanicalNcrController;
+use App\Http\Controllers\QcProductFinalMechanicalDashboardController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -149,45 +157,54 @@ Route::middleware('auth')->group(function () {
             return view('visual-check.index');
         })->name('visual-check.index');
 
-    // Durability Menu
-    Route::prefix('durability')
-        ->name('durability.')
-        ->group(function () {
-            Route::get('/', [DurabilityController::class, 'index'])->name('index');
+        // Durability Menu
+        Route::prefix('durability')
+            ->name('durability.')
+            ->group(function () {
 
-            Route::get('/penggantian-komponen', [DurabilityController::class, 'penggantianKomponen'])
-                ->name('penggantian-komponen');
+                Route::get('/', [DurabilityController::class, 'index'])
+                    ->name('index');
 
-            Route::get('/durability-komponen', [DurabilityController::class, 'durabilityKomponen'])
-                ->name('durability-komponen');
+                Route::get('/penggantian-komponen', [DurabilityController::class, 'penggantianKomponen'])
+                    ->name('penggantian-komponen');
 
-            Route::get('/lokasi', [DurabilityController::class, 'lokasi'])
-                ->name('lokasi');
+                Route::get('/durability-komponen', [DurabilityController::class, 'durabilityKomponen'])
+                    ->name('durability-komponen');
 
-            Route::get('/tabel-detail', [DurabilityController::class, 'index'])
-                ->name('tabel-detail');
+                Route::get('/lokasi', [DurabilityController::class, 'lokasi'])
+                    ->name('lokasi');
 
-            Route::get('/import', [DurabilityController::class, 'importForm'])
-                ->name('import.form');
+                Route::get('/tabel-detail', [DurabilityController::class, 'index'])
+                    ->name('tabel-detail');
 
-            Route::post('/import', [DurabilityController::class, 'import'])
-                ->name('import');
+                Route::get('/import', [DurabilityController::class, 'importForm'])
+                    ->name('import.form');
 
-            Route::get('/create', [DurabilityController::class, 'create'])
-                ->name('create');
+                Route::post('/import', [DurabilityController::class, 'import'])
+                    ->name('import');
 
-            Route::post('/', [DurabilityController::class, 'store'])
-                ->name('store');
+                Route::get('/create', [DurabilityController::class, 'create'])
+                    ->name('create');
 
-            Route::get('/{durability}/edit', [DurabilityController::class, 'edit'])
-                ->name('edit');
+                Route::post('/', [DurabilityController::class, 'store'])
+                    ->name('store');
 
-            Route::put('/{durability}', [DurabilityController::class, 'update'])
-                ->name('update');
+                // Detail
+                Route::get('/{durability}', [DurabilityController::class, 'show'])
+                    ->name('show');
 
-            Route::delete('/{durability}', [DurabilityController::class, 'destroy'])
-                ->name('destroy');
-        });
+                // Edit
+                Route::get('/{durability}/edit', [DurabilityController::class, 'edit'])
+                    ->name('edit');
+
+                // Update
+                Route::put('/{durability}', [DurabilityController::class, 'update'])
+                    ->name('update');
+
+                // Delete
+                Route::delete('/{durability}', [DurabilityController::class, 'destroy'])
+                    ->name('destroy');
+            });
 
     // Program Kerja dan KPI
     Route::prefix('program-kerja-kpi')
@@ -289,7 +306,215 @@ Route::middleware('auth')->group(function () {
                 ->name('show');
         });
 
-        Route::get('/bantuan', [App\Http\Controllers\BantuanController::class, 'index'])->name('bantuan.index');
+        /*
+        |--------------------------------------------------------------------------
+        | Monitoring QC - QC Product Elektrik
+        |--------------------------------------------------------------------------
+        */
+
+    Route::prefix('monitoring-qc/product-elektrik')
+        ->name('monitoring-qc.product-electrical.')
+        ->group(function () {
+
+            Route::get(
+                '/dashboard',
+                [QcProductElectricalDashboardController::class, 'index']
+            )->name('dashboard');
+
+            Route::prefix('daily-check')
+                ->name('daily-check.')
+                ->controller(QcProductElectricalDailyCheckController::class)
+                ->group(function () {
+                    Route::get('/', 'index')
+                        ->name('index');
+
+                    Route::get('/create', 'create')
+                        ->name('create');
+
+                    Route::post('/', 'store')
+                        ->name('store');
+
+                    /*
+                    * Route dinamis ditempatkan setelah /create.
+                    */
+                    Route::get('/{dailyCheck}', 'show')
+                        ->name('show');
+
+                    Route::get('/{dailyCheck}/edit', 'edit')
+                        ->name('edit');
+
+                    Route::put('/{dailyCheck}', 'update')
+                        ->name('update');
+
+                    Route::delete('/{dailyCheck}', 'destroy')
+                        ->name('destroy');
+                });
+        });
+
+    Route::prefix('monitoring-qc/final-elektrik')
+        ->name('monitoring-qc.final-electrical.')
+        ->group(function () {
+
+            Route::get(
+                '/dashboard',
+                [QcFinalElectricalDashboardController::class, 'index']
+            )->name('dashboard');
+
+            Route::prefix('detail-ncr')
+                ->name('ncr.')
+                ->controller(
+                    QcFinalElectricalNcrController::class
+                )
+                ->group(function () {
+                    Route::get(
+                        '/',
+                        'index'
+                    )->name('index');
+
+                    Route::get(
+                        '/create',
+                        'create'
+                    )->name('create');
+
+                    Route::post(
+                        '/',
+                        'store'
+                    )->name('store');
+
+                    Route::get(
+                        '/{ncrDetail}',
+                        'show'
+                    )->name('show');
+
+                    Route::get(
+                        '/{ncrDetail}/edit',
+                        'edit'
+                    )->name('edit');
+
+                    Route::put(
+                        '/{ncrDetail}',
+                        'update'
+                    )->name('update');
+
+                    Route::delete(
+                        '/{ncrDetail}',
+                        'destroy'
+                    )->name('destroy');
+                });
+
+            Route::prefix('daily-check')
+                ->name('daily-check.')
+                ->controller(
+                    QcFinalElectricalDailyCheckController::class
+                )
+                ->group(function () {
+                    Route::get(
+                        '/',
+                        'index'
+                    )->name('index');
+
+                    Route::get(
+                        '/create',
+                        'create'
+                    )->name('create');
+
+                    Route::post(
+                        '/',
+                        'store'
+                    )->name('store');
+
+                    Route::get(
+                        '/{dailyCheck}',
+                        'show'
+                    )->name('show');
+
+                    Route::get(
+                        '/{dailyCheck}/edit',
+                        'edit'
+                    )->name('edit');
+
+                    Route::put(
+                        '/{dailyCheck}',
+                        'update'
+                    )->name('update');
+
+                    Route::delete(
+                        '/{dailyCheck}',
+                        'destroy'
+                    )->name('destroy');
+                });
+        });
+
+    Route::prefix('monitoring-qc/product-final-mekanik')
+            ->name('monitoring-qc.product-final-mechanical.')
+            ->group(function () {
+                Route::get(
+                    '/',
+                    [
+                        QcProductFinalMechanicalDashboardController::class,
+                        'index',
+                    ]
+                )->name('dashboard');
+                Route::prefix('daily-check')
+
+                    ->name('daily-check.')
+                    ->controller(
+                        QcProductFinalMechanicalDailyCheckController::class
+                    )
+                    ->group(function () {
+                        Route::get('/', 'index')
+                            ->name('index');
+
+                        Route::get('/create', 'create')
+                            ->name('create');
+
+                        Route::post('/', 'store')
+                            ->name('store');
+
+                        Route::get('/{dailyCheck}', 'show')
+                            ->name('show');
+
+                        Route::get('/{dailyCheck}/edit', 'edit')
+                            ->name('edit');
+
+                        Route::put('/{dailyCheck}', 'update')
+                            ->name('update');
+
+                        Route::delete('/{dailyCheck}', 'destroy')
+                            ->name('destroy');
+                    });
+
+                Route::prefix('ncr')
+                    ->name('ncr.')
+                    ->controller(
+                        QcProductFinalMechanicalNcrController::class
+                    )
+                    ->group(function () {
+                        Route::get('/', 'index')
+                            ->name('index');
+
+                        Route::get('/create', 'create')
+                            ->name('create');
+
+                        Route::post('/', 'store')
+                            ->name('store');
+
+                        Route::get('/{ncr}', 'show')
+                            ->name('show');
+
+                        Route::get('/{ncr}/edit', 'edit')
+                            ->name('edit');
+
+                        Route::put('/{ncr}', 'update')
+                            ->name('update');
+
+                        Route::delete('/{ncr}', 'destroy')
+                            ->name('destroy');
+                    });
+
+            });
+
+    Route::get('/bantuan', [App\Http\Controllers\BantuanController::class, 'index'])->name('bantuan.index');
 
 });
 

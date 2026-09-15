@@ -1,0 +1,17 @@
+[90m= [39m[34;4mIlluminate\Database\Eloquent\Collection[39;24m {#6444
+    [34mall[39m: [
+      [34;4mApp\Models\Ncr[39;24m {#6445
+        [34mkategori[39m: "[32mMinor[39m",
+        [34mtotal[39m: [35m117[39m,
+      },
+      [34;4mApp\Models\Ncr[39;24m {#6846
+        [34mkategori[39m: "[32mMayor[39m",
+        [34mtotal[39m: [35m6[39m,
+      },
+      [34;4mApp\Models\Ncr[39;24m {#6843
+        [34mkategori[39m: "[32m[KOSONG][39m",
+        [34mtotal[39m: [35m6[39m,
+      },
+    ],
+  }
+

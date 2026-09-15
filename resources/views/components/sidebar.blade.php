@@ -244,6 +244,409 @@
                         </span>
                     </a>
 
+                    {{-- Monitoring QC Dropdown --}}
+                    @php
+                        $isMonitoringQcParentActive = request()->routeIs('monitoring-qc.*');
+
+                        // QC Product Elektrik
+                        $isQcProductElectricalActive = request()->routeIs(
+                            'monitoring-qc.product-electrical.*'
+                        );
+
+                        $isQcProductElectricalDailyCheckActive = request()->routeIs(
+                            'monitoring-qc.product-electrical.daily-check.*'
+                        );
+
+                        $isQcProductElectricalDashboardActive = request()->routeIs(
+                            'monitoring-qc.product-electrical.dashboard'
+                        );
+
+                        // QC Final Elektrik
+                        $isQcFinalElectricalActive = request()->routeIs(
+                            'monitoring-qc.final-electrical.*'
+                        );
+
+                        $isQcFinalElectricalDashboardActive = request()->routeIs(
+                            'monitoring-qc.final-electrical.dashboard'
+                        );
+
+                        $isQcFinalElectricalDailyCheckActive = request()->routeIs(
+                            'monitoring-qc.final-electrical.daily-check.*'
+                        );
+
+                        $isQcFinalElectricalNcrActive = request()->routeIs(
+                            'monitoring-qc.final-electrical.ncr.*'
+                        );
+
+                        // QC Product Final Mechanical
+                        $isQcProductFinalMechanicalActive = request()->routeIs(
+                            'monitoring-qc.product-final-mechanical.*'
+                        );
+
+                        $isQcProductFinalMechanicalDashboardActive = request()->routeIs(
+                            'monitoring-qc.product-final-mechanical.dashboard'
+                        );
+
+                        $isQcProductFinalMechanicalDailyCheckActive = request()->routeIs(
+                            'monitoring-qc.product-final-mechanical.daily-check.*'
+                        );
+
+                        $isQcProductFinalMechanicalNcrActive = request()->routeIs(
+                            'monitoring-qc.product-final-mechanical.ncr.*'
+                        );
+
+                    @endphp
+
+                    <div
+                        x-data="{
+                            open: {{ $isMonitoringQcParentActive ? 'true' : 'false' }},
+                            productElectricalOpen: {{ $isQcProductElectricalActive ? 'true' : 'false' }},
+                            finalElectricalOpen: {{ $isQcFinalElectricalActive ? 'true' : 'false' }},
+                            productFinalMechanicalOpen: {{ $isQcProductFinalMechanicalActive ? 'true' : 'false' }}
+                        }"
+                        class="space-y-1"
+                    >
+                        {{-- Parent Monitoring QC --}}
+                        <button
+                            type="button"
+                            @click="$store.sidebar.collapsed
+                                ? (window.location.href = '{{ route('monitoring-qc.product-electrical.daily-check.index') }}')
+                                : (open = !open)"
+                            :title="$store.sidebar.collapsed ? 'Monitoring QC' : ''"
+                            class="{{ $menuItemBase }} w-full justify-between
+                                {{ $isMonitoringQcParentActive ? $menuItemActive : $menuItemIdle }}"
+                        >
+                            @if ($isMonitoringQcParentActive)
+                                <span
+                                    class="absolute left-0 top-1/2 h-7 w-1
+                                        -translate-y-1/2 rounded-r-full bg-white/80"
+                                ></span>
+                            @endif
+
+                            <div class="flex min-w-0 items-center gap-3">
+                                <span
+                                    class="{{ $iconBase }}
+                                        {{ $isMonitoringQcParentActive ? $iconActive : $iconIdle }}"
+                                >
+                                    <i class="fa-solid fa-chart-column text-[15px]"></i>
+                                </span>
+
+                                <span
+                                    class="overflow-hidden whitespace-nowrap
+                                        transition-all duration-200"
+                                    :class="$store.sidebar.collapsed
+                                        ? 'w-0 opacity-0'
+                                        : 'opacity-100'"
+                                >
+                                    Monitoring QC
+                                </span>
+                            </div>
+
+                            <svg
+                                class="h-4 w-4 flex-shrink-0 transition-all duration-200"
+                                :class="{
+                                    'rotate-180': open,
+                                    'opacity-0 w-0': $store.sidebar.collapsed
+                                }"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2.4"
+                                    d="M19 9l-7 7-7-7"
+                                />
+                            </svg>
+                        </button>
+
+                        {{-- Level 1 --}}
+                        <div
+                            x-show="open && !$store.sidebar.collapsed"
+                            x-transition
+                            class="ml-5 space-y-1 border-l
+                                border-indigo-200/70 pl-4
+                                dark:border-indigo-400/20"
+                        >
+                            {{-- QC Product Elektrik --}}
+                            <button
+                                type="button"
+                                @click="productElectricalOpen = !productElectricalOpen"
+                                class="{{ $childBase }} w-full justify-between
+                                    {{ $isQcProductElectricalActive
+                                        ? $childActive
+                                        : $childIdle }}"
+                            >
+                                <div class="flex min-w-0 items-center gap-2">
+                                    <span
+                                        class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                            {{ $isQcProductElectricalActive
+                                                ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                                : 'bg-slate-300 dark:bg-slate-600' }}"
+                                    ></span>
+
+                                    <span class="truncate">
+                                        QC Product - Elektrik
+                                    </span>
+                                </div>
+
+                                <i
+                                    class="fa-solid fa-chevron-down text-[10px]
+                                        transition-transform duration-200"
+                                    :class="productElectricalOpen ? 'rotate-180' : ''"
+                                ></i>
+                            </button>
+
+                            {{-- Level 2 --}}
+                            <div
+                                x-show="productElectricalOpen"
+                                x-transition
+                                class="ml-4 space-y-1 border-l
+                                    border-slate-200 pl-3
+                                    dark:border-slate-700"
+                            >
+                                {{-- Dashboard --}}
+                            <a
+                                href="{{ route(
+                                    'monitoring-qc.product-electrical.dashboard'
+                                ) }}"
+                                class="{{ $childBase }}
+                                    {{ $isQcProductElectricalDashboardActive
+                                        ? $childActive
+                                        : $childIdle }}"
+                            >
+                                <span
+                                    class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                        {{ $isQcProductElectricalDashboardActive
+                                            ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                            : 'bg-slate-300 dark:bg-slate-600' }}"
+                                ></span>
+
+                                Dashboard
+                            </a>
+
+                                {{-- Daily Check --}}
+                                <a
+                                    href="{{ route(
+                                        'monitoring-qc.product-electrical.daily-check.index'
+                                    ) }}"
+                                    class="{{ $childBase }}
+                                        {{ $isQcProductElectricalDailyCheckActive
+                                            ? $childActive
+                                            : $childIdle }}"
+                                >
+                                    <span
+                                        class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                            {{ $isQcProductElectricalDailyCheckActive
+                                                ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                                : 'bg-slate-300 dark:bg-slate-600' }}"
+                                    ></span>
+
+                                    Daily Check
+                                </a>
+                            </div>
+
+                            {{-- QC Final Elektrik --}}
+                            <button
+                                type="button"
+                                @click="finalElectricalOpen = !finalElectricalOpen"
+                                class="{{ $childBase }} w-full justify-between
+                                    {{ $isQcFinalElectricalActive
+                                        ? $childActive
+                                        : $childIdle }}"
+                            >
+                                <div class="flex min-w-0 items-center gap-2">
+                                    <span
+                                        class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                            {{ $isQcFinalElectricalActive
+                                                ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                                : 'bg-slate-300 dark:bg-slate-600' }}"
+                                    ></span>
+
+                                    <span class="truncate">
+                                        QC Final - Elektrik
+                                    </span>
+                                </div>
+
+                                <i
+                                    class="fa-solid fa-chevron-down text-[10px]
+                                        transition-transform duration-200"
+                                    :class="finalElectricalOpen ? 'rotate-180' : ''"
+                                ></i>
+                            </button>
+
+                            {{-- Level 2 QC Final Elektrik --}}
+                            <div
+                                x-show="finalElectricalOpen"
+                                x-transition
+                                class="ml-4 space-y-1 border-l
+                                    border-slate-200 pl-3
+                                    dark:border-slate-700"
+                            >
+                                {{-- Dashboard --}}
+                                <a
+                                    href="{{ route(
+                                        'monitoring-qc.final-electrical.dashboard'
+                                    ) }}"
+                                    class="{{ $childBase }}
+                                        {{ $isQcFinalElectricalDashboardActive
+                                            ? $childActive
+                                            : $childIdle }}"
+                                >
+                                    <span
+                                        class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                            {{ $isQcFinalElectricalDashboardActive
+                                                ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                                : 'bg-slate-300 dark:bg-slate-600' }}"
+                                    ></span>
+
+                                    Dashboard
+                                </a>
+
+                                {{-- Daily Check --}}
+                                <a
+                                    href="{{ route(
+                                        'monitoring-qc.final-electrical.daily-check.index'
+                                    ) }}"
+                                    class="{{ $childBase }}
+                                        {{ $isQcFinalElectricalDailyCheckActive
+                                            ? $childActive
+                                            : $childIdle }}"
+                                >
+                                    <span
+                                        class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                            {{ $isQcFinalElectricalDailyCheckActive
+                                                ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                                : 'bg-slate-300 dark:bg-slate-600' }}"
+                                    ></span>
+
+                                    Daily Check
+                                </a>
+
+                                {{-- Detail NCR --}}
+                                <a
+                                    href="{{ route(
+                                        'monitoring-qc.final-electrical.ncr.index'
+                                    ) }}"
+                                    class="{{ $childBase }}
+                                        {{ $isQcFinalElectricalNcrActive
+                                            ? $childActive
+                                            : $childIdle }}"
+                                >
+                                    <span
+                                        class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                            {{ $isQcFinalElectricalNcrActive
+                                                ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                                : 'bg-slate-300 dark:bg-slate-600' }}"
+                                    ></span>
+
+                                    Detail NCR
+                                </a>
+                            </div>
+
+                            {{-- QC Product & Final Mekanik --}}
+                            <button
+                                type="button"
+                                @click="productFinalMechanicalOpen = !productFinalMechanicalOpen"
+                                class="{{ $childBase }} w-full justify-between
+                                    {{ $isQcProductFinalMechanicalActive
+                                        ? $childActive
+                                        : $childIdle }}"
+                            >
+                                <div class="flex min-w-0 items-center gap-2">
+                                    <span
+                                        class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                            {{ $isQcProductFinalMechanicalActive
+                                                ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                                : 'bg-slate-300 dark:bg-slate-600' }}"
+                                    ></span>
+
+                                    <span class="truncate">
+                                        QC Product & Final - Mekanik
+                                    </span>
+                                </div>
+
+                                <i
+                                    class="fa-solid fa-chevron-down text-[10px]
+                                        transition-transform duration-200"
+                                    :class="productFinalMechanicalOpen ? 'rotate-180' : ''"
+                                ></i>
+                            </button>
+
+                            {{-- Level 2 QC Product & Final Mekanik --}}
+                            <div
+                                x-show="productFinalMechanicalOpen"
+                                x-transition
+                                class="ml-4 space-y-1 border-l
+                                    border-slate-200 pl-3
+                                    dark:border-slate-700"
+                            >
+                                {{-- Dashboard --}}
+                                <a
+                                    href="{{ route(
+                                        'monitoring-qc.product-final-mechanical.dashboard'
+                                    ) }}"
+                                    class="{{ $childBase }}
+                                        {{ $isQcProductFinalMechanicalDashboardActive
+                                            ? $childActive
+                                            : $childIdle }}"
+                                >
+                                    <span
+                                        class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                            {{ $isQcProductFinalMechanicalDashboardActive
+                                                ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                                : 'bg-slate-300 dark:bg-slate-600' }}"
+                                    ></span>
+
+                                    Dashboard
+                                </a>
+
+                                {{-- Daily Check --}}
+                                <a
+                                    href="{{ route(
+                                        'monitoring-qc.product-final-mechanical.daily-check.index'
+                                    ) }}"
+                                    class="{{ $childBase }}
+                                        {{ $isQcProductFinalMechanicalDailyCheckActive
+                                            ? $childActive
+                                            : $childIdle }}"
+                                >
+                                    <span
+                                        class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                            {{ $isQcProductFinalMechanicalDailyCheckActive
+                                                ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                                : 'bg-slate-300 dark:bg-slate-600' }}"
+                                    ></span>
+
+                                    Daily Check
+                                </a>
+
+                                {{-- Detail NCR --}}
+                                <a
+                                    href="{{ route(
+                                        'monitoring-qc.product-final-mechanical.ncr.index'
+                                    ) }}"
+                                    class="{{ $childBase }}
+                                        {{ $isQcProductFinalMechanicalNcrActive
+                                            ? $childActive
+                                            : $childIdle }}"
+                                >
+                                    <span
+                                        class="h-1.5 w-1.5 flex-shrink-0 rounded-full
+                                            {{ $isQcProductFinalMechanicalNcrActive
+                                                ? 'bg-indigo-500 shadow-sm shadow-indigo-500/70'
+                                                : 'bg-slate-300 dark:bg-slate-600' }}"
+                                    ></span>
+
+                                    Detail NCR
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+
+
                     {{-- NCR Dropdown --}}
                     @php
                         $isTemuanActive = request()->routeIs('temuan.*');

@@ -44,7 +44,7 @@
                         </th>
                     @endforeach
 
-                    <th class="px-5 py-4 text-right font-bold">
+                    <th class="sticky right-0 z-20 min-w-[130px] border-l border-gray-100 bg-gray-50 px-5 py-4 text-center font-bold shadow-[-8px_0_12px_-12px_rgba(0,0,0,0.25)] dark:border-gray-700 dark:bg-gray-800">
                         Aksi
                     </th>
                 </tr>
@@ -52,7 +52,7 @@
 
             <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                 @forelse ($durability as $item)
-                    <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <tr class="group transition hover:bg-gray-50 dark:hover:bg-gray-800/50">
 
                         {{-- <td class="px-5 py-4 text-gray-600 dark:text-gray-300">
                             {{ $item->tahun ?? '-' }}
@@ -93,11 +93,11 @@
                         </td>
 
                         <td class="px-5 py-4 text-gray-600 dark:text-gray-300">
-                            {{ $item->tgl_kerusakan ? $item->tgl_kerusakan->format('Y-m-d') : '-' }}
+                            {{ $item->tgl_kerusakan ? $item->tgl_kerusakan->format('d-m-Y') : '-' }}
                         </td>
 
                         <td class="px-5 py-4 text-gray-600 dark:text-gray-300">
-                            {{ $item->tgl_terbit_lppb ? $item->tgl_terbit_lppb->format('Y-m-d') : '-' }}
+                            {{ $item->tgl_terbit_lppb ? $item->tgl_terbit_lppb->format('d-m-Y') : '-' }}
                         </td>
 
                         <td class="px-5 py-4">
@@ -112,28 +112,50 @@
                             </span>
                         </td>
 
-                        <td class="px-5 py-4">
-                            <div class="flex items-center justify-end gap-2">
-                                <a href="{{ route('durability.edit', $item) }}"
-                                class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-700 shadow-sm transition hover:bg-blue-100 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30"
-                                title="Edit data">
+                        <td class="sticky right-0 z-10 min-w-[130px] border-l border-gray-100 bg-white px-4 py-4 shadow-[-8px_0_12px_-12px_rgba(0,0,0,0.25)] transition group-hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:group-hover:bg-gray-800">
+
+                            <div class="flex items-center justify-center gap-2">
+
+                                {{-- Detail --}}
+                                <a
+                                    href="{{ route('durability.show', $item) }}"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                    title="Lihat detail"
+                                >
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </a>
+
+                                {{-- Edit --}}
+                                <a
+                                    href="{{ route('durability.edit', $item) }}"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-700 shadow-sm transition hover:bg-blue-100 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30"
+                                    title="Edit data"
+                                >
                                     <i class="fa-solid fa-pen-to-square text-xs"></i>
                                 </a>
 
-                                <form method="POST"
+                                {{-- Hapus --}}
+                                <form
+                                    method="POST"
                                     action="{{ route('durability.destroy', $item) }}"
-                                    onsubmit="return confirm('Yakin ingin menghapus data durability ini? Data yang sudah dihapus tidak bisa dikembalikan.')">
+                                    onsubmit="return confirm('Yakin ingin menghapus data durability ini? Data yang sudah dihapus tidak bisa dikembalikan.')"
+                                >
                                     @csrf
                                     @method('DELETE')
 
-                                    <button type="submit"
-                                            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-700 shadow-sm transition hover:bg-red-100 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/30"
-                                            title="Hapus data">
+                                    <button
+                                        type="submit"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-700 shadow-sm transition hover:bg-red-100 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/30"
+                                        title="Hapus data"
+                                    >
                                         <i class="fa-solid fa-trash text-xs"></i>
                                     </button>
                                 </form>
+
                             </div>
+
                         </td>
+
                     </tr>
                 @empty
                     <tr>

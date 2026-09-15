@@ -47,7 +47,11 @@ class NCRController extends Controller
 
         $query = Ncr::with(['project', 'penanggungJawab', 'unitKerja', 'user', 'latestRevision']);
 
-        if (in_array($authUser->level, ['user', 'manager'])) {
+        $isDepartemenQCAS = $authUser->unitKerja()
+            ->where('nama_unit', 'Departemen QCAS')
+            ->exists();
+
+        if (in_array($authUser->level, ['user', 'manager']) && !$isDepartemenQCAS) {
             $unitKerjaIds = $authUser->unitKerja()->pluck('unit_kerja.id')->toArray();
             $unitKerjaNames = $authUser->unitKerja()->pluck('nama_unit')->toArray();
 

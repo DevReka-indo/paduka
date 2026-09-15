@@ -22,7 +22,15 @@ class DashboardController extends Controller
         $level = strtolower($authUser->level ?? '');
         $isAdmin = in_array($level, ['admin', 'superadmin']);
 
-        $baseQuery = $this->baseNcrQuery($authUser, $isAdmin);
+        $isDepartemenQCAS = $authUser->unitKerja()
+            ->where('nama_unit', 'Departemen QCAS')
+            ->exists();
+
+        $canViewAllNcr = $isAdmin || $isDepartemenQCAS;
+
+        $baseQuery = $this->baseNcrQuery($authUser, $canViewAllNcr);
+
+
 
         /*
         |--------------------------------------------------------------------------
@@ -252,11 +260,11 @@ class DashboardController extends Controller
         );
     }
 
-    private function baseNcrQuery(User $authUser, bool $isAdmin)
+    private function baseNcrQuery(User $authUser, bool $canViewAllNcr)
     {
         $query = Ncr::query();
 
-        if (!$isAdmin && in_array($authUser->level, ['user', 'manager'])) {
+        if (!$canViewAllNcr && in_array($authUser->level, ['user', 'manager'])) {
             $unitKerjaIds = $authUser->unitKerja()->pluck('unit_kerja.id')->toArray();
             $unitKerjaNames = $authUser->unitKerja()->pluck('nama_unit')->toArray();
 
