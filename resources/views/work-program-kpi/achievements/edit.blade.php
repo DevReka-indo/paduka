@@ -15,9 +15,7 @@
         ? 'Program Kerja'
         : 'KPI';
 
-    $indicatorColumnWidth = $isProgramKerja
-        ? 24
-        : 40;
+    $indicatorColumnWidth = 24;
 
     $periodColumnWidth = count($periodOptions) > 0
         ? (100 - $indicatorColumnWidth) / count($periodOptions)
@@ -217,9 +215,7 @@
                             </h2>
 
                             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                {{ $isProgramKerja
-                                    ? 'Input capaian dilakukan setiap bulan.'
-                                    : 'Input capaian dilakukan setiap triwulan.' }}
+                                Input capaian {{ $typeLabel }} dilakukan setiap bulan.
                             </p>
                         </div>
 

@@ -13,9 +13,22 @@ class WorkProgramKpiController extends Controller
     public function index(Request $request): View
     {
         $validated = $request->validate([
-            'tab' => ['nullable', 'in:program_kerja,kpi'],
-            'year' => ['nullable', 'integer', 'min:2000', 'max:2100'],
-            'month' => ['nullable', 'integer', 'min:1', 'max:12'],
+            'tab' => [
+                'nullable',
+                'in:program_kerja,kpi',
+            ],
+            'year' => [
+                'nullable',
+                'integer',
+                'min:2000',
+                'max:2100',
+            ],
+            'month' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:12',
+            ],
         ]);
 
         $selectedTab = $validated['tab']
@@ -31,17 +44,21 @@ class WorkProgramKpiController extends Controller
             ?? now()->month
         );
 
-        $inputPeriod = $selectedTab === WorkIndicator::TYPE_KPI
-            ? WorkIndicator::PERIOD_QUARTERLY
-            : WorkIndicator::PERIOD_MONTHLY;
+        /*
+         * Program Kerja dan KPI sama-sama
+         * menggunakan periode bulanan.
+         */
+        $inputPeriod = WorkIndicator::PERIOD_MONTHLY;
 
         /*
-         * Program Kerja menggunakan periode 1–12.
-         * KPI menggunakan periode 1–4.
+         * period_number langsung mengikuti nomor bulan.
+         *
+         * Januari   = 1
+         * Februari  = 2
+         * ...
+         * Desember  = 12
          */
-        $periodLimit = $inputPeriod === WorkIndicator::PERIOD_QUARTERLY
-            ? (int) ceil($selectedMonth / 3)
-            : $selectedMonth;
+        $periodLimit = $selectedMonth;
 
         $indicators = WorkIndicator::query()
             ->where('type', $selectedTab)
@@ -66,7 +83,8 @@ class WorkProgramKpiController extends Controller
             ->get();
 
         /*
-         * Ambil capaian terakhir yang tersedia sampai bulan dipilih.
+         * Ambil capaian terakhir yang tersedia
+         * sampai bulan yang dipilih.
          */
         $indicators->each(function (WorkIndicator $indicator) {
             $latestAchievement = $indicator
@@ -88,8 +106,8 @@ class WorkProgramKpiController extends Controller
         });
 
         /*
-         * Indikator yang belum mempunyai data tidak dihitung
-         * sebagai nol.
+         * Indikator yang belum mempunyai data
+         * tidak dihitung sebagai nol.
          */
         $averageAchievement = $indicators
             ->pluck('latest_percentage')
@@ -100,6 +118,9 @@ class WorkProgramKpiController extends Controller
             ? round((float) $averageAchievement, 2)
             : null;
 
+        /*
+         * Daftar tahun yang tersedia.
+         */
         $availableYears = WorkAchievement::query()
             ->select('year')
             ->distinct()
@@ -110,6 +131,9 @@ class WorkProgramKpiController extends Controller
             ->sortDesc()
             ->values();
 
+        /*
+         * Pilihan bulan Januari sampai Desember.
+         */
         $monthOptions = collect(range(1, 12))
             ->mapWithKeys(fn (int $month) => [
                 $month => Carbon::create()
@@ -117,8 +141,11 @@ class WorkProgramKpiController extends Controller
                     ->translatedFormat('F'),
             ]);
 
+        /*
+         * Kolom detail ditampilkan sampai
+         * bulan yang dipilih.
+         */
         $periodOptions = $this->periodOptions(
-            $inputPeriod,
             $periodLimit
         );
 
@@ -137,20 +164,8 @@ class WorkProgramKpiController extends Controller
     }
 
     private function periodOptions(
-        string $inputPeriod,
         int $periodLimit
     ): array {
-        if ($inputPeriod === WorkIndicator::PERIOD_QUARTERLY) {
-            return collect([
-                1 => 'Januari–Maret',
-                2 => 'April–Juni',
-                3 => 'Juli–September',
-                4 => 'Oktober–Desember',
-            ])
-                ->take($periodLimit)
-                ->all();
-        }
-
         return collect(range(1, $periodLimit))
             ->mapWithKeys(fn (int $month) => [
                 $month => Carbon::create()

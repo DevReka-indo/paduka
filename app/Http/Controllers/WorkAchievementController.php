@@ -39,10 +39,7 @@ class WorkAchievementController extends Controller
             ?? now()->year
         );
 
-        $inputPeriod =
-            $selectedType === WorkIndicator::TYPE_KPI
-                ? WorkIndicator::PERIOD_QUARTERLY
-                : WorkIndicator::PERIOD_MONTHLY;
+        $inputPeriod = WorkIndicator::PERIOD_MONTHLY;
 
         $indicators = WorkIndicator::query()
             ->where('type', $selectedType)
@@ -135,15 +132,9 @@ class WorkAchievementController extends Controller
         $type = $validated['type'];
         $year = (int) $validated['year'];
 
-        $inputPeriod =
-            $type === WorkIndicator::TYPE_KPI
-                ? WorkIndicator::PERIOD_QUARTERLY
-                : WorkIndicator::PERIOD_MONTHLY;
+        $inputPeriod = WorkIndicator::PERIOD_MONTHLY;
 
-        $maximumPeriod =
-            $inputPeriod === WorkIndicator::PERIOD_QUARTERLY
-                ? 4
-                : 12;
+        $maximumPeriod = 12;
 
         $indicators = WorkIndicator::query()
             ->where('type', $type)

@@ -35,13 +35,9 @@
      * Pembagian lebar tabel agar seluruh kolom
      * tetap berada di dalam lebar layar.
      */
-    $indicatorColumnWidth = $isProgramKerja
-        ? 24
-        : 40;
+    $indicatorColumnWidth = 24;
 
-    $latestColumnWidth = $isProgramKerja
-        ? 10
-        : 15;
+    $latestColumnWidth = 15;
 
     $availablePeriodWidth =
         100

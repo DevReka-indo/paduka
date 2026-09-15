@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\WorkIndicator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class WorkIndicatorController extends Controller
 {
@@ -30,10 +30,13 @@ class WorkIndicatorController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('work-program-kpi.indicators.index', compact(
-            'indicators',
-            'selectedType'
-        ));
+        return view(
+            'work-program-kpi.indicators.index',
+            compact(
+                'indicators',
+                'selectedType'
+            )
+        );
     }
 
     public function create(Request $request): View
@@ -50,13 +53,17 @@ class WorkIndicatorController extends Controller
             $selectedType = WorkIndicator::TYPE_PROGRAM_KERJA;
         }
 
-        return view('work-program-kpi.indicators.create', compact(
-            'selectedType'
-        ));
+        return view(
+            'work-program-kpi.indicators.create',
+            compact(
+                'selectedType'
+            )
+        );
     }
 
-    public function store(Request $request): RedirectResponse
-    {
+    public function store(
+        Request $request
+    ): RedirectResponse {
         $validated = $request->validate([
             'type' => [
                 'required',
@@ -64,41 +71,51 @@ class WorkIndicatorController extends Controller
                     WorkIndicator::typeOptions()
                 )),
             ],
+
             'name' => [
                 'required',
                 'string',
                 'max:255',
             ],
+
             'description' => [
                 'nullable',
                 'string',
             ],
+
             'sort_order' => [
                 'required',
                 'integer',
                 'min:0',
             ],
+
             'is_active' => [
                 'nullable',
                 'boolean',
             ],
         ]);
 
+        /*
+         * Program Kerja dan KPI sama-sama
+         * menggunakan periode bulanan.
+         */
         $validated['input_period'] =
-            $validated['type'] === WorkIndicator::TYPE_KPI
-                ? WorkIndicator::PERIOD_QUARTERLY
-                : WorkIndicator::PERIOD_MONTHLY;
+            WorkIndicator::PERIOD_MONTHLY;
 
-        $validated['is_active'] = $request->boolean(
-            'is_active'
+        $validated['is_active'] =
+            $request->boolean('is_active');
+
+        WorkIndicator::query()->create(
+            $validated
         );
 
-        WorkIndicator::query()->create($validated);
-
         return redirect()
-            ->route('work-program-kpi.indicators.index', [
-                'type' => $validated['type'],
-            ])
+            ->route(
+                'work-program-kpi.indicators.index',
+                [
+                    'type' => $validated['type'],
+                ]
+            )
             ->with(
                 'success',
                 'Indikator berhasil ditambahkan.'
@@ -110,7 +127,9 @@ class WorkIndicatorController extends Controller
     ): View {
         return view(
             'work-program-kpi.indicators.edit',
-            compact('workIndicator')
+            compact(
+                'workIndicator'
+            )
         );
     }
 
@@ -125,41 +144,51 @@ class WorkIndicatorController extends Controller
                     WorkIndicator::typeOptions()
                 )),
             ],
+
             'name' => [
                 'required',
                 'string',
                 'max:255',
             ],
+
             'description' => [
                 'nullable',
                 'string',
             ],
+
             'sort_order' => [
                 'required',
                 'integer',
                 'min:0',
             ],
+
             'is_active' => [
                 'nullable',
                 'boolean',
             ],
         ]);
 
+        /*
+         * Program Kerja dan KPI sama-sama
+         * menggunakan periode bulanan.
+         */
         $validated['input_period'] =
-            $validated['type'] === WorkIndicator::TYPE_KPI
-                ? WorkIndicator::PERIOD_QUARTERLY
-                : WorkIndicator::PERIOD_MONTHLY;
+            WorkIndicator::PERIOD_MONTHLY;
 
-        $validated['is_active'] = $request->boolean(
-            'is_active'
+        $validated['is_active'] =
+            $request->boolean('is_active');
+
+        $workIndicator->update(
+            $validated
         );
 
-        $workIndicator->update($validated);
-
         return redirect()
-            ->route('work-program-kpi.indicators.index', [
-                'type' => $validated['type'],
-            ])
+            ->route(
+                'work-program-kpi.indicators.index',
+                [
+                    'type' => $validated['type'],
+                ]
+            )
             ->with(
                 'success',
                 'Indikator berhasil diperbarui.'

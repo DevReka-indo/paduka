@@ -44,7 +44,7 @@ class WorkIndicatorSeeder extends Seeder
             ],
             [
                 'type' => WorkIndicator::TYPE_KPI,
-                'input_period' => WorkIndicator::PERIOD_QUARTERLY,
+                'input_period' => WorkIndicator::PERIOD_MONTHLY,
                 'name' => 'Product Conformity',
                 'description' => null,
                 'sort_order' => 1,
@@ -52,7 +52,7 @@ class WorkIndicatorSeeder extends Seeder
             ],
             [
                 'type' => WorkIndicator::TYPE_KPI,
-                'input_period' => WorkIndicator::PERIOD_QUARTERLY,
+                'input_period' => WorkIndicator::PERIOD_MONTHLY,
                 'name' => 'Penanganan Customer Complaint (Customer Non INKA)',
                 'description' => null,
                 'sort_order' => 2,
