@@ -521,11 +521,11 @@ class DurabilityController extends Controller
             ]);
 
         if ($dateFrom) {
-            $baseQuery->whereDate('tgl_terbit_lppb', '>=', $dateFrom);
+            $baseQuery->whereDate('tgl_kerusakan', '>=', $dateFrom);
         }
 
         if ($dateTo) {
-            $baseQuery->whereDate('tgl_terbit_lppb', '<=', $dateTo);
+            $baseQuery->whereDate('tgl_kerusakan', '<=', $dateTo);
         }
 
         if (!empty($produkId)) {
@@ -613,8 +613,8 @@ class DurabilityController extends Controller
                 DB::raw('SUM(durability.jumlah_penggantian) as total_penggantian'),
                 DB::raw('COUNT(durability.id) as total_record'),
                 DB::raw('AVG(durability.rentang_penggantian) as rata_rentang'),
-                DB::raw('MIN(durability.tgl_terbit_lppb) as tanggal_awal'),
-                DB::raw('MAX(durability.tgl_terbit_lppb) as tanggal_akhir')
+                DB::raw('MIN(durability.tgl_kerusakan) as tanggal_awal'),
+                DB::raw('MAX(durability.tgl_kerusakan) as tanggal_akhir')
             )
             ->whereNotNull('durability.jumlah_penggantian')
             ->groupBy(
@@ -706,11 +706,11 @@ class DurabilityController extends Controller
             ]);
 
         if ($dateFrom) {
-            $baseQuery->whereDate('tgl_terbit_lppb', '>=', $dateFrom);
+            $baseQuery->whereDate('tgl_kerusakan', '>=', $dateFrom);
         }
 
         if ($dateTo) {
-            $baseQuery->whereDate('tgl_terbit_lppb', '<=', $dateTo);
+            $baseQuery->whereDate('tgl_kerusakan', '<=', $dateTo);
         }
 
         if (!empty($produkId)) {
