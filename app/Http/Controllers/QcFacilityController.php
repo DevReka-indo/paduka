@@ -146,9 +146,21 @@ class QcFacilityController extends Controller
 
                 'units as no_calibration_units_count' =>
                     function ($query) {
-                        $query->whereDoesntHave(
-                            'latestCalibration'
-                        );
+                        $query->where(function ($unitQuery) {
+                            $unitQuery
+                                ->whereDoesntHave(
+                                    'latestCalibration'
+                                )
+                                ->orWhereHas(
+                                    'latestCalibration',
+                                    function ($calibrationQuery) {
+                                        $calibrationQuery
+                                            ->whereNull(
+                                                'calibration_valid_until'
+                                            );
+                                    }
+                                );
+                        });
                     },
             ])
 
@@ -356,10 +368,23 @@ class QcFacilityController extends Controller
                                 ->orWhereHas(
                                     'units',
                                     function ($unitQuery) {
-                                        $unitQuery
-                                            ->whereDoesntHave(
-                                                'latestCalibration'
-                                            );
+                                        $unitQuery->where(
+                                            function ($query) {
+                                                $query
+                                                    ->whereDoesntHave(
+                                                        'latestCalibration'
+                                                    )
+                                                    ->orWhereHas(
+                                                        'latestCalibration',
+                                                        function ($calibrationQuery) {
+                                                            $calibrationQuery
+                                                                ->whereNull(
+                                                                    'calibration_valid_until'
+                                                                );
+                                                        }
+                                                    );
+                                            }
+                                        );
                                     }
                                 );
                         }
@@ -461,9 +486,21 @@ class QcFacilityController extends Controller
 
             'not_available' =>
                 QcFacilityUnit::query()
-                    ->whereDoesntHave(
-                        'latestCalibration'
-                    )
+                    ->where(function ($query) {
+                        $query
+                            ->whereDoesntHave(
+                                'latestCalibration'
+                            )
+                            ->orWhereHas(
+                                'latestCalibration',
+                                function ($calibrationQuery) {
+                                    $calibrationQuery
+                                        ->whereNull(
+                                            'calibration_valid_until'
+                                        );
+                                }
+                            );
+                    })
                     ->count(),
         ];
 
@@ -493,91 +530,40 @@ class QcFacilityController extends Controller
     public function store ( Request $request ): RedirectResponse
     {
         $validated = $request->validate([
-            'category_id' => [
-                'required',
-                'integer',
-                'exists:qc_facility_categories,id',
-            ],
-
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-
-            'brand' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
-
-            'model' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
-
-            'technical_specifications' => [
-                'nullable',
-                'string',
-            ],
-
-            'description' => [
-                'nullable',
-                'string',
-            ],
-
-            'photo' => [
-                'required',
-                'image',
-                'mimes:jpg,jpeg,png,webp',
-                'max:5120',
-            ],
+            'category_id' => ['required', 'integer', 'exists:qc_facility_categories,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'brand' => ['nullable', 'string', 'max:255'],
+            'model' => ['nullable', 'string', 'max:255'],
+            'technical_specifications' => ['nullable', 'string'],
+            'description' => ['nullable', 'string'],
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        $photoPath = $request
-            ->file('photo')
-            ->store(
-                'qc-facilities',
-                'public'
-            );
+        $photoPath = $request->file('photo')->store('qc-facilities', 'public');
 
-        $facility = QcFacility::query()->create([
-            'category_id' =>
-                $validated['category_id'],
+        if (!$photoPath) {
+            throw new \RuntimeException('Foto fasilitas gagal disimpan.');
+        }
 
-            'name' =>
-                $validated['name'],
-
-            'brand' =>
-                $validated['brand'] ?? null,
-
-            'model' =>
-                $validated['model'] ?? null,
-
-            'technical_specifications' =>
-                $validated[
-                    'technical_specifications'
-                ] ?? null,
-
-            'description' =>
-                $validated['description'] ?? null,
-
-            'photo_path' =>
-                $photoPath,
-
-            'created_by' =>
-                Auth::id(),
-
-            'updated_by' =>
-                Auth::id(),
-        ]);
+        try {
+            $facility = QcFacility::query()->create([
+                'category_id' => $validated['category_id'],
+                'name' => $validated['name'],
+                'brand' => $validated['brand'] ?? null,
+                'model' => $validated['model'] ?? null,
+                'technical_specifications' => $validated['technical_specifications'] ?? null,
+                'description' => $validated['description'] ?? null,
+                'photo_path' => $photoPath,
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]);
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete($photoPath);
+            throw $exception;
+        }
 
         return redirect()
-            ->route(
-                'qc-facilities.show',
-                $facility
-            )
+            ->route('qc-facilities.show', $facility)
             ->with(
                 'success',
                 'Master fasilitas QC berhasil ditambahkan. '
@@ -621,167 +607,91 @@ class QcFacilityController extends Controller
     public function update ( Request $request, QcFacility $qcFacility ): RedirectResponse
     {
         $validated = $request->validate([
-            'category_id' => [
-                'required',
-                'integer',
-                'exists:qc_facility_categories,id',
-            ],
-
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-
-            'brand' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
-
-            'model' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
-
-            'technical_specifications' => [
-                'nullable',
-                'string',
-            ],
-
-            'description' => [
-                'nullable',
-                'string',
-            ],
-
-            'photo' => [
-                'nullable',
-                'image',
-                'mimes:jpg,jpeg,png,webp',
-                'max:5120',
-            ],
+            'category_id' => ['required', 'integer', 'exists:qc_facility_categories,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'brand' => ['nullable', 'string', 'max:255'],
+            'model' => ['nullable', 'string', 'max:255'],
+            'technical_specifications' => ['nullable', 'string'],
+            'description' => ['nullable', 'string'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        $photoPath =
-            $qcFacility->photo_path;
+        $oldPhotoPath = $qcFacility->photo_path;
+        $newPhotoPath = null;
 
         if ($request->hasFile('photo')) {
-            $newPhotoPath = $request
-                ->file('photo')
-                ->store(
-                    'qc-facilities',
-                    'public'
-                );
+            $newPhotoPath = $request->file('photo')->store('qc-facilities', 'public');
 
-            if (
-                $qcFacility->photo_path &&
-                Storage::disk('public')->exists(
-                    $qcFacility->photo_path
-                )
-            ) {
-                Storage::disk('public')->delete(
-                    $qcFacility->photo_path
-                );
+            if (!$newPhotoPath) {
+                throw new \RuntimeException('Foto fasilitas gagal disimpan.');
             }
-
-            $photoPath = $newPhotoPath;
         }
 
-        $qcFacility->update([
-            'category_id' =>
-                $validated['category_id'],
+        $data = [
+            'category_id' => $validated['category_id'],
+            'name' => $validated['name'],
+            'brand' => $validated['brand'] ?? null,
+            'model' => $validated['model'] ?? null,
+            'technical_specifications' => $validated['technical_specifications'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'updated_by' => Auth::id(),
+        ];
 
-            'name' =>
-                $validated['name'],
+        if ($newPhotoPath !== null) {
+            $data['photo_path'] = $newPhotoPath;
+        }
 
-            'brand' =>
-                $validated['brand'] ?? null,
+        try {
+            $qcFacility->update($data);
+        } catch (\Throwable $exception) {
+            if ($newPhotoPath) {
+                Storage::disk('public')->delete($newPhotoPath);
+            }
+            throw $exception;
+        }
 
-            'model' =>
-                $validated['model'] ?? null,
-
-            'technical_specifications' =>
-                $validated[
-                    'technical_specifications'
-                ] ?? null,
-
-            'description' =>
-                $validated['description'] ?? null,
-
-            'photo_path' =>
-                $photoPath,
-
-            'updated_by' =>
-                Auth::id(),
-        ]);
+        if ($newPhotoPath && $oldPhotoPath) {
+            Storage::disk('public')->delete($oldPhotoPath);
+        }
 
         return redirect()
-            ->route(
-                'qc-facilities.show',
-                $qcFacility
-            )
-            ->with(
-                'success',
-                'Data master fasilitas QC berhasil diperbarui.'
-            );
+            ->route('qc-facilities.show', $qcFacility)
+            ->with('success', 'Data master fasilitas QC berhasil diperbarui.');
     }
 
     public function destroy ( QcFacility $qcFacility ): RedirectResponse
     {
-        /*
-        * Load seluruh unit dan sertifikat kalibrasi
-        * sebelum database cascade menghapus record.
-        */
-        $qcFacility->load(
-            'units.calibrations'
-        );
+        $qcFacility->load('units.calibrations');
 
-        foreach ($qcFacility->units as $unit) {
-            foreach (
-                $unit->calibrations
-                as $calibration
-            ) {
-                if (
-                    $calibration->certificate_path &&
-                    Storage::disk('local')->exists(
-                        $calibration->certificate_path
-                    )
-                ) {
-                    Storage::disk('local')->delete(
-                        $calibration->certificate_path
-                    );
-                }
-            }
-        }
-
-        /*
-        * Hapus foto master.
-        */
-        if (
-            $qcFacility->photo_path &&
-            Storage::disk('public')->exists(
-                $qcFacility->photo_path
+        $certificatePaths = $qcFacility->units
+            ->flatMap(
+                fn ($unit) => $unit->calibrations
+                    ->pluck('certificate_path')
             )
-        ) {
-            Storage::disk('public')->delete(
-                $qcFacility->photo_path
-            );
-        }
+            ->filter()
+            ->values()
+            ->all();
+
+        $photoPath = $qcFacility->photo_path;
 
         /*
-        * FK cascade:
-        * qc_facilities
-        * → qc_facility_units
-        * → qc_facility_calibrations
-        */
+         * Hapus record database lebih dulu. FK cascade akan menghapus
+         * unit dan seluruh riwayat kalibrasi. File dibersihkan setelah
+         * operasi database berhasil sehingga DB tidak menunjuk file hilang.
+         */
         $qcFacility->delete();
+
+        foreach ($certificatePaths as $certificatePath) {
+            Storage::disk('local')->delete($certificatePath);
+        }
+
+        if ($photoPath) {
+            Storage::disk('public')->delete($photoPath);
+        }
 
         return redirect()
             ->route('qc-facilities.index')
-            ->with(
-                'success',
-                'Data fasilitas QC berhasil dihapus.'
-            );
+            ->with('success', 'Data fasilitas QC berhasil dihapus.');
     }
+
 }

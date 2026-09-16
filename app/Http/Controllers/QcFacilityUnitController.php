@@ -236,25 +236,18 @@ class QcFacilityUnitController extends Controller
             $qcFacilityUnit
         );
 
-        $qcFacilityUnit->load('calibrations');
-
-        foreach (
-            $qcFacilityUnit->calibrations
-            as $calibration
-        ) {
-            if (
-                $calibration->certificate_path &&
-                Storage::disk('local')->exists(
-                    $calibration->certificate_path
-                )
-            ) {
-                Storage::disk('local')->delete(
-                    $calibration->certificate_path
-                );
-            }
-        }
+        $certificatePaths = $qcFacilityUnit
+            ->calibrations()
+            ->whereNotNull('certificate_path')
+            ->pluck('certificate_path')
+            ->filter()
+            ->all();
 
         $qcFacilityUnit->delete();
+
+        foreach ($certificatePaths as $certificatePath) {
+            Storage::disk('local')->delete($certificatePath);
+        }
 
         return redirect()
             ->route(

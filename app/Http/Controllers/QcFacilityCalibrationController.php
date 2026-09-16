@@ -37,107 +37,50 @@ class QcFacilityCalibrationController extends Controller
         QcFacility $qcFacility,
         QcFacilityUnit $qcFacilityUnit
     ): RedirectResponse {
-        $this->ensureUnitBelongsToFacility(
-            $qcFacility,
-            $qcFacilityUnit
-        );
+        $this->ensureUnitBelongsToFacility($qcFacility, $qcFacilityUnit);
 
         $validated = $request->validate([
-            'calibration_date' => [
-                'required',
-                'date',
-            ],
-
-            'calibration_valid_until' => [
-                'required',
-                'date',
-                'after_or_equal:calibration_date',
-            ],
-
-            'certificate_number' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
-
-            'calibration_laboratory' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
-
-            'certificate' => [
-                'nullable',
-                'file',
-                'mimes:pdf,jpg,jpeg,png',
-                'max:10240',
-            ],
-
-            'notes' => [
-                'nullable',
-                'string',
-                'max:5000',
-            ],
+            'calibration_date' => ['required', 'date'],
+            'calibration_valid_until' => ['required', 'date', 'after_or_equal:calibration_date'],
+            'certificate_number' => ['nullable', 'string', 'max:255'],
+            'calibration_laboratory' => ['nullable', 'string', 'max:255'],
+            'certificate' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+            'notes' => ['nullable', 'string', 'max:5000'],
         ]);
 
         $certificatePath = null;
 
         if ($request->hasFile('certificate')) {
-            $certificatePath = $request
-                ->file('certificate')
-                ->store(
-                    'qc-facility-calibrations',
-                    'public'
-                );
+            $certificatePath = $request->file('certificate')
+                ->store('qc-facility-calibrations', 'local');
+
+            if (!$certificatePath) {
+                throw new \RuntimeException('File sertifikat kalibrasi gagal disimpan.');
+            }
         }
 
-        $qcFacilityUnit
-            ->calibrations()
-            ->create([
-                'calibration_date' =>
-                    $validated['calibration_date'],
-
-                'calibration_valid_until' =>
-                    $validated[
-                        'calibration_valid_until'
-                    ],
-
-                'certificate_number' =>
-                    $validated[
-                        'certificate_number'
-                    ] ?? null,
-
-                'calibration_laboratory' =>
-                    $validated[
-                        'calibration_laboratory'
-                    ] ?? null,
-
-                'certificate_path' =>
-                    $certificatePath,
-
-                'notes' =>
-                    $validated['notes'] ?? null,
-
-                'created_by' =>
-                    Auth::id(),
-
-                'updated_by' =>
-                    Auth::id(),
+        try {
+            $qcFacilityUnit->calibrations()->create([
+                'calibration_date' => $validated['calibration_date'],
+                'calibration_valid_until' => $validated['calibration_valid_until'],
+                'certificate_number' => $validated['certificate_number'] ?? null,
+                'calibration_laboratory' => $validated['calibration_laboratory'] ?? null,
+                'certificate_path' => $certificatePath,
+                'notes' => $validated['notes'] ?? null,
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
             ]);
+        } catch (\Throwable $exception) {
+            if ($certificatePath) {
+                Storage::disk('local')->delete($certificatePath);
+            }
+            throw $exception;
+        }
 
-        return redirect()
-            ->route(
-                'qc-facilities.units.show',
-                [
-                    'qcFacility' => $qcFacility,
-                    'qcFacilityUnit' =>
-                        $qcFacilityUnit,
-                ]
-            )
-            ->with(
-                'success',
-                'Data kalibrasi berhasil ditambahkan.'
-            );
+        return redirect()->route('qc-facilities.units.show', [
+            'qcFacility' => $qcFacility,
+            'qcFacilityUnit' => $qcFacilityUnit,
+        ])->with('success', 'Data kalibrasi berhasil ditambahkan.');
     }
 
     public function edit(
@@ -167,138 +110,63 @@ class QcFacilityCalibrationController extends Controller
         QcFacilityUnit $qcFacilityUnit,
         QcFacilityCalibration $qcFacilityCalibration
     ): RedirectResponse {
-        $this->ensureHierarchy(
-            $qcFacility,
-            $qcFacilityUnit,
-            $qcFacilityCalibration
-        );
+        $this->ensureHierarchy($qcFacility, $qcFacilityUnit, $qcFacilityCalibration);
 
         $validated = $request->validate([
-            'calibration_date' => [
-                'required',
-                'date',
-            ],
-
-            'calibration_valid_until' => [
-                'required',
-                'date',
-                'after_or_equal:calibration_date',
-            ],
-
-            'certificate_number' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
-
-            'calibration_laboratory' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
-
-            'certificate' => [
-                'nullable',
-                'file',
-                'mimes:pdf,jpg,jpeg,png',
-                'max:10240',
-            ],
-
-            'remove_certificate' => [
-                'nullable',
-                'boolean',
-            ],
-
-            'notes' => [
-                'nullable',
-                'string',
-                'max:5000',
-            ],
+            'calibration_date' => ['required', 'date'],
+            'calibration_valid_until' => ['required', 'date', 'after_or_equal:calibration_date'],
+            'certificate_number' => ['nullable', 'string', 'max:255'],
+            'calibration_laboratory' => ['nullable', 'string', 'max:255'],
+            'certificate' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+            'remove_certificate' => ['nullable', 'boolean'],
+            'notes' => ['nullable', 'string', 'max:5000'],
         ]);
 
-        $certificatePath =
-            $qcFacilityCalibration->certificate_path;
+        $oldCertificatePath = $qcFacilityCalibration->certificate_path;
+        $newCertificatePath = null;
+        $removeCertificate = $request->boolean('remove_certificate');
 
-        /*
-         * Jika upload sertifikat baru:
-         * simpan file baru lalu hapus file lama.
-         */
         if ($request->hasFile('certificate')) {
-            $newCertificatePath = $request
-                ->file('certificate')
-                ->store(
-                    'qc-facility-calibrations',
-                    'public'
-                );
+            $newCertificatePath = $request->file('certificate')
+                ->store('qc-facility-calibrations', 'local');
 
-            if (
-                $certificatePath
-                && Storage::disk('public')
-                    ->exists($certificatePath)
-            ) {
-                Storage::disk('public')
-                    ->delete($certificatePath);
+            if (!$newCertificatePath) {
+                throw new \RuntimeException('File sertifikat kalibrasi gagal disimpan.');
             }
-
-            $certificatePath =
-                $newCertificatePath;
-        } elseif (
-            $request->boolean('remove_certificate')
-        ) {
-            if (
-                $certificatePath
-                && Storage::disk('public')
-                    ->exists($certificatePath)
-            ) {
-                Storage::disk('public')
-                    ->delete($certificatePath);
-            }
-
-            $certificatePath = null;
         }
 
-        $qcFacilityCalibration->update([
-            'calibration_date' =>
-                $validated['calibration_date'],
+        $data = [
+            'calibration_date' => $validated['calibration_date'],
+            'calibration_valid_until' => $validated['calibration_valid_until'],
+            'certificate_number' => $validated['certificate_number'] ?? null,
+            'calibration_laboratory' => $validated['calibration_laboratory'] ?? null,
+            'notes' => $validated['notes'] ?? null,
+            'updated_by' => Auth::id(),
+        ];
 
-            'calibration_valid_until' =>
-                $validated[
-                    'calibration_valid_until'
-                ],
+        if ($newCertificatePath !== null) {
+            $data['certificate_path'] = $newCertificatePath;
+        } elseif ($removeCertificate) {
+            $data['certificate_path'] = null;
+        }
 
-            'certificate_number' =>
-                $validated[
-                    'certificate_number'
-                ] ?? null,
+        try {
+            $qcFacilityCalibration->update($data);
+        } catch (\Throwable $exception) {
+            if ($newCertificatePath) {
+                Storage::disk('local')->delete($newCertificatePath);
+            }
+            throw $exception;
+        }
 
-            'calibration_laboratory' =>
-                $validated[
-                    'calibration_laboratory'
-                ] ?? null,
+        if ($oldCertificatePath && ($newCertificatePath !== null || $removeCertificate)) {
+            Storage::disk('local')->delete($oldCertificatePath);
+        }
 
-            'certificate_path' =>
-                $certificatePath,
-
-            'notes' =>
-                $validated['notes'] ?? null,
-
-            'updated_by' =>
-                Auth::id(),
-        ]);
-
-        return redirect()
-            ->route(
-                'qc-facilities.units.show',
-                [
-                    'qcFacility' => $qcFacility,
-                    'qcFacilityUnit' =>
-                        $qcFacilityUnit,
-                ]
-            )
-            ->with(
-                'success',
-                'Data kalibrasi berhasil diperbarui.'
-            );
+        return redirect()->route('qc-facilities.units.show', [
+            'qcFacility' => $qcFacility,
+            'qcFacilityUnit' => $qcFacilityUnit,
+        ])->with('success', 'Data kalibrasi berhasil diperbarui.');
     }
 
     public function destroy(
@@ -306,40 +174,19 @@ class QcFacilityCalibrationController extends Controller
         QcFacilityUnit $qcFacilityUnit,
         QcFacilityCalibration $qcFacilityCalibration
     ): RedirectResponse {
-        $this->ensureHierarchy(
-            $qcFacility,
-            $qcFacilityUnit,
-            $qcFacilityCalibration
-        );
+        $this->ensureHierarchy($qcFacility, $qcFacilityUnit, $qcFacilityCalibration);
 
-        if (
-            $qcFacilityCalibration->certificate_path
-            && Storage::disk('public')->exists(
-                $qcFacilityCalibration
-                    ->certificate_path
-            )
-        ) {
-            Storage::disk('public')->delete(
-                $qcFacilityCalibration
-                    ->certificate_path
-            );
-        }
-
+        $certificatePath = $qcFacilityCalibration->certificate_path;
         $qcFacilityCalibration->delete();
 
-        return redirect()
-            ->route(
-                'qc-facilities.units.show',
-                [
-                    'qcFacility' => $qcFacility,
-                    'qcFacilityUnit' =>
-                        $qcFacilityUnit,
-                ]
-            )
-            ->with(
-                'success',
-                'Riwayat kalibrasi berhasil dihapus.'
-            );
+        if ($certificatePath) {
+            Storage::disk('local')->delete($certificatePath);
+        }
+
+        return redirect()->route('qc-facilities.units.show', [
+            'qcFacility' => $qcFacility,
+            'qcFacilityUnit' => $qcFacilityUnit,
+        ])->with('success', 'Riwayat kalibrasi berhasil dihapus.');
     }
 
     public function certificate(
@@ -358,7 +205,7 @@ class QcFacilityCalibrationController extends Controller
 
         abort_if(
             !$path
-            || !Storage::disk('public')->exists($path),
+            || !Storage::disk('local')->exists($path),
             404,
             'File sertifikat tidak ditemukan.'
         );
@@ -381,7 +228,7 @@ class QcFacilityCalibrationController extends Controller
         $fileName = $baseName
             . ($extension ? '.' . $extension : '');
 
-        return Storage::disk('public')->response(
+        return Storage::disk('local')->response(
             $path,
             $fileName
         );
