@@ -49,8 +49,8 @@
                             class="mt-1 max-w-2xl text-sm leading-6
                                 text-gray-500 dark:text-gray-400"
                         >
-                            Perbarui informasi alat, spesifikasi teknis,
-                            kalibrasi, kondisi, atau foto fasilitas.
+                            Perbarui informasi umum, spesifikasi teknis,
+                            dan foto master fasilitas.
                         </p>
                     </div>
 

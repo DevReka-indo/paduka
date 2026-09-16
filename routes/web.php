@@ -1,59 +1,71 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DurabilityController;
+use App\Http\Controllers\FeedbackPelangganController;
+use App\Http\Controllers\FeedbackProjectController;
+use App\Http\Controllers\FeedbackProjectItemController;
 use App\Http\Controllers\NCRController;
+use App\Http\Controllers\NcrPdfController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\TemuanController;
-use App\Http\Controllers\UnitKerjaController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\NcrPdfController;
-use App\Http\Controllers\FeedbackPelangganController;
-use App\Http\Controllers\SignatureController;
-use App\Http\Controllers\FeedbackProjectController;
-use App\Http\Controllers\FeedbackProjectItemController;
-use App\Http\Controllers\DurabilityController;
-use App\Http\Controllers\QcFacilityController;
-use App\Http\Controllers\WorkProgramKpiController;
-use App\Http\Controllers\WorkIndicatorController;
-use App\Http\Controllers\WorkAchievementController;
 use App\Http\Controllers\QcFacilityCategoryController;
-use App\Http\Controllers\QcProductElectricalDailyCheckController;
-use App\Http\Controllers\QcProductElectricalDashboardController;
+use App\Http\Controllers\QcFacilityController;
+use App\Http\Controllers\QcFacilityUnitController;
+use App\Http\Controllers\QcFacilityCalibrationController;
 use App\Http\Controllers\QcFinalElectricalDailyCheckController;
 use App\Http\Controllers\QcFinalElectricalDashboardController;
 use App\Http\Controllers\QcFinalElectricalNcrController;
+use App\Http\Controllers\QcProductElectricalDailyCheckController;
+use App\Http\Controllers\QcProductElectricalDashboardController;
 use App\Http\Controllers\QcProductFinalMechanicalDailyCheckController;
-use App\Http\Controllers\QcProductFinalMechanicalNcrController;
 use App\Http\Controllers\QcProductFinalMechanicalDashboardController;
+use App\Http\Controllers\QcProductFinalMechanicalNcrController;
+use App\Http\Controllers\SignatureController;
+use App\Http\Controllers\TemuanController;
+use App\Http\Controllers\UnitKerjaController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\WorkAchievementController;
+use App\Http\Controllers\WorkIndicatorController;
+use App\Http\Controllers\WorkProgramKpiController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-//testing only
+// Testing only
 use App\Models\Ncr;
-use App\Models\User;
 use App\Models\NcrChangeLog;
+use App\Models\User;
 
 Route::get('/', function () {
-    return Auth::check() ? redirect()->route('dashboard') : redirect()->route('login');
+    return Auth::check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
 });
 
-//link detail qr code signature
-Route::get('/signature/{token}', [SignatureController::class, 'show'])->name('signature.show');
+// Link detail QR Code signature
+Route::get('/signature/{token}', [SignatureController::class, 'show'])
+    ->name('signature.show');
 
-//link publik form kepuasan pelanggan
-Route::get('/survey-kepuasan', [FeedbackPelangganController::class, 'form'])->name('feedback.form');
-Route::post('/survey-kepuasan', [FeedbackPelangganController::class, 'store'])->name('feedback.store');
-Route::get('/survey-kepuasan/submited', [FeedbackPelangganController::class, 'success'])->name('feedback.success');
+// Link publik form kepuasan pelanggan
+Route::get('/survey-kepuasan', [FeedbackPelangganController::class, 'form'])
+    ->name('feedback.form');
+Route::post('/survey-kepuasan', [FeedbackPelangganController::class, 'store'])
+    ->name('feedback.store');
+Route::get('/survey-kepuasan/submited', [FeedbackPelangganController::class, 'success'])
+    ->name('feedback.success');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
 });
 
-
 Route::middleware('auth')->group(function () {
-    // Profile
+    /*
+    |--------------------------------------------------------------------------
+    | Profile
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('profile')
         ->name('profile.')
         ->group(function () {
@@ -63,7 +75,11 @@ Route::middleware('auth')->group(function () {
             Route::patch('/foto', [ProfileController::class, 'updateFoto'])->name('foto');
         });
 
-    // Notifications
+    /*
+    |--------------------------------------------------------------------------
+    | Notifications
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('notifications')
         ->name('notifications.')
         ->group(function () {
@@ -71,7 +87,11 @@ Route::middleware('auth')->group(function () {
             Route::get('/{id}/read', [NotificationController::class, 'read'])->name('read');
         });
 
-    // NCR
+    /*
+    |--------------------------------------------------------------------------
+    | NCR
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('ncr')
         ->name('ncr.')
         ->group(function () {
@@ -95,13 +115,16 @@ Route::middleware('auth')->group(function () {
             Route::post('/{nomor_ncr}/open', [NCRController::class, 'openncr'])->name('open');
             Route::delete('/{nomor_ncr}', [NCRController::class, 'destroy'])->name('destroy');
 
-            Route::get('/ncr/export-report', [NcrController::class, 'exportReport'])->name('export-report');
+            Route::get('/ncr/export-report', [NCRController::class, 'exportReport'])->name('export-report');
             Route::get('/{nomor_ncr}/export-pdf', [NcrPdfController::class, 'export'])->name('export.pdf');
-
             Route::get('/{nomor_ncr}/revision/{rev}', [NCRController::class, 'showRevision'])->name('revision.show');
         });
 
-    // Feedback Kepuasan Pelanggan
+    /*
+    |--------------------------------------------------------------------------
+    | Feedback Kepuasan Pelanggan
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('feedback-pelanggan')
         ->name('feedback.')
         ->group(function () {
@@ -113,100 +136,90 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{id}', [FeedbackPelangganController::class, 'destroy'])->name('destroy');
         });
 
-        Route::resource('feedback-projects', FeedbackProjectController::class);
-        Route::resource('feedback-project-items', FeedbackProjectItemController::class)
-            ->only(['create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('feedback-projects', FeedbackProjectController::class);
+    Route::resource('feedback-project-items', FeedbackProjectItemController::class)
+        ->only(['create', 'store', 'edit', 'update', 'destroy']);
 
+    /*
+    |--------------------------------------------------------------------------
+    | NCR File Preview
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/ncr/file/{path}', function (string $path) {
+        $decoded = base64_decode($path);
 
-        Route::get('/ncr/file/{path}', function (string $path) {
-            $decoded = base64_decode($path);
+        // Cegah path traversal
+        if (str_contains($decoded, '..')) {
+            abort(403);
+        }
 
-            // Cegah path traversal
-            if (str_contains($decoded, '..')) {
-                abort(403);
-            }
+        $fullPath = storage_path('app/' . $decoded);
 
-            $fullPath = storage_path('app/' . $decoded);
+        if (!file_exists($fullPath)) {
+            abort(404, 'File tidak ditemukan.');
+        }
 
-            if (!file_exists($fullPath)) {
-                abort(404, 'File tidak ditemukan.');
-            }
+        $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
 
-            $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
-            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'])) {
-                abort(403, 'Tipe file tidak diizinkan.');
-            }
+        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'])) {
+            abort(403, 'Tipe file tidak diizinkan.');
+        }
 
-            $mimeMap = [
-                'jpg'  => 'image/jpeg',
-                'jpeg' => 'image/jpeg',
-                'png'  => 'image/png',
-                'gif'  => 'image/gif',
-                'webp' => 'image/webp',
-                'svg'  => 'image/svg+xml',
-                'bmp'  => 'image/bmp',
-            ];
+        $mimeMap = [
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            'svg' => 'image/svg+xml',
+            'bmp' => 'image/bmp',
+        ];
 
-            return response()->file($fullPath, [
-                'Content-Type' => $mimeMap[$ext] ?? 'application/octet-stream',
-            ]);
-        })->middleware('auth')->name('ncr.file.preview');
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeMap[$ext] ?? 'application/octet-stream',
+        ]);
+    })->middleware('auth')->name('ncr.file.preview');
 
-        //embed visual check
-        Route::get('/visiq', function () {
-            return view('visual-check.index');
-        })->name('visual-check.index');
+    /*
+    |--------------------------------------------------------------------------
+    | Visual Check
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/visiq', function () {
+        return view('visual-check.index');
+    })->name('visual-check.index');
 
-        // Durability Menu
-        Route::prefix('durability')
-            ->name('durability.')
-            ->group(function () {
+    /*
+    |--------------------------------------------------------------------------
+    | Durability Product
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('durability')
+        ->name('durability.')
+        ->group(function () {
+            Route::get('/', [DurabilityController::class, 'index'])->name('index');
+            Route::get('/penggantian-komponen', [DurabilityController::class, 'penggantianKomponen'])->name('penggantian-komponen');
+            Route::get('/durability-komponen', [DurabilityController::class, 'durabilityKomponen'])->name('durability-komponen');
+            Route::get('/lokasi', [DurabilityController::class, 'lokasi'])->name('lokasi');
+            Route::get('/tabel-detail', [DurabilityController::class, 'index'])->name('tabel-detail');
 
-                Route::get('/', [DurabilityController::class, 'index'])
-                    ->name('index');
+            Route::get('/import', [DurabilityController::class, 'importForm'])->name('import.form');
+            Route::post('/import', [DurabilityController::class, 'import'])->name('import');
 
-                Route::get('/penggantian-komponen', [DurabilityController::class, 'penggantianKomponen'])
-                    ->name('penggantian-komponen');
+            Route::get('/create', [DurabilityController::class, 'create'])->name('create');
+            Route::post('/', [DurabilityController::class, 'store'])->name('store');
 
-                Route::get('/durability-komponen', [DurabilityController::class, 'durabilityKomponen'])
-                    ->name('durability-komponen');
+            Route::get('/{durability}', [DurabilityController::class, 'show'])->name('show');
+            Route::get('/{durability}/edit', [DurabilityController::class, 'edit'])->name('edit');
+            Route::put('/{durability}', [DurabilityController::class, 'update'])->name('update');
+            Route::delete('/{durability}', [DurabilityController::class, 'destroy'])->name('destroy');
+        });
 
-                Route::get('/lokasi', [DurabilityController::class, 'lokasi'])
-                    ->name('lokasi');
-
-                Route::get('/tabel-detail', [DurabilityController::class, 'index'])
-                    ->name('tabel-detail');
-
-                Route::get('/import', [DurabilityController::class, 'importForm'])
-                    ->name('import.form');
-
-                Route::post('/import', [DurabilityController::class, 'import'])
-                    ->name('import');
-
-                Route::get('/create', [DurabilityController::class, 'create'])
-                    ->name('create');
-
-                Route::post('/', [DurabilityController::class, 'store'])
-                    ->name('store');
-
-                // Detail
-                Route::get('/{durability}', [DurabilityController::class, 'show'])
-                    ->name('show');
-
-                // Edit
-                Route::get('/{durability}/edit', [DurabilityController::class, 'edit'])
-                    ->name('edit');
-
-                // Update
-                Route::put('/{durability}', [DurabilityController::class, 'update'])
-                    ->name('update');
-
-                // Delete
-                Route::delete('/{durability}', [DurabilityController::class, 'destroy'])
-                    ->name('destroy');
-            });
-
-    // Program Kerja dan KPI
+    /*
+    |--------------------------------------------------------------------------
+    | Program Kerja dan KPI
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('program-kerja-kpi')
         ->name('work-program-kpi.')
         ->group(function () {
@@ -216,318 +229,277 @@ Route::middleware('auth')->group(function () {
 
             // Hanya admin dan superadmin
             Route::middleware('isAdmin')->group(function () {
-                Route::get(
-                    '/indikator',
-                    [WorkIndicatorController::class, 'index']
-                )->name('indicators.index');
+                Route::get('/indikator', [WorkIndicatorController::class, 'index'])
+                    ->name('indicators.index');
+                Route::get('/indikator/create', [WorkIndicatorController::class, 'create'])
+                    ->name('indicators.create');
+                Route::post('/indikator', [WorkIndicatorController::class, 'store'])
+                    ->name('indicators.store');
+                Route::get('/indikator/{workIndicator}/edit', [WorkIndicatorController::class, 'edit'])
+                    ->name('indicators.edit');
+                Route::put('/indikator/{workIndicator}', [WorkIndicatorController::class, 'update'])
+                    ->name('indicators.update');
 
-                Route::get(
-                    '/indikator/create',
-                    [WorkIndicatorController::class, 'create']
-                )->name('indicators.create');
-
-                Route::post(
-                    '/indikator',
-                    [WorkIndicatorController::class, 'store']
-                )->name('indicators.store');
-
-                Route::get(
-                    '/indikator/{workIndicator}/edit',
-                    [WorkIndicatorController::class, 'edit']
-                )->name('indicators.edit');
-
-                Route::put(
-                    '/indikator/{workIndicator}',
-                    [WorkIndicatorController::class, 'update']
-                )->name('indicators.update');
-
-                Route::get(
-                    '/capaian',
-                    [WorkAchievementController::class, 'edit']
-                )->name('achievements.edit');
-
-                Route::put(
-                    '/capaian',
-                    [WorkAchievementController::class, 'update']
-                )->name('achievements.update');
+                Route::get('/capaian', [WorkAchievementController::class, 'edit'])
+                    ->name('achievements.edit');
+                Route::put('/capaian', [WorkAchievementController::class, 'update'])
+                    ->name('achievements.update');
             });
         });
 
-    // Kategori Fasilitas Quality Control
+    /*
+    |--------------------------------------------------------------------------
+    | Kategori Fasilitas Quality Control
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('fasilitas-qc/kategori')
         ->name('qc-facility-categories.')
         ->middleware('isAdmin')
         ->group(function () {
             Route::get('/', [QcFacilityCategoryController::class, 'index'])
                 ->name('index');
-
             Route::post('/', [QcFacilityCategoryController::class, 'store'])
                 ->name('store');
-
-            Route::put(
-                '/{qcFacilityCategory}',
-                [QcFacilityCategoryController::class, 'update']
-            )->name('update');
-
-            Route::delete(
-                '/{qcFacilityCategory}',
-                [QcFacilityCategoryController::class, 'destroy']
-            )->name('destroy');
+            Route::put('/{qcFacilityCategory}', [QcFacilityCategoryController::class, 'update'])
+                ->name('update');
+            Route::delete('/{qcFacilityCategory}', [QcFacilityCategoryController::class, 'destroy'])
+                ->name('destroy');
         });
 
-        // Fasilitas Quality Control
+    /*
+    |--------------------------------------------------------------------------
+    | Fasilitas Quality Control
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('fasilitas-qc')
         ->name('qc-facilities.')
         ->group(function () {
-            // Semua pengguna yang sudah login
+            // Semua pengguna login
             Route::get('/', [QcFacilityController::class, 'index'])
                 ->name('index');
 
-            // Hanya admin dan superadmin
+            // Kelola master fasilitas dan unit hanya admin / superadmin
             Route::middleware('isAdmin')->group(function () {
+                // Master fasilitas
                 Route::get('/create', [QcFacilityController::class, 'create'])
                     ->name('create');
-
                 Route::post('/', [QcFacilityController::class, 'store'])
                     ->name('store');
-
                 Route::get('/{qcFacility}/edit', [QcFacilityController::class, 'edit'])
                     ->name('edit');
-
                 Route::put('/{qcFacility}', [QcFacilityController::class, 'update'])
                     ->name('update');
-
                 Route::delete('/{qcFacility}', [QcFacilityController::class, 'destroy'])
                     ->name('destroy');
+
+                // Unit / perangkat fasilitas
+                // Route statis /create diletakkan sebelum route dinamis /{qcFacilityUnit}
+                Route::get('/{qcFacility}/units/create', [QcFacilityUnitController::class, 'create'])
+                    ->name('units.create');
+                Route::post('/{qcFacility}/units', [QcFacilityUnitController::class, 'store'])
+                    ->name('units.store');
+                Route::get('/{qcFacility}/units/{qcFacilityUnit}/edit', [QcFacilityUnitController::class, 'edit'])
+                    ->name('units.edit');
+                Route::put('/{qcFacility}/units/{qcFacilityUnit}', [QcFacilityUnitController::class, 'update'])
+                    ->name('units.update');
+                Route::delete('/{qcFacility}/units/{qcFacilityUnit}', [QcFacilityUnitController::class, 'destroy'])
+                    ->name('units.destroy');
             });
 
-            // Route dinamis diletakkan paling bawah
+            /*
+            |--------------------------------------------------------------------------
+            | Kalibrasi Unit Fasilitas
+            |--------------------------------------------------------------------------
+            */
+
+            // Admin / Superadmin
+            Route::middleware('isAdmin')->group(function () {
+                Route::get(
+                    '/{qcFacility}/units/{qcFacilityUnit}/calibrations/create',
+                    [
+                        QcFacilityCalibrationController::class,
+                        'create',
+                    ]
+                )->name('units.calibrations.create');
+
+                Route::post(
+                    '/{qcFacility}/units/{qcFacilityUnit}/calibrations',
+                    [
+                        QcFacilityCalibrationController::class,
+                        'store',
+                    ]
+                )->name('units.calibrations.store');
+
+                Route::get(
+                    '/{qcFacility}/units/{qcFacilityUnit}/calibrations/{qcFacilityCalibration}/edit',
+                    [
+                        QcFacilityCalibrationController::class,
+                        'edit',
+                    ]
+                )->name('units.calibrations.edit');
+
+                Route::put(
+                    '/{qcFacility}/units/{qcFacilityUnit}/calibrations/{qcFacilityCalibration}',
+                    [
+                        QcFacilityCalibrationController::class,
+                        'update',
+                    ]
+                )->name('units.calibrations.update');
+
+                Route::delete(
+                    '/{qcFacility}/units/{qcFacilityUnit}/calibrations/{qcFacilityCalibration}',
+                    [
+                        QcFacilityCalibrationController::class,
+                        'destroy',
+                    ]
+                )->name('units.calibrations.destroy');
+            });
+
+            // Semua user login boleh melihat sertifikat
+            Route::get(
+                '/{qcFacility}/units/{qcFacilityUnit}/calibrations/{qcFacilityCalibration}/certificate',
+                [
+                    QcFacilityCalibrationController::class,
+                    'certificate',
+                ]
+            )->name('units.calibrations.certificate');
+
+            // Detail unit dapat dilihat semua pengguna login.
+            // Diletakkan setelah /units/create agar "create" tidak terbaca sebagai model binding unit.
+            Route::get('/{qcFacility}/units/{qcFacilityUnit}', [QcFacilityUnitController::class, 'show'])
+                ->name('units.show');
+
+            // Route detail master diletakkan paling bawah karena /{qcFacility} bersifat dinamis.
             Route::get('/{qcFacility}', [QcFacilityController::class, 'show'])
                 ->name('show');
         });
 
-        /*
-        |--------------------------------------------------------------------------
-        | Monitoring QC - QC Product Elektrik
-        |--------------------------------------------------------------------------
-        */
-
+    /*
+    |--------------------------------------------------------------------------
+    | Monitoring QC - Product Elektrik
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('monitoring-qc/product-elektrik')
         ->name('monitoring-qc.product-electrical.')
         ->group(function () {
-
-            Route::get(
-                '/dashboard',
-                [QcProductElectricalDashboardController::class, 'index']
-            )->name('dashboard');
+            Route::get('/dashboard', [QcProductElectricalDashboardController::class, 'index'])
+                ->name('dashboard');
 
             Route::prefix('daily-check')
                 ->name('daily-check.')
                 ->controller(QcProductElectricalDailyCheckController::class)
                 ->group(function () {
-                    Route::get('/', 'index')
-                        ->name('index');
+                    Route::get('/', 'index')->name('index');
+                    Route::get('/create', 'create')->name('create');
+                    Route::post('/', 'store')->name('store');
 
-                    Route::get('/create', 'create')
-                        ->name('create');
-
-                    Route::post('/', 'store')
-                        ->name('store');
-
-                    /*
-                    * Route dinamis ditempatkan setelah /create.
-                    */
-                    Route::get('/{dailyCheck}', 'show')
-                        ->name('show');
-
-                    Route::get('/{dailyCheck}/edit', 'edit')
-                        ->name('edit');
-
-                    Route::put('/{dailyCheck}', 'update')
-                        ->name('update');
-
-                    Route::delete('/{dailyCheck}', 'destroy')
-                        ->name('destroy');
+                    // Route dinamis ditempatkan setelah /create.
+                    Route::get('/{dailyCheck}', 'show')->name('show');
+                    Route::get('/{dailyCheck}/edit', 'edit')->name('edit');
+                    Route::put('/{dailyCheck}', 'update')->name('update');
+                    Route::delete('/{dailyCheck}', 'destroy')->name('destroy');
                 });
         });
 
+    /*
+    |--------------------------------------------------------------------------
+    | Monitoring QC - Final Elektrik
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('monitoring-qc/final-elektrik')
         ->name('monitoring-qc.final-electrical.')
         ->group(function () {
-
-            Route::get(
-                '/dashboard',
-                [QcFinalElectricalDashboardController::class, 'index']
-            )->name('dashboard');
+            Route::get('/dashboard', [QcFinalElectricalDashboardController::class, 'index'])
+                ->name('dashboard');
 
             Route::prefix('detail-ncr')
                 ->name('ncr.')
-                ->controller(
-                    QcFinalElectricalNcrController::class
-                )
+                ->controller(QcFinalElectricalNcrController::class)
                 ->group(function () {
-                    Route::get(
-                        '/',
-                        'index'
-                    )->name('index');
-
-                    Route::get(
-                        '/create',
-                        'create'
-                    )->name('create');
-
-                    Route::post(
-                        '/',
-                        'store'
-                    )->name('store');
-
-                    Route::get(
-                        '/{ncrDetail}',
-                        'show'
-                    )->name('show');
-
-                    Route::get(
-                        '/{ncrDetail}/edit',
-                        'edit'
-                    )->name('edit');
-
-                    Route::put(
-                        '/{ncrDetail}',
-                        'update'
-                    )->name('update');
-
-                    Route::delete(
-                        '/{ncrDetail}',
-                        'destroy'
-                    )->name('destroy');
+                    Route::get('/', 'index')->name('index');
+                    Route::get('/create', 'create')->name('create');
+                    Route::post('/', 'store')->name('store');
+                    Route::get('/{ncrDetail}', 'show')->name('show');
+                    Route::get('/{ncrDetail}/edit', 'edit')->name('edit');
+                    Route::put('/{ncrDetail}', 'update')->name('update');
+                    Route::delete('/{ncrDetail}', 'destroy')->name('destroy');
                 });
 
             Route::prefix('daily-check')
                 ->name('daily-check.')
-                ->controller(
-                    QcFinalElectricalDailyCheckController::class
-                )
+                ->controller(QcFinalElectricalDailyCheckController::class)
                 ->group(function () {
-                    Route::get(
-                        '/',
-                        'index'
-                    )->name('index');
-
-                    Route::get(
-                        '/create',
-                        'create'
-                    )->name('create');
-
-                    Route::post(
-                        '/',
-                        'store'
-                    )->name('store');
-
-                    Route::get(
-                        '/{dailyCheck}',
-                        'show'
-                    )->name('show');
-
-                    Route::get(
-                        '/{dailyCheck}/edit',
-                        'edit'
-                    )->name('edit');
-
-                    Route::put(
-                        '/{dailyCheck}',
-                        'update'
-                    )->name('update');
-
-                    Route::delete(
-                        '/{dailyCheck}',
-                        'destroy'
-                    )->name('destroy');
+                    Route::get('/', 'index')->name('index');
+                    Route::get('/create', 'create')->name('create');
+                    Route::post('/', 'store')->name('store');
+                    Route::get('/{dailyCheck}', 'show')->name('show');
+                    Route::get('/{dailyCheck}/edit', 'edit')->name('edit');
+                    Route::put('/{dailyCheck}', 'update')->name('update');
+                    Route::delete('/{dailyCheck}', 'destroy')->name('destroy');
                 });
         });
 
+    /*
+    |--------------------------------------------------------------------------
+    | Monitoring QC - Product & Final Mekanik
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('monitoring-qc/product-final-mekanik')
-            ->name('monitoring-qc.product-final-mechanical.')
-            ->group(function () {
-                Route::get(
-                    '/',
-                    [
-                        QcProductFinalMechanicalDashboardController::class,
-                        'index',
-                    ]
-                )->name('dashboard');
-                Route::prefix('daily-check')
+        ->name('monitoring-qc.product-final-mechanical.')
+        ->group(function () {
+            Route::get('/', [QcProductFinalMechanicalDashboardController::class, 'index'])
+                ->name('dashboard');
 
-                    ->name('daily-check.')
-                    ->controller(
-                        QcProductFinalMechanicalDailyCheckController::class
-                    )
-                    ->group(function () {
-                        Route::get('/', 'index')
-                            ->name('index');
+            Route::prefix('daily-check')
+                ->name('daily-check.')
+                ->controller(QcProductFinalMechanicalDailyCheckController::class)
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::get('/create', 'create')->name('create');
+                    Route::post('/', 'store')->name('store');
+                    Route::get('/{dailyCheck}', 'show')->name('show');
+                    Route::get('/{dailyCheck}/edit', 'edit')->name('edit');
+                    Route::put('/{dailyCheck}', 'update')->name('update');
+                    Route::delete('/{dailyCheck}', 'destroy')->name('destroy');
+                });
 
-                        Route::get('/create', 'create')
-                            ->name('create');
+            Route::prefix('ncr')
+                ->name('ncr.')
+                ->controller(QcProductFinalMechanicalNcrController::class)
+                ->group(function () {
+                    Route::get('/', 'index')->name('index');
+                    Route::get('/create', 'create')->name('create');
+                    Route::post('/', 'store')->name('store');
+                    Route::get('/{ncr}', 'show')->name('show');
+                    Route::get('/{ncr}/edit', 'edit')->name('edit');
+                    Route::put('/{ncr}', 'update')->name('update');
+                    Route::delete('/{ncr}', 'destroy')->name('destroy');
+                });
+        });
 
-                        Route::post('/', 'store')
-                            ->name('store');
-
-                        Route::get('/{dailyCheck}', 'show')
-                            ->name('show');
-
-                        Route::get('/{dailyCheck}/edit', 'edit')
-                            ->name('edit');
-
-                        Route::put('/{dailyCheck}', 'update')
-                            ->name('update');
-
-                        Route::delete('/{dailyCheck}', 'destroy')
-                            ->name('destroy');
-                    });
-
-                Route::prefix('ncr')
-                    ->name('ncr.')
-                    ->controller(
-                        QcProductFinalMechanicalNcrController::class
-                    )
-                    ->group(function () {
-                        Route::get('/', 'index')
-                            ->name('index');
-
-                        Route::get('/create', 'create')
-                            ->name('create');
-
-                        Route::post('/', 'store')
-                            ->name('store');
-
-                        Route::get('/{ncr}', 'show')
-                            ->name('show');
-
-                        Route::get('/{ncr}/edit', 'edit')
-                            ->name('edit');
-
-                        Route::put('/{ncr}', 'update')
-                            ->name('update');
-
-                        Route::delete('/{ncr}', 'destroy')
-                            ->name('destroy');
-                    });
-
-            });
-
-    Route::get('/bantuan', [App\Http\Controllers\BantuanController::class, 'index'])->name('bantuan.index');
-
+    /*
+    |--------------------------------------------------------------------------
+    | Bantuan
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/bantuan', [App\Http\Controllers\BantuanController::class, 'index'])
+        ->name('bantuan.index');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Administrasi
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'isAdmin'])->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('unit-kerja', UnitKerjaController::class);
-
-    Route::resource('temuan', TemuanController::class)->parameters(['temuan' => 'lokasi']);
-
-    Route::resource('projects', ProjectController::class)->parameters(['projects' => 'project']);
-
-    Route::resource('changelog', App\Http\Controllers\ChangelogController::class)->except(['show']);
+    Route::resource('temuan', TemuanController::class)
+        ->parameters(['temuan' => 'lokasi']);
+    Route::resource('projects', ProjectController::class)
+        ->parameters(['projects' => 'project']);
+    Route::resource('changelog', App\Http\Controllers\ChangelogController::class)
+        ->except(['show']);
 });
-
 
 require __DIR__ . '/auth.php';

@@ -18,19 +18,19 @@
             'tidak_layak' => 'Tidak Layak Digunakan',
         ];
 
-        $conditionBadgeClasses = [
-            'baik' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/20',
-            'perlu_perbaikan' => 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-400/20',
-            'dalam_perbaikan' => 'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-500/15 dark:text-blue-300 dark:ring-blue-400/20',
-            'tidak_layak' => 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-500/15 dark:text-red-300 dark:ring-red-400/20',
-        ];
+        // $conditionBadgeClasses = [
+        //     'baik' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/20',
+        //     'perlu_perbaikan' => 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-400/20',
+        //     'dalam_perbaikan' => 'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-500/15 dark:text-blue-300 dark:ring-blue-400/20',
+        //     'tidak_layak' => 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-500/15 dark:text-red-300 dark:ring-red-400/20',
+        // ];
 
-        $calibrationBadgeClasses = [
-            'valid' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/20',
-            'expiring' => 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-400/20',
-            'expired' => 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-500/15 dark:text-red-300 dark:ring-red-400/20',
-            'not_available' => 'bg-slate-100 text-slate-600 ring-slate-500/20 dark:bg-white/10 dark:text-slate-300 dark:ring-white/10',
-        ];
+        // $calibrationBadgeClasses = [
+        //     'valid' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/20',
+        //     'expiring' => 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-400/20',
+        //     'expired' => 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-500/15 dark:text-red-300 dark:ring-red-400/20',
+        //     'not_available' => 'bg-slate-100 text-slate-600 ring-slate-500/20 dark:bg-white/10 dark:text-slate-300 dark:ring-white/10',
+        // ];
     @endphp
 
     <div class="min-h-screen bg-slate-50 px-4 py-6 dark:bg-gray-950 sm:px-6 lg:px-8">
@@ -128,7 +128,8 @@
                             </p>
 
                             <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                                Seluruh alat yang terdaftar
+                                {{ number_format($summary['unit_total']) }}
+                                unit fisik terdaftar
                             </p>
                         </div>
 
@@ -245,7 +246,7 @@
                             </span>
 
                             <input id="search" type="text" name="search" value="{{ $search }}"
-                                placeholder="Nama, merk, model, inventaris..."
+                                placeholder="Nama, merk, model, SN, inventaris, lokasi..."
                                 class="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-700 shadow-sm transition focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
                         </div>
                     </div>
@@ -364,7 +365,7 @@
                             </p>
 
                             <p class="mt-1 text-xs opacity-80">
-                                Ditemukan {{ number_format($facilities->total()) }} fasilitas yang sesuai.
+                                Ditemukan {{ number_format($facilities->total()) }} master fasilitas yang sesuai.
                             </p>
                         </div>
                     </div>
@@ -447,16 +448,24 @@
                                     </span>
                                 </div>
 
-                                {{-- Calibration Status --}}
+                                {{-- Jumlah Unit --}}
                                 <div class="absolute bottom-4 right-4">
                                     <span
-                                        class="inline-flex items-center rounded-full px-3 py-1.5 text-[11px] font-semibold shadow-sm ring-1 ring-inset backdrop-blur {{ $calibrationBadgeClasses[$facility->calibration_status] ?? $calibrationBadgeClasses['not_available'] }}">
+                                        class="inline-flex items-center rounded-full
+                                            bg-gray-900/80 px-3 py-1.5
+                                            text-[11px] font-semibold text-white
+                                            shadow-sm backdrop-blur"
+                                    >
+                                        <i
+                                            class="fa-solid
+                                                fa-boxes-stacked mr-1.5"
+                                        ></i>
 
-                                        <i class="fa-solid fa-calendar-check mr-1.5"></i>
-
-                                        {{ $facility->calibration_status_label }}
+                                        {{ number_format($facility->units_count) }}
+                                        Unit
                                     </span>
                                 </div>
+
                             </a>
 
                             {{-- Content --}}
@@ -491,13 +500,53 @@
                                             </span>
                                         @endif
 
-                                        <span
-                                            class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold ring-1 ring-inset {{ $conditionBadgeClasses[$facility->condition] ?? $conditionBadgeClasses['baik'] }}">
+                                        @if ($facility->units_count > 0)
+                                            <span
+                                                class="inline-flex items-center rounded-lg
+                                                    bg-emerald-50 px-2.5 py-1
+                                                    text-xs font-semibold text-emerald-700
+                                                    dark:bg-emerald-500/15
+                                                    dark:text-emerald-300"
+                                            >
+                                                <i
+                                                    class="fa-solid fa-circle-check
+                                                        mr-1.5 text-[10px]"
+                                                ></i>
 
-                                            <i class="fa-solid fa-circle mr-1.5 text-[6px]"></i>
+                                                {{ $facility->good_units_count }}
+                                                Baik
+                                            </span>
 
-                                            {{ $facility->condition_label }}
-                                        </span>
+                                            @if ($facility->issue_units_count > 0)
+                                                <span
+                                                    class="inline-flex items-center rounded-lg
+                                                        bg-amber-50 px-2.5 py-1
+                                                        text-xs font-semibold text-amber-700
+                                                        dark:bg-amber-500/15
+                                                        dark:text-amber-300"
+                                                >
+                                                    <i
+                                                        class="fa-solid
+                                                            fa-triangle-exclamation
+                                                            mr-1.5 text-[10px]"
+                                                    ></i>
+
+                                                    {{ $facility->issue_units_count }}
+                                                    Perlu Perhatian
+                                                </span>
+                                            @endif
+                                        @else
+                                            <span
+                                                class="inline-flex items-center rounded-lg
+                                                    bg-slate-100 px-2.5 py-1
+                                                    text-xs font-semibold text-slate-500
+                                                    dark:bg-white/10
+                                                    dark:text-gray-400"
+                                            >
+                                                Belum Ada Unit
+                                            </span>
+                                        @endif
+
                                     </div>
                                 </div>
 
@@ -591,67 +640,196 @@
                                     @endif
                                 </div>
 
-                                {{-- Additional Information --}}
-                                <div class="mt-5 grid grid-cols-2 gap-3">
+                                {{-- Unit Summary --}}
+                                <div class="mt-5 space-y-3">
 
-                                    {{-- Nomor Inventaris --}}
-                                    <div class="rounded-2xl bg-slate-50 px-3 py-3 dark:bg-white/[0.04]">
-                                        <p
-                                            class="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                                    <div class="grid grid-cols-3 gap-3">
 
-                                            Nomor Inventaris
-                                        </p>
+                                        {{-- Total Unit --}}
+                                        <div
+                                            class="rounded-2xl bg-slate-50
+                                                px-3 py-3 text-center
+                                                dark:bg-white/[0.04]"
+                                        >
+                                            <p
+                                                class="text-[10px] font-bold
+                                                    uppercase tracking-wide
+                                                    text-slate-400"
+                                            >
+                                                Unit
+                                            </p>
 
-                                        <p
-                                            class="mt-1 truncate text-xs font-semibold text-slate-700 dark:text-slate-200">
+                                            <p
+                                                class="mt-1 text-lg font-bold
+                                                    text-slate-800
+                                                    dark:text-white"
+                                            >
+                                                {{ $facility->units_count }}
+                                            </p>
+                                        </div>
 
-                                            {{ $facility->inventory_number ?: '-' }}
-                                        </p>
+                                        {{-- Kondisi Baik --}}
+                                        <div
+                                            class="rounded-2xl bg-emerald-50
+                                                px-3 py-3 text-center
+                                                dark:bg-emerald-500/10"
+                                        >
+                                            <p
+                                                class="text-[10px] font-bold
+                                                    uppercase tracking-wide
+                                                    text-emerald-500"
+                                            >
+                                                Baik
+                                            </p>
+
+                                            <p
+                                                class="mt-1 text-lg font-bold
+                                                    text-emerald-700
+                                                    dark:text-emerald-300"
+                                            >
+                                                {{ $facility->good_units_count }}
+                                            </p>
+                                        </div>
+
+                                        {{-- Perlu Perhatian --}}
+                                        <div
+                                            class="rounded-2xl bg-amber-50
+                                                px-3 py-3 text-center
+                                                dark:bg-amber-500/10"
+                                        >
+                                            <p
+                                                class="text-[10px] font-bold
+                                                    uppercase tracking-wide
+                                                    text-amber-500"
+                                            >
+                                                Perhatian
+                                            </p>
+
+                                            <p
+                                                class="mt-1 text-lg font-bold
+                                                    text-amber-700
+                                                    dark:text-amber-300"
+                                            >
+                                                {{ $facility->issue_units_count }}
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    {{-- Serial Number --}}
-                                    <div class="rounded-2xl bg-slate-50 px-3 py-3 dark:bg-white/[0.04]">
-                                        <p
-                                            class="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                                    {{-- Calibration Summary --}}
+                                    <div
+                                        class="rounded-2xl border
+                                            border-slate-200/80
+                                            bg-slate-50/80 p-4
+                                            dark:border-white/10
+                                            dark:bg-white/[0.04]"
+                                    >
+                                        <div
+                                            class="mb-3 flex items-center
+                                                justify-between"
+                                        >
+                                            <p
+                                                class="text-xs font-bold
+                                                    text-slate-700
+                                                    dark:text-slate-200"
+                                            >
+                                                Status Kalibrasi Unit
+                                            </p>
 
-                                            Serial Number
-                                        </p>
+                                            <i
+                                                class="fa-solid fa-calendar-check
+                                                    text-blue-500"
+                                            ></i>
+                                        </div>
 
-                                        <p
-                                            class="mt-1 truncate text-xs font-semibold text-slate-700 dark:text-slate-200">
+                                        <div
+                                            class="grid grid-cols-2 gap-2
+                                                text-xs"
+                                        >
+                                            <div
+                                                class="flex items-center
+                                                    justify-between rounded-lg
+                                                    bg-emerald-50 px-2.5 py-2
+                                                    dark:bg-emerald-500/10"
+                                            >
+                                                <span
+                                                    class="text-emerald-700
+                                                        dark:text-emerald-300"
+                                                >
+                                                    Berlaku
+                                                </span>
 
-                                            {{ $facility->serial_number ?: '-' }}
-                                        </p>
-                                    </div>
+                                                <strong
+                                                    class="text-emerald-700
+                                                        dark:text-emerald-300"
+                                                >
+                                                    {{ $facility->valid_units_count }}
+                                                </strong>
+                                            </div>
 
-                                    {{-- Lokasi --}}
-                                    <div class="rounded-2xl bg-slate-50 px-3 py-3 dark:bg-white/[0.04]">
-                                        <p
-                                            class="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                                            <div
+                                                class="flex items-center
+                                                    justify-between rounded-lg
+                                                    bg-amber-50 px-2.5 py-2
+                                                    dark:bg-amber-500/10"
+                                            >
+                                                <span
+                                                    class="text-amber-700
+                                                        dark:text-amber-300"
+                                                >
+                                                    H-30
+                                                </span>
 
-                                            Lokasi
-                                        </p>
+                                                <strong
+                                                    class="text-amber-700
+                                                        dark:text-amber-300"
+                                                >
+                                                    {{ $facility->expiring_units_count }}
+                                                </strong>
+                                            </div>
 
-                                        <p
-                                            class="mt-1 truncate text-xs font-semibold text-slate-700 dark:text-slate-200">
+                                            <div
+                                                class="flex items-center
+                                                    justify-between rounded-lg
+                                                    bg-red-50 px-2.5 py-2
+                                                    dark:bg-red-500/10"
+                                            >
+                                                <span
+                                                    class="text-red-700
+                                                        dark:text-red-300"
+                                                >
+                                                    Kedaluwarsa
+                                                </span>
 
-                                            {{ $facility->location ?: '-' }}
-                                        </p>
-                                    </div>
+                                                <strong
+                                                    class="text-red-700
+                                                        dark:text-red-300"
+                                                >
+                                                    {{ $facility->expired_units_count }}
+                                                </strong>
+                                            </div>
 
-                                    {{-- Masa Berlaku Kalibrasi --}}
-                                    <div class="rounded-2xl bg-slate-50 px-3 py-3 dark:bg-white/[0.04]">
-                                        <p
-                                            class="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                                            <div
+                                                class="flex items-center
+                                                    justify-between rounded-lg
+                                                    bg-slate-100 px-2.5 py-2
+                                                    dark:bg-white/10"
+                                            >
+                                                <span
+                                                    class="text-slate-600
+                                                        dark:text-slate-300"
+                                                >
+                                                    Belum Ada
+                                                </span>
 
-                                            Berlaku Kalibrasi
-                                        </p>
-
-                                        <p
-                                            class="mt-1 truncate text-xs font-semibold text-slate-700 dark:text-slate-200">
-
-                                            {{ $facility->calibration_valid_until?->translatedFormat('d M Y') ?? '-' }}
-                                        </p>
+                                                <strong
+                                                    class="text-slate-700
+                                                        dark:text-white"
+                                                >
+                                                    {{ $facility
+                                                        ->no_calibration_units_count }}
+                                                </strong>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

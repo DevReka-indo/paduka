@@ -49,8 +49,9 @@
                             class="mt-1 max-w-2xl text-sm leading-6
                                 text-gray-500 dark:text-gray-400"
                         >
-                            Tambahkan informasi alat, spesifikasi teknis,
-                            status kalibrasi, dan foto fasilitas.
+                            Tambahkan master fasilitas Quality Control.
+                            Unit fisik, serial number, kondisi, dan kalibrasi
+                            dikelola setelah master fasilitas dibuat.
                         </p>
                     </div>
 

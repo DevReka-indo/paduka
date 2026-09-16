@@ -9,63 +9,146 @@
 @section('content')
     @php
         $level = strtolower(Auth::user()->level ?? '');
-        $canManage = in_array($level, ['admin', 'superadmin'], true);
+
+        $canManage = in_array(
+            $level,
+            ['admin', 'superadmin'],
+            true
+        );
 
         $specificationLines = collect(
             preg_split(
                 '/\r\n|\r|\n/',
-                trim((string) $qcFacility->technical_specifications),
-            ),
+                trim((string) $qcFacility->technical_specifications)
+            )
         )
             ->map(fn ($line) => trim($line))
             ->filter()
             ->values();
 
-        $conditionBadgeClasses = [
-            'baik' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/20',
-            'perlu_perbaikan' => 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-400/20',
-            'dalam_perbaikan' => 'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-500/15 dark:text-blue-300 dark:ring-blue-400/20',
-            'tidak_layak' => 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-500/15 dark:text-red-300 dark:ring-red-400/20',
+        $units = $qcFacility->units ?? collect();
+
+        $totalUnits = $units->count();
+
+        $goodUnits = $units
+            ->where('condition', 'baik')
+            ->count();
+
+        $attentionUnits = $units
+            ->where('condition', '!=', 'baik')
+            ->count();
+
+        $validCalibrations = $units
+            ->filter(
+                fn ($unit) =>
+                    $unit->latestCalibration
+                    && $unit->latestCalibration
+                        ->calibration_status === 'valid'
+            )
+            ->count();
+
+        $expiringCalibrations = $units
+            ->filter(
+                fn ($unit) =>
+                    $unit->latestCalibration
+                    && $unit->latestCalibration
+                        ->calibration_status === 'expiring'
+            )
+            ->count();
+
+        $expiredCalibrations = $units
+            ->filter(
+                fn ($unit) =>
+                    $unit->latestCalibration
+                    && $unit->latestCalibration
+                        ->calibration_status === 'expired'
+            )
+            ->count();
+
+        $noCalibrations = $units
+            ->filter(
+                fn ($unit) =>
+                    !$unit->latestCalibration
+                    || $unit->latestCalibration
+                        ->calibration_status === 'not_available'
+            )
+            ->count();
+
+        $conditionClasses = [
+            'baik' =>
+                'bg-emerald-50 text-emerald-700 ring-emerald-600/20
+                dark:bg-emerald-500/15 dark:text-emerald-300
+                dark:ring-emerald-400/20',
+
+            'perlu_perbaikan' =>
+                'bg-amber-50 text-amber-700 ring-amber-600/20
+                dark:bg-amber-500/15 dark:text-amber-300
+                dark:ring-amber-400/20',
+
+            'dalam_perbaikan' =>
+                'bg-blue-50 text-blue-700 ring-blue-600/20
+                dark:bg-blue-500/15 dark:text-blue-300
+                dark:ring-blue-400/20',
+
+            'tidak_layak' =>
+                'bg-red-50 text-red-700 ring-red-600/20
+                dark:bg-red-500/15 dark:text-red-300
+                dark:ring-red-400/20',
         ];
 
-        $calibrationBadgeClasses = [
-            'valid' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/20',
-            'expiring' => 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-400/20',
-            'expired' => 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-500/15 dark:text-red-300 dark:ring-red-400/20',
-            'not_available' => 'bg-slate-100 text-slate-600 ring-slate-500/20 dark:bg-white/10 dark:text-slate-300 dark:ring-white/10',
+        $calibrationClasses = [
+            'valid' =>
+                'bg-emerald-50 text-emerald-700 ring-emerald-600/20
+                dark:bg-emerald-500/15 dark:text-emerald-300',
+
+            'expiring' =>
+                'bg-amber-50 text-amber-700 ring-amber-600/20
+                dark:bg-amber-500/15 dark:text-amber-300',
+
+            'expired' =>
+                'bg-red-50 text-red-700 ring-red-600/20
+                dark:bg-red-500/15 dark:text-red-300',
+
+            'not_available' =>
+                'bg-slate-100 text-slate-600 ring-slate-500/20
+                dark:bg-white/10 dark:text-slate-300',
         ];
 
-        $calibrationIcons = [
-            'valid' => 'fa-circle-check',
-            'expiring' => 'fa-clock',
-            'expired' => 'fa-triangle-exclamation',
-            'not_available' => 'fa-circle-minus',
-        ];
-
-        $creatorName = $qcFacility->creator?->name
+        $creatorName =
+            $qcFacility->creator?->name
             ?? $qcFacility->creator?->nama
             ?? '-';
 
-        $updaterName = $qcFacility->updater?->name
+        $updaterName =
+            $qcFacility->updater?->name
             ?? $qcFacility->updater?->nama
             ?? '-';
     @endphp
 
     <div
         x-data="{ openDeleteModal: false }"
-        class="min-h-screen bg-slate-50 px-4 py-6 dark:bg-gray-950 sm:px-6 lg:px-8"
+        class="min-h-screen bg-slate-50
+            px-4 py-6 dark:bg-gray-950
+            sm:px-6 lg:px-8"
     >
         <div class="mx-auto max-w-[1600px] space-y-6">
 
-            {{-- Success Alert --}}
+            {{-- Success --}}
             @if (session('success'))
                 <div
-                    class="flex items-start gap-3 rounded-2xl border border-emerald-200
-                        bg-emerald-50 px-5 py-4 text-sm text-emerald-700
-                        dark:border-emerald-900/40 dark:bg-emerald-900/20
+                    class="flex items-start gap-3
+                        rounded-2xl border
+                        border-emerald-200
+                        bg-emerald-50 px-5 py-4
+                        text-sm text-emerald-700
+                        dark:border-emerald-900/40
+                        dark:bg-emerald-900/20
                         dark:text-emerald-300"
                 >
-                    <i class="fa-solid fa-circle-check mt-0.5"></i>
+                    <i
+                        class="fa-solid
+                            fa-circle-check mt-0.5"
+                    ></i>
 
                     <span>
                         {{ session('success') }}
@@ -75,118 +158,169 @@
 
             {{-- Header --}}
             <div
-                class="relative overflow-hidden rounded-3xl border border-white/70
-                    bg-white p-6 shadow-sm
-                    dark:border-gray-800 dark:bg-gray-900"
+                class="relative overflow-hidden
+                    rounded-3xl border
+                    border-white/70 bg-white
+                    p-6 shadow-sm
+                    dark:border-gray-800
+                    dark:bg-gray-900"
             >
                 <div
-                    class="absolute -right-20 -top-20 h-56 w-56 rounded-full
+                    class="absolute -right-20 -top-20
+                        h-56 w-56 rounded-full
                         bg-blue-500/10 blur-3xl"
                 ></div>
 
                 <div
-                    class="absolute -bottom-24 left-10 h-56 w-56 rounded-full
+                    class="absolute -bottom-24 left-10
+                        h-56 w-56 rounded-full
                         bg-cyan-500/10 blur-3xl"
                 ></div>
 
                 <div
                     class="relative flex flex-col gap-5
-                        lg:flex-row lg:items-end lg:justify-between"
+                        lg:flex-row lg:items-end
+                        lg:justify-between"
                 >
                     <div class="min-w-0">
-                        <div class="flex flex-wrap items-center gap-2">
+
+                        <div
+                            class="flex flex-wrap
+                                items-center gap-2"
+                        >
                             <span
-                                class="inline-flex items-center rounded-full
-                                    bg-blue-50 px-3 py-1 text-xs font-bold
-                                    text-blue-700 ring-1 ring-blue-600/10
-                                    dark:bg-blue-500/15 dark:text-blue-300
-                                    dark:ring-blue-400/20"
-                            >
-                                <i class="fa-solid fa-layer-group mr-1.5"></i>
-
-                                {{ $qcFacility->category?->name ?? 'Tanpa Kategori' }}
-                            </span>
-
-                            <span
-                                class="inline-flex items-center rounded-full
-                                    px-3 py-1 text-xs font-semibold ring-1 ring-inset
-                                    {{ $conditionBadgeClasses[$qcFacility->condition]
-                                        ?? $conditionBadgeClasses['baik'] }}"
-                            >
-                                <i class="fa-solid fa-circle mr-1.5 text-[6px]"></i>
-
-                                {{ $qcFacility->condition_label }}
-                            </span>
-
-                            <span
-                                class="inline-flex items-center rounded-full
-                                    px-3 py-1 text-xs font-semibold ring-1 ring-inset
-                                    {{ $calibrationBadgeClasses[$qcFacility->calibration_status]
-                                        ?? $calibrationBadgeClasses['not_available'] }}"
+                                class="inline-flex items-center
+                                    rounded-full bg-blue-50
+                                    px-3 py-1 text-xs
+                                    font-bold text-blue-700
+                                    ring-1 ring-blue-600/10
+                                    dark:bg-blue-500/15
+                                    dark:text-blue-300"
                             >
                                 <i
                                     class="fa-solid
-                                        {{ $calibrationIcons[$qcFacility->calibration_status]
-                                            ?? $calibrationIcons['not_available'] }}
-                                        mr-1.5"
+                                        fa-layer-group mr-1.5"
                                 ></i>
 
-                                {{ $qcFacility->calibration_status_label }}
+                                {{
+                                    $qcFacility
+                                        ->category?->name
+                                    ?? 'Tanpa Kategori'
+                                }}
+                            </span>
+
+                            <span
+                                class="inline-flex items-center
+                                    rounded-full bg-slate-100
+                                    px-3 py-1 text-xs
+                                    font-semibold
+                                    text-slate-600
+                                    dark:bg-white/10
+                                    dark:text-slate-300"
+                            >
+                                <i
+                                    class="fa-solid
+                                        fa-boxes-stacked mr-1.5"
+                                ></i>
+
+                                {{ $totalUnits }}
+                                Unit
                             </span>
                         </div>
 
                         <h1
-                            class="mt-4 text-2xl font-extrabold tracking-tight
-                                text-gray-900 dark:text-white sm:text-3xl"
+                            class="mt-4 text-2xl
+                                font-extrabold tracking-tight
+                                text-gray-900
+                                dark:text-white sm:text-3xl"
                         >
                             {{ $qcFacility->name }}
                         </h1>
 
-                        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                            {{ collect([$qcFacility->brand, $qcFacility->model])
-                                ->filter()
-                                ->join(' · ') ?: 'Merk dan model belum tersedia' }}
+                        <p
+                            class="mt-2 text-sm
+                                text-gray-500
+                                dark:text-gray-400"
+                        >
+                            {{
+                                collect([
+                                    $qcFacility->brand,
+                                    $qcFacility->model,
+                                ])
+                                    ->filter()
+                                    ->join(' · ')
+                                ?: 'Merk dan model belum tersedia'
+                            }}
                         </p>
                     </div>
 
-                    <div class="flex flex-col gap-3 sm:flex-row">
+                    <div
+                        class="flex flex-col
+                            gap-3 sm:flex-row"
+                    >
                         <a
-                            href="{{ route('qc-facilities.index') }}"
-                            class="inline-flex items-center justify-center rounded-xl
-                                border border-gray-200 bg-white px-4 py-2.5
-                                text-sm font-semibold text-gray-700 shadow-sm transition
+                            href="{{ route(
+                                'qc-facilities.index'
+                            ) }}"
+                            class="inline-flex items-center
+                                justify-center rounded-xl
+                                border border-gray-200
+                                bg-white px-4 py-2.5
+                                text-sm font-semibold
+                                text-gray-700 shadow-sm
                                 hover:bg-gray-50
-                                dark:border-gray-700 dark:bg-gray-800
-                                dark:text-gray-200 dark:hover:bg-gray-700"
+                                dark:border-gray-700
+                                dark:bg-gray-800
+                                dark:text-gray-200"
                         >
-                            <i class="fa-solid fa-arrow-left mr-2"></i>
+                            <i
+                                class="fa-solid
+                                    fa-arrow-left mr-2"
+                            ></i>
 
                             Kembali
                         </a>
 
                         @if ($canManage)
                             <a
-                                href="{{ route('qc-facilities.edit', $qcFacility) }}"
-                                class="inline-flex items-center justify-center rounded-xl
-                                    bg-blue-600 px-4 py-2.5 text-sm font-semibold
-                                    text-white shadow-sm transition hover:bg-blue-700"
+                                href="{{ route(
+                                    'qc-facilities.edit',
+                                    $qcFacility
+                                ) }}"
+                                class="inline-flex items-center
+                                    justify-center rounded-xl
+                                    bg-blue-600 px-4 py-2.5
+                                    text-sm font-semibold
+                                    text-white hover:bg-blue-700"
                             >
-                                <i class="fa-solid fa-pen-to-square mr-2"></i>
+                                <i
+                                    class="fa-solid
+                                        fa-pen-to-square mr-2"
+                                ></i>
 
-                                Edit Fasilitas
+                                Edit Master
                             </a>
 
                             <button
                                 type="button"
-                                @click="openDeleteModal = true"
-                                class="inline-flex items-center justify-center rounded-xl
-                                    border border-red-200 bg-red-50 px-4 py-2.5
-                                    text-sm font-semibold text-red-600 shadow-sm transition
-                                    hover:bg-red-100 hover:text-red-700
-                                    dark:border-red-900/40 dark:bg-red-500/10
-                                    dark:text-red-300 dark:hover:bg-red-500/20"
+                                @click="
+                                    openDeleteModal = true
+                                "
+                                class="inline-flex items-center
+                                    justify-center rounded-xl
+                                    border border-red-200
+                                    bg-red-50 px-4 py-2.5
+                                    text-sm font-semibold
+                                    text-red-600
+                                    hover:bg-red-100
+                                    dark:border-red-900/40
+                                    dark:bg-red-500/10
+                                    dark:text-red-300"
                             >
-                                <i class="fa-solid fa-trash mr-2"></i>
+                                <i
+                                    class="fa-solid
+                                        fa-trash mr-2"
+                                ></i>
 
                                 Hapus
                             </button>
@@ -195,733 +329,1143 @@
                 </div>
             </div>
 
-            {{-- Main Content --}}
-            <div class="grid gap-6 xl:grid-cols-[minmax(0,5fr)_minmax(380px,3fr)]">
+            {{-- Summary --}}
+            <div
+                class="grid gap-4
+                    sm:grid-cols-2 xl:grid-cols-5"
+            >
+                <div
+                    class="rounded-3xl border
+                        border-white/70 bg-white
+                        p-5 shadow-sm
+                        dark:border-gray-800
+                        dark:bg-gray-900"
+                >
+                    <p
+                        class="text-sm font-medium
+                            text-gray-500
+                            dark:text-gray-400"
+                    >
+                        Total Unit
+                    </p>
 
-                {{-- Left Column --}}
+                    <p
+                        class="mt-2 text-3xl font-bold
+                            text-gray-900 dark:text-white"
+                    >
+                        {{ $totalUnits }}
+                    </p>
+                </div>
+
+                <div
+                    class="rounded-3xl border
+                        border-emerald-100
+                        bg-emerald-50 p-5
+                        dark:border-emerald-900/30
+                        dark:bg-emerald-500/10"
+                >
+                    <p
+                        class="text-sm font-medium
+                            text-emerald-700
+                            dark:text-emerald-300"
+                    >
+                        Kondisi Baik
+                    </p>
+
+                    <p
+                        class="mt-2 text-3xl font-bold
+                            text-emerald-700
+                            dark:text-emerald-300"
+                    >
+                        {{ $goodUnits }}
+                    </p>
+                </div>
+
+                <div
+                    class="rounded-3xl border
+                        border-amber-100
+                        bg-amber-50 p-5
+                        dark:border-amber-900/30
+                        dark:bg-amber-500/10"
+                >
+                    <p
+                        class="text-sm font-medium
+                            text-amber-700
+                            dark:text-amber-300"
+                    >
+                        Perlu Perhatian
+                    </p>
+
+                    <p
+                        class="mt-2 text-3xl font-bold
+                            text-amber-700
+                            dark:text-amber-300"
+                    >
+                        {{ $attentionUnits }}
+                    </p>
+                </div>
+
+                <div
+                    class="rounded-3xl border
+                        border-red-100
+                        bg-red-50 p-5
+                        dark:border-red-900/30
+                        dark:bg-red-500/10"
+                >
+                    <p
+                        class="text-sm font-medium
+                            text-red-700
+                            dark:text-red-300"
+                    >
+                        Kalibrasi Expired
+                    </p>
+
+                    <p
+                        class="mt-2 text-3xl font-bold
+                            text-red-700
+                            dark:text-red-300"
+                    >
+                        {{ $expiredCalibrations }}
+                    </p>
+                </div>
+
+                <div
+                    class="rounded-3xl border
+                        border-slate-200 bg-slate-100
+                        p-5
+                        dark:border-gray-700
+                        dark:bg-white/[0.06]"
+                >
+                    <p
+                        class="text-sm font-medium
+                            text-slate-600
+                            dark:text-slate-300"
+                    >
+                        Belum Kalibrasi
+                    </p>
+
+                    <p
+                        class="mt-2 text-3xl font-bold
+                            text-slate-800
+                            dark:text-white"
+                    >
+                        {{ $noCalibrations }}
+                    </p>
+                </div>
+            </div>
+
+            {{-- Main Master Information --}}
+            <div
+                class="grid gap-6
+                    xl:grid-cols-[minmax(0,5fr)_minmax(360px,2fr)]"
+            >
+
+                {{-- Left --}}
                 <div class="space-y-6">
 
                     {{-- Photo --}}
                     <div
-                        class="overflow-hidden rounded-3xl border border-white/70
-                            bg-white shadow-sm
-                            dark:border-gray-800 dark:bg-gray-900"
+                        class="overflow-hidden
+                            rounded-3xl border
+                            border-white/70 bg-white
+                            shadow-sm
+                            dark:border-gray-800
+                            dark:bg-gray-900"
                     >
                         <div
-                            class="flex items-center justify-between border-b
-                                border-gray-100 px-6 py-4
+                            class="flex items-center
+                                justify-between border-b
+                                border-gray-100
+                                px-6 py-4
                                 dark:border-gray-800"
                         >
                             <div>
-                                <h2 class="font-bold text-gray-900 dark:text-white">
-                                    Foto Fasilitas
+                                <h2
+                                    class="font-bold
+                                        text-gray-900
+                                        dark:text-white"
+                                >
+                                    Foto Master Fasilitas
                                 </h2>
 
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                    Dokumentasi visual fasilitas Quality Control.
+                                <p
+                                    class="mt-1 text-xs
+                                        text-gray-500
+                                        dark:text-gray-400"
+                                >
+                                    Foto representatif
+                                    jenis fasilitas.
                                 </p>
                             </div>
 
                             <span
-                                class="flex h-10 w-10 items-center justify-center
-                                    rounded-2xl bg-blue-50 text-blue-600
-                                    dark:bg-blue-500/15 dark:text-blue-300"
+                                class="flex h-10 w-10
+                                    items-center
+                                    justify-center
+                                    rounded-2xl bg-blue-50
+                                    text-blue-600
+                                    dark:bg-blue-500/15
+                                    dark:text-blue-300"
                             >
-                                <i class="fa-solid fa-image"></i>
+                                <i
+                                    class="fa-solid fa-image"
+                                ></i>
                             </span>
                         </div>
 
                         <div
-                            class="relative aspect-[16/10] overflow-hidden
-                                bg-slate-100 dark:bg-gray-800"
+                            class="relative aspect-[16/10]
+                                overflow-hidden
+                                bg-slate-100
+                                dark:bg-gray-800"
                         >
                             @if ($qcFacility->photo_url)
                                 <img
-                                    src="{{ $qcFacility->photo_url }}"
-                                    alt="{{ $qcFacility->name }}"
-                                    class="h-full w-full object-contain"
+                                    src="{{
+                                        $qcFacility->photo_url
+                                    }}"
+                                    alt="{{
+                                        $qcFacility->name
+                                    }}"
+                                    class="h-full w-full
+                                        object-contain"
                                 >
                             @else
                                 <div
-                                    class="flex h-full w-full flex-col items-center
-                                        justify-center bg-gradient-to-br
-                                        from-slate-100 via-blue-50 to-cyan-50
-                                        px-6 text-center text-slate-400
-                                        dark:from-gray-800 dark:via-gray-800
-                                        dark:to-slate-900 dark:text-gray-500"
+                                    class="flex h-full w-full
+                                        flex-col items-center
+                                        justify-center"
                                 >
-                                    <span
-                                        class="flex h-24 w-24 items-center justify-center
-                                            rounded-[2rem] bg-white/80 text-4xl shadow-sm
-                                            ring-1 ring-slate-200
-                                            dark:bg-white/10 dark:ring-white/10"
-                                    >
-                                        <i class="fa-solid fa-screwdriver-wrench"></i>
-                                    </span>
+                                    <i
+                                        class="fa-solid
+                                            fa-screwdriver-wrench
+                                            text-5xl
+                                            text-slate-300"
+                                    ></i>
 
-                                    <p class="mt-4 text-sm font-semibold">
-                                        Foto fasilitas belum tersedia
+                                    <p
+                                        class="mt-4 text-sm
+                                            text-slate-400"
+                                    >
+                                        Foto belum tersedia
                                     </p>
                                 </div>
                             @endif
                         </div>
                     </div>
 
-                    {{-- Technical Specifications --}}
+                    {{-- Specification --}}
                     <div
-                        class="rounded-3xl border border-white/70 bg-white p-6
-                            shadow-sm dark:border-gray-800 dark:bg-gray-900"
+                        class="rounded-3xl border
+                            border-white/70 bg-white
+                            p-6 shadow-sm
+                            dark:border-gray-800
+                            dark:bg-gray-900"
                     >
-                        <div class="flex items-start justify-between gap-4">
-                            <div>
-                                <h2 class="text-lg font-bold text-gray-900 dark:text-white">
-                                    Spesifikasi Teknis
-                                </h2>
+                        <h2
+                            class="text-lg font-bold
+                                text-gray-900
+                                dark:text-white"
+                        >
+                            Spesifikasi Teknis
+                        </h2>
 
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    Informasi teknis lengkap mengenai kemampuan dan
-                                    karakteristik alat.
-                                </p>
-                            </div>
+                        <p
+                            class="mt-1 text-sm
+                                text-gray-500
+                                dark:text-gray-400"
+                        >
+                            Spesifikasi yang berlaku
+                            untuk master fasilitas ini.
+                        </p>
 
-                            <span
-                                class="flex h-11 w-11 flex-shrink-0 items-center
-                                    justify-center rounded-2xl bg-violet-50
-                                    text-violet-600
-                                    dark:bg-violet-500/15 dark:text-violet-300"
-                            >
-                                <i class="fa-solid fa-list-check"></i>
-                            </span>
-                        </div>
-
-                        @if ($specificationLines->isNotEmpty())
+                        @if (
+                            $specificationLines
+                                ->isNotEmpty()
+                        )
                             <dl
-                                class="mt-6 divide-y divide-gray-100 overflow-hidden
-                                    rounded-2xl border border-gray-100
-                                    dark:divide-gray-800 dark:border-gray-800"
+                                class="mt-6 divide-y
+                                    divide-gray-100
+                                    overflow-hidden
+                                    rounded-2xl border
+                                    border-gray-100
+                                    dark:divide-gray-800
+                                    dark:border-gray-800"
                             >
-                                @foreach ($specificationLines as $specificationLine)
+                                @foreach (
+                                    $specificationLines
+                                    as $specificationLine
+                                )
                                     @php
-                                        $specificationParts = explode(
+                                        $parts = explode(
                                             ':',
                                             $specificationLine,
-                                            2,
+                                            2
                                         );
 
-                                        $specificationLabel = trim(
-                                            $specificationParts[0] ?? '',
+                                        $label = trim(
+                                            $parts[0] ?? ''
                                         );
 
-                                        $specificationValue = trim(
-                                            $specificationParts[1] ?? '',
+                                        $value = trim(
+                                            $parts[1] ?? ''
                                         );
                                     @endphp
 
-                                    @if ($specificationValue !== '')
+                                    @if ($value !== '')
                                         <div
-                                            class="grid gap-2 px-5 py-4
-                                                sm:grid-cols-[minmax(180px,0.8fr)_minmax(0,1.2fr)]
-                                                sm:gap-6"
+                                            class="grid gap-2
+                                                px-5 py-4
+                                                sm:grid-cols-[minmax(180px,0.8fr)_minmax(0,1.2fr)]"
                                         >
                                             <dt
-                                                class="text-sm font-semibold text-gray-500
+                                                class="text-sm
+                                                    font-semibold
+                                                    text-gray-500
                                                     dark:text-gray-400"
                                             >
-                                                {{ $specificationLabel }}
+                                                {{ $label }}
                                             </dt>
 
                                             <dd
-                                                class="break-words text-sm font-medium
-                                                    text-gray-900 dark:text-gray-100"
+                                                class="break-words
+                                                    text-sm
+                                                    font-medium
+                                                    text-gray-900
+                                                    dark:text-gray-100"
                                             >
-                                                {{ $specificationValue }}
+                                                {{ $value }}
                                             </dd>
                                         </div>
                                     @else
-                                        <div class="flex items-start gap-3 px-5 py-4">
-                                            <span
-                                                class="mt-2 h-1.5 w-1.5 flex-shrink-0
-                                                    rounded-full bg-blue-500"
-                                            ></span>
-
-                                            <p
-                                                class="text-sm leading-6 text-gray-700
-                                                    dark:text-gray-300"
-                                            >
-                                                {{ $specificationLine }}
-                                            </p>
+                                        <div
+                                            class="px-5 py-4
+                                                text-sm
+                                                text-gray-700
+                                                dark:text-gray-300"
+                                        >
+                                            {{
+                                                $specificationLine
+                                            }}
                                         </div>
                                     @endif
                                 @endforeach
                             </dl>
                         @else
                             <div
-                                class="mt-6 rounded-2xl border border-dashed
-                                    border-gray-300 px-6 py-12 text-center
+                                class="mt-6 rounded-2xl
+                                    border border-dashed
+                                    border-gray-300
+                                    px-6 py-10
+                                    text-center text-sm
+                                    text-gray-400
                                     dark:border-gray-700"
                             >
-                                <span
-                                    class="mx-auto flex h-16 w-16 items-center
-                                        justify-center rounded-3xl bg-slate-100
-                                        text-2xl text-slate-400
-                                        dark:bg-white/10 dark:text-gray-500"
-                                >
-                                    <i class="fa-solid fa-clipboard-list"></i>
-                                </span>
-
-                                <p class="mt-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                    Spesifikasi teknis belum tersedia
-                                </p>
+                                Spesifikasi teknis
+                                belum tersedia.
                             </div>
                         @endif
                     </div>
 
                     {{-- Description --}}
                     <div
-                        class="rounded-3xl border border-white/70 bg-white p-6
-                            shadow-sm dark:border-gray-800 dark:bg-gray-900"
+                        class="rounded-3xl border
+                            border-white/70 bg-white
+                            p-6 shadow-sm
+                            dark:border-gray-800
+                            dark:bg-gray-900"
                     >
-                        <div class="flex items-start justify-between gap-4">
-                            <div>
-                                <h2 class="text-lg font-bold text-gray-900 dark:text-white">
-                                    Keterangan Tambahan
-                                </h2>
-
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    Informasi penggunaan, fungsi, atau catatan mengenai alat.
-                                </p>
-                            </div>
-
-                            <span
-                                class="flex h-11 w-11 flex-shrink-0 items-center
-                                    justify-center rounded-2xl bg-cyan-50 text-cyan-600
-                                    dark:bg-cyan-500/15 dark:text-cyan-300"
-                            >
-                                <i class="fa-solid fa-align-left"></i>
-                            </span>
-                        </div>
+                        <h2
+                            class="text-lg font-bold
+                                text-gray-900
+                                dark:text-white"
+                        >
+                            Keterangan Tambahan
+                        </h2>
 
                         @if ($qcFacility->description)
                             <div
-                                class="mt-6 rounded-2xl bg-slate-50 px-5 py-4
-                                    text-sm leading-7 text-gray-700
-                                    dark:bg-white/[0.04] dark:text-gray-300"
+                                class="mt-5 rounded-2xl
+                                    bg-slate-50 px-5 py-4
+                                    text-sm leading-7
+                                    text-gray-700
+                                    dark:bg-white/[0.04]
+                                    dark:text-gray-300"
                             >
-                                {!! nl2br(e($qcFacility->description)) !!}
+                                {!! nl2br(
+                                    e(
+                                        $qcFacility
+                                            ->description
+                                    )
+                                ) !!}
                             </div>
                         @else
-                            <div
-                                class="mt-6 rounded-2xl border border-dashed
-                                    border-gray-300 px-5 py-8 text-center
-                                    text-sm text-gray-400
-                                    dark:border-gray-700 dark:text-gray-500"
+                            <p
+                                class="mt-5 text-sm
+                                    text-gray-400"
                             >
-                                Keterangan tambahan belum tersedia.
-                            </div>
+                                Belum ada keterangan.
+                            </p>
                         @endif
                     </div>
                 </div>
 
-                {{-- Right Column --}}
+                {{-- Right --}}
                 <div class="space-y-6">
 
-                    {{-- Identity Information --}}
+                    {{-- Master Info --}}
                     <div
-                        class="rounded-3xl border border-white/70 bg-white p-6
-                            shadow-sm dark:border-gray-800 dark:bg-gray-900"
+                        class="rounded-3xl border
+                            border-white/70 bg-white
+                            p-6 shadow-sm
+                            dark:border-gray-800
+                            dark:bg-gray-900"
                     >
-                        <div class="flex items-start justify-between gap-4">
-                            <div>
-                                <h2 class="text-lg font-bold text-gray-900 dark:text-white">
-                                    Informasi Fasilitas
-                                </h2>
+                        <h2
+                            class="text-lg font-bold
+                                text-gray-900
+                                dark:text-white"
+                        >
+                            Informasi Master
+                        </h2>
 
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    Identitas dan lokasi fasilitas.
-                                </p>
-                            </div>
-
-                            <span
-                                class="flex h-11 w-11 flex-shrink-0 items-center
-                                    justify-center rounded-2xl bg-blue-50 text-blue-600
-                                    dark:bg-blue-500/15 dark:text-blue-300"
-                            >
-                                <i class="fa-solid fa-toolbox"></i>
-                            </span>
-                        </div>
+                        <p
+                            class="mt-1 text-sm
+                                text-gray-500
+                                dark:text-gray-400"
+                        >
+                            Informasi umum fasilitas.
+                        </p>
 
                         <dl class="mt-6 space-y-5">
 
-                            {{-- Category --}}
-                            <div class="flex items-start gap-4">
+                            <div>
                                 <dt
-                                    class="flex h-10 w-10 flex-shrink-0 items-center
-                                        justify-center rounded-2xl bg-slate-100
-                                        text-slate-500
-                                        dark:bg-white/10 dark:text-slate-300"
+                                    class="text-xs font-bold
+                                        uppercase tracking-wide
+                                        text-gray-400"
                                 >
-                                    <i class="fa-solid fa-layer-group"></i>
+                                    Kategori
                                 </dt>
 
-                                <dd class="min-w-0">
-                                    <p
-                                        class="text-xs font-bold uppercase tracking-wide
-                                            text-gray-400 dark:text-gray-500"
-                                    >
-                                        Kategori
-                                    </p>
-
-                                    <p
-                                        class="mt-1 font-semibold text-gray-900
-                                            dark:text-white"
-                                    >
-                                        {{ $qcFacility->category?->name ?? '-' }}
-                                    </p>
+                                <dd
+                                    class="mt-1 font-semibold
+                                        text-gray-900
+                                        dark:text-white"
+                                >
+                                    {{
+                                        $qcFacility
+                                            ->category?->name
+                                        ?? '-'
+                                    }}
                                 </dd>
                             </div>
 
-                            {{-- Brand --}}
-                            <div class="flex items-start gap-4">
+                            <div>
                                 <dt
-                                    class="flex h-10 w-10 flex-shrink-0 items-center
-                                        justify-center rounded-2xl bg-slate-100
-                                        text-slate-500
-                                        dark:bg-white/10 dark:text-slate-300"
+                                    class="text-xs font-bold
+                                        uppercase tracking-wide
+                                        text-gray-400"
                                 >
-                                    <i class="fa-solid fa-tag"></i>
+                                    Merk
                                 </dt>
 
-                                <dd class="min-w-0">
-                                    <p
-                                        class="text-xs font-bold uppercase tracking-wide
-                                            text-gray-400 dark:text-gray-500"
-                                    >
-                                        Merk
-                                    </p>
-
-                                    <p
-                                        class="mt-1 break-words font-semibold
-                                            text-gray-900 dark:text-white"
-                                    >
-                                        {{ $qcFacility->brand ?: '-' }}
-                                    </p>
+                                <dd
+                                    class="mt-1 font-semibold
+                                        text-gray-900
+                                        dark:text-white"
+                                >
+                                    {{
+                                        $qcFacility->brand
+                                        ?: '-'
+                                    }}
                                 </dd>
                             </div>
 
-                            {{-- Model --}}
-                            <div class="flex items-start gap-4">
+                            <div>
                                 <dt
-                                    class="flex h-10 w-10 flex-shrink-0 items-center
-                                        justify-center rounded-2xl bg-slate-100
-                                        text-slate-500
-                                        dark:bg-white/10 dark:text-slate-300"
+                                    class="text-xs font-bold
+                                        uppercase tracking-wide
+                                        text-gray-400"
                                 >
-                                    <i class="fa-solid fa-cube"></i>
+                                    Tipe / Model
                                 </dt>
 
-                                <dd class="min-w-0">
-                                    <p
-                                        class="text-xs font-bold uppercase tracking-wide
-                                            text-gray-400 dark:text-gray-500"
-                                    >
-                                        Tipe/Model
-                                    </p>
-
-                                    <p
-                                        class="mt-1 break-words font-semibold
-                                            text-gray-900 dark:text-white"
-                                    >
-                                        {{ $qcFacility->model ?: '-' }}
-                                    </p>
-                                </dd>
-                            </div>
-
-                            {{-- Inventory Number --}}
-                            <div class="flex items-start gap-4">
-                                <dt
-                                    class="flex h-10 w-10 flex-shrink-0 items-center
-                                        justify-center rounded-2xl bg-slate-100
-                                        text-slate-500
-                                        dark:bg-white/10 dark:text-slate-300"
+                                <dd
+                                    class="mt-1 font-semibold
+                                        text-gray-900
+                                        dark:text-white"
                                 >
-                                    <i class="fa-solid fa-barcode"></i>
-                                </dt>
-
-                                <dd class="min-w-0">
-                                    <p
-                                        class="text-xs font-bold uppercase tracking-wide
-                                            text-gray-400 dark:text-gray-500"
-                                    >
-                                        Nomor Inventaris
-                                    </p>
-
-                                    <p
-                                        class="mt-1 break-all font-semibold
-                                            text-gray-900 dark:text-white"
-                                    >
-                                        {{ $qcFacility->inventory_number ?: '-' }}
-                                    </p>
-                                </dd>
-                            </div>
-
-                            {{-- Serial Number --}}
-                            <div class="flex items-start gap-4">
-                                <dt
-                                    class="flex h-10 w-10 flex-shrink-0 items-center
-                                        justify-center rounded-2xl bg-slate-100
-                                        text-slate-500
-                                        dark:bg-white/10 dark:text-slate-300"
-                                >
-                                    <i class="fa-solid fa-hashtag"></i>
-                                </dt>
-
-                                <dd class="min-w-0">
-                                    <p
-                                        class="text-xs font-bold uppercase tracking-wide
-                                            text-gray-400 dark:text-gray-500"
-                                    >
-                                        Serial Number
-                                    </p>
-
-                                    <p
-                                        class="mt-1 break-all font-semibold
-                                            text-gray-900 dark:text-white"
-                                    >
-                                        {{ $qcFacility->serial_number ?: '-' }}
-                                    </p>
-                                </dd>
-                            </div>
-
-                            {{-- Location --}}
-                            <div class="flex items-start gap-4">
-                                <dt
-                                    class="flex h-10 w-10 flex-shrink-0 items-center
-                                        justify-center rounded-2xl bg-slate-100
-                                        text-slate-500
-                                        dark:bg-white/10 dark:text-slate-300"
-                                >
-                                    <i class="fa-solid fa-location-dot"></i>
-                                </dt>
-
-                                <dd class="min-w-0">
-                                    <p
-                                        class="text-xs font-bold uppercase tracking-wide
-                                            text-gray-400 dark:text-gray-500"
-                                    >
-                                        Lokasi
-                                    </p>
-
-                                    <p
-                                        class="mt-1 break-words font-semibold
-                                            text-gray-900 dark:text-white"
-                                    >
-                                        {{ $qcFacility->location ?: '-' }}
-                                    </p>
+                                    {{
+                                        $qcFacility->model
+                                        ?: '-'
+                                    }}
                                 </dd>
                             </div>
                         </dl>
                     </div>
 
-                    {{-- Calibration --}}
+                    {{-- Calibration Summary --}}
                     <div
-                        class="rounded-3xl border border-white/70 bg-white p-6
-                            shadow-sm dark:border-gray-800 dark:bg-gray-900"
+                        class="rounded-3xl border
+                            border-white/70 bg-white
+                            p-6 shadow-sm
+                            dark:border-gray-800
+                            dark:bg-gray-900"
                     >
-                        <div class="flex items-start justify-between gap-4">
-                            <div>
-                                <h2 class="text-lg font-bold text-gray-900 dark:text-white">
-                                    Informasi Kalibrasi
-                                </h2>
+                        <h2
+                            class="text-lg font-bold
+                                text-gray-900
+                                dark:text-white"
+                        >
+                            Status Kalibrasi Unit
+                        </h2>
 
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    Periode dan status kalibrasi alat.
+                        <div
+                            class="mt-5 grid
+                                grid-cols-2 gap-3"
+                        >
+                            <div
+                                class="rounded-2xl
+                                    bg-emerald-50 p-4
+                                    dark:bg-emerald-500/10"
+                            >
+                                <p
+                                    class="text-xs font-semibold
+                                        text-emerald-600"
+                                >
+                                    Berlaku
+                                </p>
+
+                                <p
+                                    class="mt-1 text-2xl
+                                        font-bold
+                                        text-emerald-700
+                                        dark:text-emerald-300"
+                                >
+                                    {{ $validCalibrations }}
                                 </p>
                             </div>
 
-                            <span
-                                class="flex h-11 w-11 flex-shrink-0 items-center
-                                    justify-center rounded-2xl bg-emerald-50
-                                    text-emerald-600
-                                    dark:bg-emerald-500/15 dark:text-emerald-300"
-                            >
-                                <i class="fa-solid fa-calendar-check"></i>
-                            </span>
-                        </div>
-
-                        <div class="mt-6">
-                            <span
-                                class="inline-flex items-center rounded-full px-3 py-1.5
-                                    text-xs font-semibold ring-1 ring-inset
-                                    {{ $calibrationBadgeClasses[$qcFacility->calibration_status]
-                                        ?? $calibrationBadgeClasses['not_available'] }}"
-                            >
-                                <i
-                                    class="fa-solid
-                                        {{ $calibrationIcons[$qcFacility->calibration_status]
-                                            ?? $calibrationIcons['not_available'] }}
-                                        mr-1.5"
-                                ></i>
-
-                                {{ $qcFacility->calibration_status_label }}
-                            </span>
-                        </div>
-
-                        <div class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
                             <div
-                                class="rounded-2xl bg-slate-50 px-4 py-4
-                                    dark:bg-white/[0.04]"
+                                class="rounded-2xl
+                                    bg-amber-50 p-4
+                                    dark:bg-amber-500/10"
                             >
                                 <p
-                                    class="text-xs font-bold uppercase tracking-wide
-                                        text-gray-400 dark:text-gray-500"
+                                    class="text-xs font-semibold
+                                        text-amber-600"
                                 >
-                                    Tanggal Kalibrasi
+                                    H-30
                                 </p>
 
                                 <p
-                                    class="mt-2 font-semibold text-gray-900
+                                    class="mt-1 text-2xl
+                                        font-bold
+                                        text-amber-700
+                                        dark:text-amber-300"
+                                >
+                                    {{
+                                        $expiringCalibrations
+                                    }}
+                                </p>
+                            </div>
+
+                            <div
+                                class="rounded-2xl
+                                    bg-red-50 p-4
+                                    dark:bg-red-500/10"
+                            >
+                                <p
+                                    class="text-xs font-semibold
+                                        text-red-600"
+                                >
+                                    Kedaluwarsa
+                                </p>
+
+                                <p
+                                    class="mt-1 text-2xl
+                                        font-bold
+                                        text-red-700
+                                        dark:text-red-300"
+                                >
+                                    {{
+                                        $expiredCalibrations
+                                    }}
+                                </p>
+                            </div>
+
+                            <div
+                                class="rounded-2xl
+                                    bg-slate-100 p-4
+                                    dark:bg-white/10"
+                            >
+                                <p
+                                    class="text-xs font-semibold
+                                        text-slate-500"
+                                >
+                                    Belum Ada
+                                </p>
+
+                                <p
+                                    class="mt-1 text-2xl
+                                        font-bold
+                                        text-slate-700
                                         dark:text-white"
                                 >
-                                    {{ $qcFacility->calibration_date?->translatedFormat('d F Y') ?? '-' }}
-                                </p>
-                            </div>
-
-                            <div
-                                class="rounded-2xl bg-slate-50 px-4 py-4
-                                    dark:bg-white/[0.04]"
-                            >
-                                <p
-                                    class="text-xs font-bold uppercase tracking-wide
-                                        text-gray-400 dark:text-gray-500"
-                                >
-                                    Masa Berlaku
-                                </p>
-
-                                <p
-                                    class="mt-2 font-semibold text-gray-900
-                                        dark:text-white"
-                                >
-                                    {{ $qcFacility->calibration_valid_until?->translatedFormat('d F Y') ?? '-' }}
+                                    {{ $noCalibrations }}
                                 </p>
                             </div>
                         </div>
-
-                        @if (
-                            $qcFacility->calibration_valid_until &&
-                            $qcFacility->calibration_status !== 'expired'
-                        )
-                            @php
-                                $remainingDays = now()
-                                    ->startOfDay()
-                                    ->diffInDays(
-                                        $qcFacility->calibration_valid_until->startOfDay(),
-                                        false,
-                                    );
-                            @endphp
-
-                            <div
-                                class="mt-4 rounded-2xl border border-blue-100
-                                    bg-blue-50 px-4 py-3 text-sm text-blue-700
-                                    dark:border-blue-900/40 dark:bg-blue-900/20
-                                    dark:text-blue-300"
-                            >
-                                <i class="fa-solid fa-clock mr-1.5"></i>
-
-                                Masa berlaku tersisa
-                                <strong>{{ max($remainingDays, 0) }} hari</strong>.
-                            </div>
-                        @endif
                     </div>
 
-                    {{-- Record Information --}}
+                    {{-- Record --}}
                     <div
-                        class="rounded-3xl border border-white/70 bg-white p-6
-                            shadow-sm dark:border-gray-800 dark:bg-gray-900"
+                        class="rounded-3xl border
+                            border-white/70 bg-white
+                            p-6 shadow-sm
+                            dark:border-gray-800
+                            dark:bg-gray-900"
                     >
-                        <div class="flex items-start justify-between gap-4">
+                        <h2
+                            class="text-lg font-bold
+                                text-gray-900
+                                dark:text-white"
+                        >
+                            Informasi Data
+                        </h2>
+
+                        <dl class="mt-5 space-y-4">
                             <div>
-                                <h2 class="text-lg font-bold text-gray-900 dark:text-white">
-                                    Informasi Data
-                                </h2>
-
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    Catatan pembuatan dan pembaruan data.
-                                </p>
-                            </div>
-
-                            <span
-                                class="flex h-11 w-11 flex-shrink-0 items-center
-                                    justify-center rounded-2xl bg-slate-100
-                                    text-slate-600
-                                    dark:bg-white/10 dark:text-slate-300"
-                            >
-                                <i class="fa-solid fa-clock-rotate-left"></i>
-                            </span>
-                        </div>
-
-                        <dl class="mt-6 space-y-4">
-                            <div
-                                class="rounded-2xl bg-slate-50 px-4 py-3
-                                    dark:bg-white/[0.04]"
-                            >
                                 <dt
-                                    class="text-xs font-bold uppercase tracking-wide
-                                        text-gray-400 dark:text-gray-500"
+                                    class="text-xs font-bold
+                                        uppercase
+                                        text-gray-400"
                                 >
                                     Dibuat Oleh
                                 </dt>
 
                                 <dd
-                                    class="mt-1 text-sm font-semibold text-gray-800
-                                        dark:text-gray-200"
+                                    class="mt-1 text-sm
+                                        font-semibold
+                                        dark:text-white"
                                 >
                                     {{ $creatorName }}
                                 </dd>
                             </div>
 
-                            <div
-                                class="rounded-2xl bg-slate-50 px-4 py-3
-                                    dark:bg-white/[0.04]"
-                            >
+                            <div>
                                 <dt
-                                    class="text-xs font-bold uppercase tracking-wide
-                                        text-gray-400 dark:text-gray-500"
+                                    class="text-xs font-bold
+                                        uppercase
+                                        text-gray-400"
                                 >
-                                    Tanggal Dibuat
+                                    Dibuat
                                 </dt>
 
                                 <dd
-                                    class="mt-1 text-sm font-semibold text-gray-800
-                                        dark:text-gray-200"
+                                    class="mt-1 text-sm
+                                        font-semibold
+                                        dark:text-white"
                                 >
-                                    {{ $qcFacility->created_at?->translatedFormat('d F Y, H:i') ?? '-' }}
+                                    {{
+                                        $qcFacility
+                                            ->created_at
+                                            ?->translatedFormat(
+                                                'd F Y, H:i'
+                                            )
+                                        ?? '-'
+                                    }}
                                 </dd>
                             </div>
 
-                            <div
-                                class="rounded-2xl bg-slate-50 px-4 py-3
-                                    dark:bg-white/[0.04]"
-                            >
+                            <div>
                                 <dt
-                                    class="text-xs font-bold uppercase tracking-wide
-                                        text-gray-400 dark:text-gray-500"
+                                    class="text-xs font-bold
+                                        uppercase
+                                        text-gray-400"
                                 >
-                                    Terakhir Diperbarui Oleh
+                                    Diperbarui Oleh
                                 </dt>
 
                                 <dd
-                                    class="mt-1 text-sm font-semibold text-gray-800
-                                        dark:text-gray-200"
+                                    class="mt-1 text-sm
+                                        font-semibold
+                                        dark:text-white"
                                 >
                                     {{ $updaterName }}
-                                </dd>
-                            </div>
-
-                            <div
-                                class="rounded-2xl bg-slate-50 px-4 py-3
-                                    dark:bg-white/[0.04]"
-                            >
-                                <dt
-                                    class="text-xs font-bold uppercase tracking-wide
-                                        text-gray-400 dark:text-gray-500"
-                                >
-                                    Terakhir Diperbarui
-                                </dt>
-
-                                <dd
-                                    class="mt-1 text-sm font-semibold text-gray-800
-                                        dark:text-gray-200"
-                                >
-                                    {{ $qcFacility->updated_at?->translatedFormat('d F Y, H:i') ?? '-' }}
                                 </dd>
                             </div>
                         </dl>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {{-- Delete Modal --}}
-        @if ($canManage)
+            {{-- Units --}}
             <div
-                x-show="openDeleteModal"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
-                class="fixed inset-0 z-50 flex items-center justify-center
-                    bg-slate-950/60 px-4 backdrop-blur-sm"
-                style="display: none;"
+                id="unit-fasilitas"
+                class="overflow-hidden
+                    rounded-3xl border
+                    border-white/70 bg-white
+                    shadow-sm
+                    dark:border-gray-800
+                    dark:bg-gray-900"
             >
                 <div
-                    @click.away="openDeleteModal = false"
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="scale-95 opacity-0 translate-y-2"
-                    x-transition:enter-end="scale-100 opacity-100 translate-y-0"
-                    x-transition:leave="transition ease-in duration-150"
-                    x-transition:leave-start="scale-100 opacity-100 translate-y-0"
-                    x-transition:leave-end="scale-95 opacity-0 translate-y-2"
-                    class="w-full max-w-md rounded-3xl border border-slate-200
-                        bg-white p-6 shadow-2xl shadow-slate-950/20
-                        dark:border-white/10 dark:bg-slate-900
-                        dark:shadow-black/40"
+                    class="flex flex-col gap-4
+                        border-b border-gray-100
+                        px-6 py-5
+                        dark:border-gray-800
+                        sm:flex-row sm:items-center
+                        sm:justify-between"
                 >
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="flex h-12 w-12 flex-shrink-0 items-center
-                                justify-center rounded-2xl bg-red-50 text-red-600
-                                dark:bg-red-500/15 dark:text-red-300"
+                    <div>
+                        <h2
+                            class="text-lg font-bold
+                                text-gray-900
+                                dark:text-white"
                         >
-                            <i class="fa-solid fa-trash"></i>
-                        </div>
+                            Unit / Perangkat Fisik
+                        </h2>
+
+                        <p
+                            class="mt-1 text-sm
+                                text-gray-500
+                                dark:text-gray-400"
+                        >
+                            Serial number, inventaris,
+                            lokasi, kondisi dan kalibrasi
+                            dikelola per unit.
+                        </p>
+                    </div>
+
+                    @if ($canManage)
+                        <a
+                            href="{{ route(
+                                'qc-facilities.units.create',
+                                $qcFacility
+                            ) }}"
+                            class="inline-flex items-center
+                                justify-center rounded-xl
+                                bg-blue-600 px-4 py-2.5
+                                text-sm font-semibold
+                                text-white hover:bg-blue-700"
+                        >
+                            <i
+                                class="fa-solid
+                                    fa-plus mr-2"
+                            ></i>
+
+                            Tambah Unit
+                        </a>
+                    @endif
+                </div>
+
+                @if ($units->isNotEmpty())
+                    <div class="overflow-x-auto">
+                        <table
+                            class="w-full min-w-[1050px]
+                                text-sm"
+                        >
+                            <thead
+                                class="bg-slate-50
+                                    text-xs font-bold
+                                    uppercase tracking-wide
+                                    text-gray-500
+                                    dark:bg-gray-800/70
+                                    dark:text-gray-400"
+                            >
+                                <tr>
+                                    <th
+                                        class="px-5 py-4
+                                            text-left"
+                                    >
+                                        Serial Number
+                                    </th>
+
+                                    <th
+                                        class="px-5 py-4
+                                            text-left"
+                                    >
+                                        Inventaris
+                                    </th>
+
+                                    <th
+                                        class="px-5 py-4
+                                            text-left"
+                                    >
+                                        Lokasi
+                                    </th>
+
+                                    <th
+                                        class="px-5 py-4
+                                            text-left"
+                                    >
+                                        Kondisi
+                                    </th>
+
+                                    <th
+                                        class="px-5 py-4
+                                            text-left"
+                                    >
+                                        Kalibrasi
+                                    </th>
+
+                                    <th
+                                        class="px-5 py-4
+                                            text-left"
+                                    >
+                                        Berlaku Sampai
+                                    </th>
+
+                                    <th
+                                        class="px-5 py-4
+                                            text-right"
+                                    >
+                                        Aksi
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody
+                                class="divide-y
+                                    divide-gray-100
+                                    dark:divide-gray-800"
+                            >
+                                @foreach ($units as $unit)
+                                    @php
+                                        $latest =
+                                            $unit
+                                                ->latestCalibration;
+
+                                        $calStatus =
+                                            $latest
+                                                ? $latest
+                                                    ->calibration_status
+                                                : 'not_available';
+
+                                        $calLabel =
+                                            $latest
+                                                ? $latest
+                                                    ->calibration_status_label
+                                                : 'Belum Ada Data';
+
+                                        $conditionClass =
+                                            $conditionClasses[
+                                                $unit->condition
+                                            ]
+                                            ?? $conditionClasses[
+                                                'baik'
+                                            ];
+
+                                        $calibrationClass =
+                                            $calibrationClasses[
+                                                $calStatus
+                                            ]
+                                            ?? $calibrationClasses[
+                                                'not_available'
+                                            ];
+                                    @endphp
+
+                                    <tr
+                                        class="hover:bg-slate-50/70
+                                            dark:hover:bg-white/[0.03]"
+                                    >
+                                        <td
+                                            class="px-5 py-4
+                                                font-mono
+                                                font-semibold
+                                                text-gray-900
+                                                dark:text-white"
+                                        >
+                                            {{
+                                                $unit
+                                                    ->serial_number
+                                                ?: '-'
+                                            }}
+                                        </td>
+
+                                        <td
+                                            class="px-5 py-4
+                                                text-gray-700
+                                                dark:text-gray-300"
+                                        >
+                                            {{
+                                                $unit
+                                                    ->inventory_number
+                                                ?: '-'
+                                            }}
+                                        </td>
+
+                                        <td
+                                            class="px-5 py-4
+                                                text-gray-700
+                                                dark:text-gray-300"
+                                        >
+                                            {{
+                                                $unit->location
+                                                ?: '-'
+                                            }}
+                                        </td>
+
+                                        <td class="px-5 py-4">
+                                            <span
+                                                class="inline-flex
+                                                    rounded-full
+                                                    px-2.5 py-1
+                                                    text-xs
+                                                    font-semibold
+                                                    ring-1 ring-inset
+                                                    {{
+                                                        $conditionClass
+                                                    }}"
+                                            >
+                                                {{
+                                                    $unit
+                                                        ->condition_label
+                                                }}
+                                            </span>
+                                        </td>
+
+                                        <td class="px-5 py-4">
+                                            <span
+                                                class="inline-flex
+                                                    rounded-full
+                                                    px-2.5 py-1
+                                                    text-xs
+                                                    font-semibold
+                                                    ring-1 ring-inset
+                                                    {{
+                                                        $calibrationClass
+                                                    }}"
+                                            >
+                                                {{ $calLabel }}
+                                            </span>
+                                        </td>
+
+                                        <td
+                                            class="px-5 py-4
+                                                text-gray-700
+                                                dark:text-gray-300"
+                                        >
+                                            {{
+                                                $latest
+                                                    ?->calibration_valid_until
+                                                    ?->translatedFormat(
+                                                        'd M Y'
+                                                    )
+                                                ?? '-'
+                                            }}
+                                        </td>
+
+                                        <td
+                                            class="px-5 py-4
+                                                text-right"
+                                        >
+                                            <a
+                                                href="{{ route(
+                                                    'qc-facilities.units.show',
+                                                    [
+                                                        'qcFacility' =>
+                                                            $qcFacility,
+                                                        'qcFacilityUnit' =>
+                                                            $unit,
+                                                    ]
+                                                ) }}"
+                                                class="inline-flex
+                                                    items-center
+                                                    rounded-lg
+                                                    bg-blue-50
+                                                    px-3 py-2
+                                                    text-xs
+                                                    font-semibold
+                                                    text-blue-600
+                                                    hover:bg-blue-100
+                                                    dark:bg-blue-500/10
+                                                    dark:text-blue-300"
+                                            >
+                                                <i
+                                                    class="fa-solid
+                                                        fa-eye mr-2"
+                                                ></i>
+
+                                                Detail
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div
+                        class="px-6 py-14 text-center"
+                    >
+                        <span
+                            class="mx-auto flex
+                                h-16 w-16 items-center
+                                justify-center
+                                rounded-3xl
+                                bg-slate-100
+                                text-2xl
+                                text-slate-400
+                                dark:bg-white/10"
+                        >
+                            <i
+                                class="fa-solid
+                                    fa-box-open"
+                            ></i>
+                        </span>
+
+                        <h3
+                            class="mt-4 font-bold
+                                text-gray-900
+                                dark:text-white"
+                        >
+                            Belum ada unit fisik
+                        </h3>
+
+                        <p
+                            class="mt-2 text-sm
+                                text-gray-500"
+                        >
+                            Tambahkan perangkat fisik
+                            beserta serial number-nya.
+                        </p>
+
+                        @if ($canManage)
+                            <a
+                                href="{{ route(
+                                    'qc-facilities.units.create',
+                                    $qcFacility
+                                ) }}"
+                                class="mt-5
+                                    inline-flex items-center
+                                    rounded-xl bg-blue-600
+                                    px-4 py-2.5
+                                    text-sm font-semibold
+                                    text-white
+                                    hover:bg-blue-700"
+                            >
+                                <i
+                                    class="fa-solid
+                                        fa-plus mr-2"
+                                ></i>
+
+                                Tambah Unit Pertama
+                            </a>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- Delete Master Modal --}}
+        @if ($canManage)
+            <div
+                x-cloak
+                x-show="openDeleteModal"
+                class="fixed inset-0 z-50
+                    flex items-center
+                    justify-center bg-black/60
+                    px-4 backdrop-blur-sm"
+            >
+                <div
+                    @click.outside="
+                        openDeleteModal = false
+                    "
+                    class="w-full max-w-md
+                        rounded-3xl bg-white
+                        p-6 shadow-2xl
+                        dark:bg-gray-900"
+                >
+                    <div class="flex gap-4">
+                        <span
+                            class="flex h-12 w-12
+                                flex-shrink-0
+                                items-center justify-center
+                                rounded-2xl bg-red-50
+                                text-red-600
+                                dark:bg-red-500/15"
+                        >
+                            <i
+                                class="fa-solid
+                                    fa-trash"
+                            ></i>
+                        </span>
 
                         <div>
-                            <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">
-                                Hapus Fasilitas
-                            </h2>
+                            <h3
+                                class="text-lg font-bold
+                                    text-gray-900
+                                    dark:text-white"
+                            >
+                                Hapus Master Fasilitas?
+                            </h3>
 
                             <p
-                                class="mt-1 text-sm leading-6 text-slate-500
-                                    dark:text-slate-400"
+                                class="mt-2 text-sm
+                                    leading-6
+                                    text-gray-500
+                                    dark:text-gray-400"
                             >
-                                Apakah Anda yakin ingin menghapus
-                                <strong>{{ $qcFacility->name }}</strong>?
-                                Foto fasilitas juga akan dihapus dan tindakan ini
-                                tidak dapat dibatalkan.
+                                Master
+                                <strong>
+                                    {{ $qcFacility->name }}
+                                </strong>
+                                beserta
+                                <strong>
+                                    {{ $totalUnits }}
+                                    unit
+                                </strong>,
+                                seluruh riwayat
+                                kalibrasi, sertifikat
+                                dan foto fasilitas
+                                akan dihapus.
                             </p>
                         </div>
                     </div>
 
-                    <div class="mt-6 flex justify-end gap-3">
+                    <div
+                        class="mt-6 flex
+                            justify-end gap-3"
+                    >
                         <button
                             type="button"
-                            @click="openDeleteModal = false"
-                            class="rounded-2xl border border-slate-200 px-4 py-2
-                                text-sm font-semibold text-slate-600 transition
-                                hover:bg-slate-100 hover:text-slate-900
-                                dark:border-white/10 dark:text-slate-300
-                                dark:hover:bg-white/10 dark:hover:text-white"
+                            @click="
+                                openDeleteModal = false
+                            "
+                            class="rounded-xl border
+                                border-gray-200
+                                px-4 py-2.5
+                                text-sm font-semibold
+                                text-gray-600
+                                dark:border-gray-700
+                                dark:text-gray-300"
                         >
                             Batal
                         </button>
 
                         <form
                             method="POST"
-                            action="{{ route('qc-facilities.destroy', $qcFacility) }}"
+                            action="{{ route(
+                                'qc-facilities.destroy',
+                                $qcFacility
+                            ) }}"
                         >
                             @csrf
                             @method('DELETE')
 
                             <button
                                 type="submit"
-                                class="rounded-2xl bg-red-600 px-4 py-2
-                                    text-sm font-bold text-white shadow-lg
-                                    shadow-red-500/20 transition
-                                    hover:-translate-y-0.5 hover:bg-red-700"
+                                class="rounded-xl
+                                    bg-red-600
+                                    px-4 py-2.5
+                                    text-sm font-semibold
+                                    text-white
+                                    hover:bg-red-700"
                             >
-                                Hapus Fasilitas
+                                Hapus Master
                             </button>
                         </form>
                     </div>

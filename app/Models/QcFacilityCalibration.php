@@ -5,24 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class QcFacility extends Model
+class QcFacilityCalibration extends Model
 {
     protected $fillable = [
-        'category_id',
-        'name',
-        'brand',
-        'model',
-        'technical_specifications',
-        'inventory_number',
-        'serial_number',
-        'location',
-        'condition',
+        'qc_facility_unit_id',
         'calibration_date',
         'calibration_valid_until',
-        'photo_path',
-        'description',
+        'certificate_number',
+        'calibration_laboratory',
+        'certificate_path',
+        'notes',
         'created_by',
         'updated_by',
     ];
@@ -30,6 +23,7 @@ class QcFacility extends Model
     protected function casts(): array
     {
         return [
+            'qc_facility_unit_id' => 'integer',
             'calibration_date' => 'date',
             'calibration_valid_until' => 'date',
             'created_by' => 'integer',
@@ -37,19 +31,11 @@ class QcFacility extends Model
         ];
     }
 
-    public function category(): BelongsTo
+    public function unit(): BelongsTo
     {
         return $this->belongsTo(
-            QcFacilityCategory::class,
-            'category_id'
-        );
-    }
-
-    public function units(): HasMany
-    {
-        return $this->hasMany(
             QcFacilityUnit::class,
-            'qc_facility_id'
+            'qc_facility_unit_id'
         );
     }
 
@@ -79,14 +65,18 @@ class QcFacility extends Model
 
                 $today = now()->startOfDay();
 
-                if ($this->calibration_valid_until->isBefore($today)) {
+                if (
+                    $this->calibration_valid_until
+                        ->isBefore($today)
+                ) {
                     return 'expired';
                 }
 
                 if (
-                    $this->calibration_valid_until->lessThanOrEqualTo(
-                        $today->copy()->addDays(30)
-                    )
+                    $this->calibration_valid_until
+                        ->lessThanOrEqualTo(
+                            $today->copy()->addDays(30)
+                        )
                 ) {
                     return 'expiring';
                 }
@@ -99,34 +89,14 @@ class QcFacility extends Model
     protected function calibrationStatusLabel(): Attribute
     {
         return Attribute::make(
-            get: fn (): string => match ($this->calibration_status) {
+            get: fn (): string => match (
+                $this->calibration_status
+            ) {
                 'valid' => 'Masih Berlaku',
                 'expiring' => 'Akan Kedaluwarsa',
                 'expired' => 'Kedaluwarsa',
                 default => 'Belum Ada Data Kalibrasi',
             }
-        );
-    }
-
-    protected function conditionLabel(): Attribute
-    {
-        return Attribute::make(
-            get: fn (): string => match ($this->condition) {
-                'baik' => 'Baik',
-                'perlu_perbaikan' => 'Perlu Perbaikan',
-                'dalam_perbaikan' => 'Dalam Perbaikan',
-                'tidak_layak' => 'Tidak Layak Digunakan',
-                default => '-',
-            }
-        );
-    }
-
-    protected function photoUrl(): Attribute
-    {
-        return Attribute::make(
-            get: fn (): ?string => $this->photo_path
-                ? asset('storage/' . $this->photo_path)
-                : null
         );
     }
 }
